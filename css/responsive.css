@@ -97,3 +97,19 @@
 @media (min-width: 1500px) {
   :root { --shell: 1240px; }
 }
+
+/* --- the final pass at small sizes --- */
+@media (max-width: 720px) {
+  .station-link { grid-template-columns: 46px minmax(0, 1fr); row-gap: var(--sp-2); }
+  .station-go, .station .stamp { grid-column: 2; justify-self: start; }
+  .traverse::before { top: 30px; bottom: 30px; left: 23px; }
+
+  .q-head { gap: var(--sp-3); }
+  .q-medallion { width: 50px; height: 50px; }
+
+  .milestone { flex-wrap: wrap; }
+  .milestone .btn { width: 100%; }
+
+  .book-block .section-head { flex-wrap: wrap; }
+  .book-block .section-head .meta { margin-left: 0; width: 100%; }
+}

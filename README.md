@@ -290,6 +290,35 @@ Requests are rate-limited per browser and time out; the body is capped at 8 KB.
 
 ## How this meets the assignment
 
+The three requirements, and exactly where each one lives:
+
+| Requirement | Where it is met | Where to look in the interface |
+|---|---|---|
+| **Get something from the internet** | **Wikimedia "On this day" API** | Home → *Today in History*, tagged `Live API · Wikimedia`; the event page badges *Live from the Wikimedia API* and names the date it was fetched for |
+| **Remember something** | **Progress, saved items, XP and streak**, in `localStorage` under `trident.state` | the class rail on Home, Learn and Progress; the collection; the XP and streak in the header |
+| **Respond to time** | **The daily event, quiz, story and streak**, all keyed to the local calendar date | a new set of five questions, a new story, a new event and a new Timeline Challenge each day; the streak rises at most once per date |
+
+### Get something from the internet — Wikimedia On This Day
+
+One request per calendar date, cached under
+`trident:wikimedia-event:YYYY-MM-DD`. The interface makes the source
+unmistakable rather than burying it:
+
+- the Home row is titled **Today in History** and carries a teal
+  `Live API · Wikimedia` tag with a globe icon;
+- the event page opens with a teal **Live from the Wikimedia API** badge, the
+  date it was loaded for, and a note saying this is live encyclopaedia content
+  and not TRIDENT syllabus material;
+- the link to the source Wikipedia article is kept;
+- if the image fails, a drawn motif takes its place — never a blank frame;
+- if the API cannot be reached, the screen says **"Today's Wikimedia event could
+  not be loaded."**, offers **Retry**, invents nothing, and grants no XP.
+
+Nothing from this API becomes a lesson, a quiz question or a citation. Every
+one of those comes from a verified textbook passage with a page reference.
+
+---
+
 **It gets something from the internet.** Two public APIs that need no key, plus
 one optional keyed service:
 

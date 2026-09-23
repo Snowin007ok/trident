@@ -57,6 +57,10 @@ const PATHS = {
   refresh: '<path d="M19.4 12a7.4 7.4 0 1 1-2.2-5.2"/><path d="M19.4 5.2V11h-5.8"/>',
   world: '<circle cx="12" cy="12" r="8.2"/><path d="M3.8 12h16.4"/><path d="M12 3.8a12.6 12.6 0 0 1 0 16.4 12.6 12.6 0 0 1 0-16.4z"/>',
 
+  // an external feed: a globe with a signal arc, used wherever live API
+  // content appears so it is never mistaken for textbook material
+  api: '<circle cx="12" cy="12" r="7"/><path d="M5 12h14"/><path d="M12 5a11 11 0 0 1 0 14 11 11 0 0 1 0-14z"/><path d="M17.4 3.6a10 10 0 0 1 3 3M19.2 1.8a13 13 0 0 1 3 3" stroke-width="1.5"/>',
+
   /* ---- aliases kept so older call sites keep working ---- */
   quest: '<circle cx="12" cy="12" r="8.4"/><circle cx="12" cy="12" r="4.4"/><circle cx="12" cy="12" r="1"/>',
   event: '<circle cx="12" cy="12" r="8.2"/><path d="M3.8 12h16.4"/><path d="M12 3.8a12.6 12.6 0 0 1 0 16.4 12.6 12.6 0 0 1 0-16.4z"/>',
@@ -295,5 +299,95 @@ export function tricolourRule(className = 'tricolour-rule') {
   wrap.className = className;
   wrap.setAttribute('aria-hidden', 'true');
   wrap.innerHTML = '<i></i><i></i><i></i>';
+  return wrap;
+}
+
+/* ------------------------------------------------------------ era markers
+   Each era gets a small emblem in its own accent. These are markers, not
+   decoration: the colour identifies the period a lesson or event belongs to,
+   and it appears at emblem size and never larger.                         */
+export const ERA_COLOUR = {
+  origins: 'var(--era-origins)',
+  ancient: 'var(--era-ancient)',
+  medieval: 'var(--era-medieval)',
+  colonial: 'var(--era-colonial)',
+  independence: 'var(--era-independence)'
+};
+
+const ERA_EMBLEMS = {
+  // a struck flint
+  origins: '<path d="M12 4.2 18 9v6l-6 4.8L6 15V9z"/><path d="M12 8.4 15 11v3l-3 2.2L9 14v-3z"/>',
+  // a stepped shrine
+  ancient: '<path d="M4.4 19.6h15.2"/><path d="M6.8 19.6V10h10.4v9.6"/><path d="m6.8 10 5.2-5.6 5.2 5.6"/><path d="M10.4 19.6v-4.4h3.2v4.4"/>',
+  // an arch and dome
+  medieval: '<path d="M4.6 19.6h14.8"/><path d="M6.6 19.6V11a5.4 5.4 0 0 1 10.8 0v8.6"/><path d="M12 5.6V3.2"/><path d="M9.6 19.6v-4.2a2.4 2.4 0 0 1 4.8 0v4.2"/>',
+  // a ship's mast
+  colonial: '<path d="M12 3.4v12.2"/><path d="M12 5.8 18.2 9 12 11.4z"/><path d="M4.2 17.2h15.6l-2.2 3.4H6.4z"/>',
+  // a raised standard
+  independence: '<path d="M6.6 20.6V3.4"/><path d="M6.6 4.8h10.8l-2.4 3.4 2.4 3.4H6.6z"/><path d="M3.6 20.6h7"/>'
+};
+
+/**
+ * The emblem for an era, drawn in that era's accent. `size` stays small —
+ * these mark content, they do not fill space.
+ */
+export function eraEmblem(eraId, size = 22) {
+  const svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('width', size);
+  svg.setAttribute('height', size);
+  svg.setAttribute('fill', 'none');
+  svg.setAttribute('stroke', 'currentColor');
+  svg.setAttribute('stroke-width', '1.75');
+  svg.setAttribute('stroke-linecap', 'round');
+  svg.setAttribute('stroke-linejoin', 'round');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.setAttribute('focusable', 'false');
+  svg.setAttribute('class', 'era-emblem');
+  svg.innerHTML = ERA_EMBLEMS[eraId] || ERA_EMBLEMS.ancient;
+  svg.style.color = ERA_COLOUR[eraId] || 'var(--text-muted)';
+  return svg;
+}
+
+/**
+ * A surveyor's route across the head of Home: a dotted traverse with three
+ * station marks and a compass point. Drawn here, illustrating nothing
+ * specific, standing in for no textbook picture.
+ */
+export function expeditionRoute() {
+  const wrap = document.createElement('div');
+  wrap.className = 'expedition-route';
+  wrap.setAttribute('aria-hidden', 'true');
+  wrap.innerHTML = `
+    <svg viewBox="0 0 900 48" preserveAspectRatio="none" focusable="false">
+      <path d="M16 38C130 38 170 14 300 16s180 20 320 12 190-16 264-22"
+            fill="none" stroke="var(--saffron)" stroke-width="2"
+            stroke-linecap="round" stroke-dasharray="7 7"/>
+      <g fill="var(--paper)" stroke="var(--ink)" stroke-width="2">
+        <circle cx="16" cy="38" r="4"/>
+        <circle cx="450" cy="23" r="4"/>
+        <circle cx="884" cy="6" r="4"/>
+      </g>
+    </svg>`;
+  return wrap;
+}
+
+/**
+ * An expedition flag marking the next milestone on Progress. The pennant
+ * fills as the milestone is approached.
+ */
+export function milestoneFlag(percent, size = 64) {
+  const p = Math.max(0, Math.min(100, percent));
+  const wrap = document.createElement('div');
+  wrap.className = 'milestone-flag';
+  wrap.setAttribute('aria-hidden', 'true');
+  wrap.innerHTML = `
+    <svg viewBox="0 0 48 64" width="${size}" height="${Math.round(size * 64 / 48)}" fill="none" focusable="false">
+      <path d="M12 60V6" stroke="var(--ink)" stroke-width="3" stroke-linecap="round"/>
+      <path d="M6 60h18" stroke="var(--ink)" stroke-width="3" stroke-linecap="round"/>
+      <clipPath id="mf-${Math.round(p)}"><rect x="12" y="${8 + (26 * (100 - p) / 100)}" width="32" height="${26 * p / 100}"/></clipPath>
+      <path d="M12 8h30l-7 9 7 9H12z" fill="var(--wash-gold)" stroke="var(--gold-ink)" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M12 8h30l-7 9 7 9H12z" fill="var(--gold)" clip-path="url(#mf-${Math.round(p)})"/>
+    </svg>`;
   return wrap;
 }

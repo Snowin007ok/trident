@@ -289,11 +289,14 @@ export function renderDailyQuiz(view) {
     }
   }
 
-  /* ---- the rail: one segment per question ---- */
+  /* ---- the rail counts answers given, not where the cursor is: the first
+     segment stays empty until question one has actually been answered ---- */
+  function answeredCount() { return revealed.filter(Boolean).length; }
+
   function railNode() {
     return el('div', {
       class: 'rail', 'data-testid': 'quiz-rail', role: 'img',
-      'aria-label': `Question ${at + 1} of ${questions.length}`
+      'aria-label': `${answeredCount()} of ${questions.length} questions answered`
     }, questions.map((q, i) => el('i', {
       class: revealed[i] ? (isCorrect(q, answers[i]) ? 'is-done' : 'is-wrong') : (i === at ? 'is-now' : '')
     })));
@@ -305,7 +308,7 @@ export function renderDailyQuiz(view) {
     const q = questions[at];
     const name = `q-${at}`;
     const isOpen = !revealed[at];
-    const pct = Math.round((at / questions.length) * 100);
+    const pct = Math.round((answeredCount() / questions.length) * 100);
 
     let body;
     if (q.type === 'match') {
@@ -348,7 +351,14 @@ export function renderDailyQuiz(view) {
         railNode(),
         el('div', { class: 'q-timer' }, [timerBtn, timerNode])
       ]),
-      el('h1', { class: 'question-prompt', text: q.prompt }),
+      el('div', { class: 'q-head' }, [
+        // the question number, struck like a seal
+        el('span', { class: 'q-medallion', 'aria-hidden': 'true' }, [
+          el('b', { text: String(at + 1) }),
+          el('i', { text: `of ${questions.length}` })
+        ]),
+        el('h1', { class: 'question-prompt', text: q.prompt })
+      ]),
       body,
       revealed[at] ? explanationBlock(q, isCorrect(q, answers[at])) : null,
       action

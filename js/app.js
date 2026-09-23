@@ -1,7 +1,7 @@
 /** TRIDENT application shell: data loading, chrome, dashboard, features, settings. */
 
 import { el, clear, toast, openModal, citationBlock, tag, xpBar, announceToScreenReader, pages } from './ui.js';
-import { icon, iconSolid, levelEmblem, gatewayMotif, journeyThreads, expeditionPath, tricolourRule, badgeArt, artefactArt } from './icons.js';
+import { icon, iconSolid, levelEmblem, gatewayMotif, journeyThreads, expeditionPath, tricolourRule, badgeArt, artefactArt, eraEmblem, expeditionRoute, milestoneFlag } from './icons.js';
 import * as store from './storage.js';
 import { route, setNotFound, start, go, onAfterNavigate, currentPath } from './router.js';
 import { todayKey, prettyDate, pickDailyStory, pickDailyEvent } from './daily.js';
@@ -82,7 +82,7 @@ function decoratePrimaryNav() {
   DESTINATIONS.forEach((d) => {
     const a = document.querySelector(`#primaryNav a[data-nav="${d.nav}"]`);
     if (!a || a.querySelector('svg')) return;
-    a.prepend(icon(d.ic, 19));
+    a.prepend(icon(d.ic, 21));
   });
 }
 
@@ -90,7 +90,7 @@ function decoratePrimaryNav() {
 function paintNavIcons(active) {
   DESTINATIONS.forEach((d) => {
     document.querySelectorAll(`[data-nav="${d.nav}"]`).forEach((a) => {
-      const size = a.closest('.bottom-nav') ? 22 : 19;
+      const size = a.closest('.bottom-nav') ? 24 : 21;
       const svg = a.querySelector('svg');
       const want = d.nav === active ? iconSolid(d.ic, size) : icon(d.ic, size);
       if (svg) svg.replaceWith(want); else a.prepend(want);
@@ -319,6 +319,7 @@ function renderDashboard() {
 
   /* ---- 1. the one thing to do now ---- */
   v.append(el('section', { class: 'mission', 'data-testid': 'mission' }, [
+    expeditionRoute(),
     el('div', { class: 'mission-body' }, [
       el('span', { class: 'mission-kicker', 'data-testid': 'greeting',
         text: resuming ? 'Carry on where you stopped' : 'Your next lesson' }),
@@ -353,27 +354,46 @@ function renderDashboard() {
     ])
   ]));
 
-  /* ---- 2. today, as a three-station traverse ---- */
+  /* ---- 2. today, as a three-station traverse ----
+     Each row is one link with a visible action on the right, so it reads as
+     something to do rather than something to know. The row that is next up
+     wears saffron; a finished row wears green; nothing else does. ---- */
+  const nextTask = quest.tasks.find((task) => !task.done) || null;
   v.append(el('section', { class: 'today section', 'data-testid': 'quest-panel' }, [
     el('div', { class: 'section-head' }, [
       el('h2', { text: 'Today' }),
       el('span', { class: 'meta', 'data-testid': 'quest-count', text: `${quest.done} of ${quest.total} done` })
     ]),
-    el('ol', { class: 'traverse' }, quest.tasks.map((task) => el('li', {
-      class: `station${task.done ? ' is-done' : ''}`, 'data-testid': `quest-${task.id}`
-    }, [
-      el('a', { class: 'station-link', href: task.href }, [
-        el('span', { class: 'station-mark', 'aria-hidden': 'true' }, [icon(task.done ? 'check' : task.icon, 20)]),
-        el('span', { class: 'station-main' }, [
-          el('span', { class: 'station-title', text: task.title }),
-          el('span', { class: 'station-sub', text: task.done ? 'Done today' : task.sub })
+    el('ol', { class: 'traverse' }, quest.tasks.map((task) => {
+      const isNext = nextTask && task.id === nextTask.id;
+      return el('li', {
+        class: `station${task.done ? ' is-done' : ''}${isNext ? ' is-next' : ''}`,
+        'data-testid': `quest-${task.id}`
+      }, [
+        el('a', {
+          class: 'station-link', href: task.href,
+          'data-testid': `quest-link-${task.id}`,
+          'aria-label': `${task.action}. ${task.title}: ${task.done ? 'done today' : `worth ${task.xp} XP`}.`
+        }, [
+          el('span', { class: 'station-mark', 'aria-hidden': 'true' }, [icon(task.done ? 'check' : task.icon, 22)]),
+          el('span', { class: 'station-main' }, [
+            el('span', { class: 'station-title' }, [
+              task.title,
+              task.source === 'api'
+                ? el('span', { class: 'api-tag', 'data-testid': 'home-api-tag' },
+                  [icon('api', 13), task.sourceLabel])
+                : null
+            ].filter(Boolean)),
+            el('span', { class: 'station-sub', text: task.done ? 'Done today' : task.sub })
+          ]),
+          task.done
+            ? el('span', { class: 'stamp stamp-done', text: 'Done' })
+            : el('span', { class: 'station-go', 'data-testid': `quest-action-${task.id}` },
+              [task.action, icon('right', 16)])
         ]),
-        task.done
-          ? el('span', { class: 'stamp stamp-done', text: 'Done' })
-          : el('span', { class: 'station-xp', text: `+${task.xp} XP` })
-      ]),
-      el('span', { class: 'sr-only', text: task.done ? `${task.title}: done today.` : `${task.title}: worth ${task.xp} XP.` })
-    ])))
+        el('span', { class: 'sr-only', text: task.done ? `${task.title}: done today.` : `${task.title}: worth ${task.xp} XP.` })
+      ]);
+    }))
   ]));
 
   /* ---- 3. the next thing that unlocks ---- */
@@ -401,19 +421,43 @@ function renderDashboard() {
  * It used to sit on the dashboard with its full Wikimedia description; the
  * dashboard now links here from the quest, and the reading happens on arrival.
  */
+/**
+ * Today in History — the one screen whose content comes from outside TRIDENT.
+ *
+ * Everything else in the app is a verified textbook passage with a page
+ * citation. This is fetched live from the Wikimedia "On this day" API, so the
+ * page says so in a teal badge, names the date it was fetched for, keeps the
+ * link to the source article, and states plainly that it is not syllabus
+ * material. When the feed cannot be reached nothing is invented and no XP is
+ * granted — the screen offers a retry and waits.
+ */
 function renderEventPage() {
   if (!requireGuest()) return;
   const v = beginView();
+  const today = todayKey();
+
+  v.append(el('div', { class: 'reader-top' }, [
+    el('a', { class: 'back-link', href: '#/dashboard' }, [icon('left', 16), 'Home'])
+  ]));
+
+  v.append(el('div', { class: 'section-head' }, [
+    el('h1', { text: 'Today in History' }),
+    el('span', { class: 'stamp stamp-live', 'data-testid': 'wikimedia-label' },
+      [icon('api', 15), 'Live from the Wikimedia API'])
+  ]));
+
+  v.append(el('p', { class: 'api-note', 'data-testid': 'api-note' }, [
+    icon('info', 15),
+    el('span', { text: `Fetched from the Wikimedia “On this day” API for ${prettyDate(today)}. `
+      + 'This is live encyclopaedia content, not TRIDENT syllabus material: it carries no textbook '
+      + 'citation, and nothing in your lessons or quizzes comes from it.' })
+  ]));
+
   const host = el('section', { class: 'section', 'data-testid': 'event-host' }, [
-    el('div', { class: 'section-head' }, [
-      el('h1', { text: 'Historical Event of the Day' }),
-      el('span', { class: 'hint', 'data-testid': 'wikimedia-label', text: 'Live data from Wikimedia' })
-    ]),
-    el('div', { class: 'state-box' }, [el('span', { class: 'spinner' }), ' Loading today’s event…'])
+    el('div', { class: 'state-box' }, [el('span', { class: 'spinner' }), ' Contacting the Wikimedia API…'])
   ]);
   v.append(host);
   renderEventOfTheDay(host);
-  v.append(el('a', { class: 'btn btn-ghost btn-sm section', href: '#/dashboard', text: '← Back to the dashboard' }));
 }
 
 /* ------------------------------------------------------- event of the day */
@@ -424,25 +468,30 @@ async function renderEventOfTheDay(host) {
   const body = host.lastChild;
 
   if (result.status === 'offline') {
-    body.replaceWith(el('div', { class: 'state-box is-error', 'data-testid': 'event-offline' }, [
-      el('p', { text: 'Today’s online historical event is temporarily unavailable.' }),
-      el('p', { class: 'hint', text: 'Nothing is invented here — this stays empty until a real event can be fetched. Everything else on this page works as usual.' }),
+    // no substitute event, no placeholder text that could be mistaken for
+    // one, and no XP: the day's event is simply not there yet
+    body.replaceWith(el('div', { class: 'api-down', 'data-testid': 'event-offline' }, [
+      el('span', { class: 'stamp stamp-error' }, [icon('api', 15), 'Wikimedia API unreachable']),
+      el('h2', { text: 'Today’s Wikimedia event could not be loaded.' }),
+      el('p', { text: 'Nothing is shown in its place. This screen stays empty until the real event arrives, and no experience is granted for it.' }),
       el('button', {
-        class: 'btn btn-secondary btn-sm', type: 'button',
+        class: 'btn btn-primary', type: 'button', 'data-testid': 'event-retry',
         onclick: () => {
           clear(host);
-          host.append(
-            el('div', { class: 'section-head' }, [el('h2', { text: 'Historical Event of the Day' })]),
-            el('div', { class: 'state-box' }, [el('span', { class: 'spinner' }), ' Retrying…'])
-          );
+          host.append(el('div', { class: 'state-box' }, [el('span', { class: 'spinner' }), ' Contacting the Wikimedia API…']));
           renderEventOfTheDay(host);
         }
-      }, [icon('refresh', 16), 'Try again'])
+      }, [icon('refresh', 16), 'Retry']),
+      el('a', { class: 'btn btn-ghost', href: '#/quiz', text: 'Answer today’s questions instead' })
     ]));
     return;
   }
   if (result.status === 'empty') {
-    body.replaceWith(el('div', { class: 'state-box' }, [el('p', { text: 'The feed returned no events for today’s date.' })]));
+    body.replaceWith(el('div', { class: 'api-down', 'data-testid': 'event-empty' }, [
+      el('span', { class: 'stamp stamp-warn' }, [icon('api', 15), 'Wikimedia API returned nothing']),
+      el('h2', { text: 'Today’s Wikimedia event could not be loaded.' }),
+      el('p', { text: 'The feed answered, but had no event for this date. Nothing is invented in its place.' })
+    ]));
     return;
   }
 
@@ -494,20 +543,23 @@ async function renderEventOfTheDay(host) {
     el('div', { class: 'event-body' }, [
       el('div', { class: 'event-meta' }, [
         el('span', { class: 'event-year', text: evt.year }),
-        el('span', { class: 'stamp stamp-live', 'data-testid': 'event-scope',
-          text: indian ? 'On this day' : 'World history today' })
+        el('span', { class: 'stamp stamp-live', 'data-testid': 'event-scope' },
+          [icon('api', 14), indian ? 'On this day' : 'World history today'])
       ]),
       el('h2', { class: 'title-serif', text: evt.title }),
       el('p', { text: evt.text }),
       detail,
       el('div', { class: 'event-actions' }, [
         exploreBtn, saveBtn,
-        el('a', { class: 'btn btn-quiet btn-sm', href: evt.url, target: '_blank', rel: 'noopener noreferrer', text: 'Read on Wikipedia' })
+        el('a', {
+          class: 'btn btn-ghost btn-sm', href: evt.url,
+          target: '_blank', rel: 'noopener noreferrer'
+        }, [icon('api', 15), 'Read on Wikipedia'])
       ]),
       el('p', { class: 'hint', 'data-testid': 'event-attribution' }, [
-        `${evt.source} — fetched for ${prettyDate(today)}`,
-        result.status === 'cache' ? ', from this device\u2019s copy because the feed could not be reached'
-          : result.status === 'cache-hit' ? ', already fetched today' : ''
+        `${evt.source}, loaded for ${prettyDate(today)}`,
+        result.status === 'cache' ? ' — from this device’s copy, because the API could not be reached just now'
+          : result.status === 'cache-hit' ? ' — already fetched once today, so the API was not called again' : ''
       ])
     ])
   ]));

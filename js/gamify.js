@@ -160,21 +160,26 @@ export const ARTEFACT_DISCLAIMER =
 export function questTasks(state, dateKey) {
   return [
     {
-      id: 'story', title: 'Read the Daily Story', icon: 'story',
-      xp: XP_RULES.story, href: '#/story',
-      sub: 'A cited retelling drawn from a verified passage.',
+      id: 'story', title: 'Daily Story', icon: 'story',
+      xp: XP_RULES.story, href: '#/story', action: 'Read story',
+      sub: 'A retelling drawn from a verified textbook passage.',
+      source: 'textbook',
       done: store.hasReward(rewardId('story', dateKey))
     },
     {
-      id: 'quiz', title: 'Complete the Daily Quiz', icon: 'quiz',
-      xp: XP_RULES.quiz, href: '#/quiz',
-      sub: 'Five questions, one per format.',
+      id: 'quiz', title: 'Daily Quiz', icon: 'quiz',
+      xp: XP_RULES.quiz, href: '#/quiz', action: 'Start quiz',
+      sub: 'Five questions, each citing its page.',
+      source: 'textbook',
       done: !!(state.dailyQuizByDate || {})[dateKey]
     },
     {
-      id: 'event', title: "Explore Today's Event", icon: 'event',
-      xp: XP_RULES.event, href: '#/event',
-      sub: 'From the Wikimedia "On this day" feed.',
+      // the one activity whose content comes from outside TRIDENT, and it
+      // says so on the row rather than only on the page it opens
+      id: 'event', title: 'Today in History', icon: 'api',
+      xp: XP_RULES.event, href: '#/event', action: 'Explore event',
+      sub: 'A new historical event fetched for today.',
+      source: 'api', sourceLabel: 'Live API · Wikimedia',
       done: store.hasReward(rewardId('event', dateKey))
     }
   ];

@@ -239,8 +239,15 @@ small { font-size: var(--step--1); }
   border: 1px solid var(--line-strong);
   border-radius: 1px;
 }
+/* A segment is filled only when the thing it stands for is finished. The
+   segment you are on is marked by a heavier outline, never by a fill, so a
+   learner at 0% sees an empty rail rather than one orange block that reads
+   as progress already made. */
 .rail i.is-done { background: var(--green); border-color: var(--green); }
-.rail i.is-now { background: var(--saffron); border-color: var(--saffron); }
+.rail i.is-now {
+  background: var(--surface);
+  border-color: var(--ink); border-width: 2px;
+}
 .rail.rail-sm { --rail-h: 6px; gap: 2px; }
 .rail.rail-lg { --rail-h: 16px; gap: 4px; }
 

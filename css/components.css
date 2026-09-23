@@ -28,29 +28,58 @@
 .mission-meta { margin-top: var(--sp-4); }
 
 /* --- today, drawn as a three-station traverse --- */
-.traverse { list-style: none; margin: 0; padding: 0; position: relative; }
+.traverse { list-style: none; margin: 0; padding: 0; position: relative; max-width: 640px; }
 .traverse::before {
-  content: ''; position: absolute; left: 21px; top: 26px; bottom: 26px;
+  content: ''; position: absolute; left: 27px; top: 34px; bottom: 34px;
   width: 2px; background: var(--line-strong);
 }
 .station { position: relative; }
 .station-link {
-  display: grid; grid-template-columns: 44px minmax(0, 1fr) auto;
+  display: grid; grid-template-columns: 54px minmax(0, 1fr) auto;
   align-items: center; gap: var(--sp-4);
-  padding: var(--sp-3) var(--sp-2); text-decoration: none; color: var(--text);
-  border-radius: var(--radius-sm);
+  padding: var(--sp-3); text-decoration: none; color: var(--text);
+  border: 1px solid transparent; border-radius: var(--radius);
+  transition: background var(--transition), border-color var(--transition), transform 90ms ease;
 }
-.station-link:hover { background: var(--surface-sunken); color: var(--text); }
+.station-link:hover { background: var(--surface); border-color: var(--line-strong); color: var(--text); }
+.station-link:active { transform: translateY(1px); background: var(--surface-sunken); }
 .station-mark {
-  width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center;
+  width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center;
   background: var(--surface); border: 2px solid var(--line-strong);
   color: var(--text-muted); position: relative; z-index: 1;
 }
+/* saffron marks the one activity to do next, green one already done */
+.station.is-next .station-mark { border-color: var(--saffron); color: var(--saffron-ink); }
 .station.is-done .station-mark { background: var(--green); border-color: var(--green); color: var(--text-on-green); }
-.station-main { min-width: 0; display: flex; flex-direction: column; }
-.station-title { font-weight: 700; }
+.station-main { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.station-title { font-weight: 700; display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; }
 .station-sub { font-size: var(--step--1); color: var(--text-muted); }
 .station-xp { font-weight: 700; font-size: var(--step--1); color: var(--gold-ink); white-space: nowrap; }
+
+/* the action, visible on the row rather than implied by it */
+.station-go {
+  display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;
+  font-weight: 700; font-size: var(--step--1); color: var(--text);
+  border: 2px solid var(--line-strong); border-radius: var(--radius-sm);
+  padding: var(--sp-2) var(--sp-3); min-height: 40px;
+  background: var(--surface);
+}
+.station.is-next .station-go {
+  background: var(--saffron); border-color: var(--saffron); color: var(--text-on-saffron);
+}
+.station-link:hover .station-go { border-color: var(--ink); }
+.station.is-next .station-link:hover .station-go { border-color: var(--saffron-ink); }
+
+/* the one row whose content is fetched live */
+.api-tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: var(--step--2); font-weight: 800; letter-spacing: 0.02em;
+  color: var(--teal-ink); background: var(--wash-teal);
+  border: 1px solid var(--teal); border-radius: var(--radius-xs);
+  padding: 1px var(--sp-2);
+}
+.station[data-testid="quest-event"] .station-mark { border-color: var(--teal); color: var(--teal-ink); }
+.station[data-testid="quest-event"].is-done .station-mark { background: var(--green); border-color: var(--green); color: var(--text-on-green); }
 
 /* --- next reward --- */
 .next-reward {
@@ -758,3 +787,113 @@
 .book-card:last-child { border-bottom: 0; }
 .bc-title { font-weight: 600; }
 .bc-meta { font-size: var(--step--1); color: var(--text-muted); }
+
+
+/* ==========================================================================
+   The final pass: era markers, the API treatments and the area visuals
+   ========================================================================== */
+
+/* --- the expedition route behind Home's mission --- */
+.mission { position: relative; overflow: hidden; }
+.expedition-route {
+  position: absolute; inset: auto 0 0 0; height: 46px;
+  pointer-events: none; opacity: 0.55; z-index: 0;
+}
+.expedition-route svg { width: 100%; height: 100%; display: block; }
+.mission > *:not(.expedition-route) { position: relative; z-index: 1; }
+
+/* --- era markers. Small, semantic, never a background. --- */
+.era-emblem { flex: none; }
+.era-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: var(--step--2); font-weight: 700; color: var(--text-muted);
+  white-space: nowrap;
+}
+.era-chip::before {
+  content: ''; width: 9px; height: 9px; border-radius: 2px;
+  background: var(--era, var(--line-strong));
+}
+
+.lr-era { display: grid; place-items: center; }
+.lr-done { color: var(--green); display: inline-grid; place-items: center; }
+.block-emblem { display: inline-grid; place-items: center; flex: none; }
+.book-block .section-head { display: flex; align-items: center; gap: var(--sp-3); }
+.book-block .section-head .meta { margin-left: auto; }
+
+.chapter-emblem {
+  display: flex; align-items: center; gap: var(--sp-3);
+  padding-bottom: var(--sp-3); margin-bottom: var(--sp-2);
+}
+
+/* --- Learn's lesson rows gain a clear hover and focus treatment --- */
+.lesson-row { transition: background var(--transition); }
+.lesson-row:hover { background: var(--surface); }
+.lesson-row:focus-within { background: var(--surface); outline: 2px solid var(--saffron); outline-offset: -2px; }
+
+/* --- the quiz's question medallion --- */
+.q-head { display: flex; align-items: flex-start; gap: var(--sp-4); margin-bottom: var(--sp-5); }
+.q-medallion {
+  flex: none; width: 62px; height: 62px; border-radius: 50%;
+  display: grid; place-items: center; gap: 0;
+  border: 3px solid var(--ink); background: var(--surface);
+  box-shadow: 0 3px 0 var(--ink);
+}
+.q-medallion b { font-size: var(--step-3); font-weight: 800; line-height: 1; }
+.q-medallion i { font-style: normal; font-size: 10px; color: var(--text-muted); line-height: 1; }
+.q-head .question-prompt { margin: 0; padding-top: var(--sp-1); }
+
+/* answer selection reads at a glance */
+.option { transition: border-color var(--transition), background var(--transition), transform 90ms ease; }
+.option:active { transform: translateY(1px); }
+.option:has(input:checked) { box-shadow: inset 4px 0 0 var(--saffron); }
+.option.is-correct { box-shadow: inset 4px 0 0 var(--green); }
+.option.is-wrong { box-shadow: inset 4px 0 0 var(--red); }
+
+/* --- the timeline's chronological nodes --- */
+.tl-card::after {
+  content: ''; position: absolute; left: calc(var(--sp-6) * -1 - 5px);
+  top: 50%; margin-top: -5px; width: 11px; height: 11px;
+  border-radius: 50%; background: var(--paper); border: 2px solid var(--ink);
+}
+.tl-card.is-right::after { background: var(--green); border-color: var(--green); }
+.tl-card.is-wrong::after { background: var(--red); border-color: var(--red); }
+.tl-era {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: var(--step--1); color: var(--text-muted);
+}
+.tl-answer { list-style: none; margin: var(--sp-4) 0 0; padding: 0; }
+.tl-answer li {
+  display: flex; gap: var(--sp-4); padding: var(--sp-3) 0;
+  border-top: 1px solid var(--line);
+}
+.tl-answer .t-event { font-weight: 600; display: block; }
+.tl-answer .tl-cite { display: block; }
+
+/* --- Progress: the milestone flag --- */
+.passport-figure { min-width: 0; }
+.milestone {
+  display: flex; align-items: center; gap: var(--sp-4);
+  border: 1px solid var(--line); border-radius: var(--radius);
+  padding: var(--sp-3) var(--sp-4); background: var(--surface);
+}
+.milestone > div { min-width: 0; display: flex; flex-direction: column; }
+.ms-kicker { font-size: var(--step--2); color: var(--text-muted); }
+.milestone b { font-size: var(--step-1); }
+.milestone-flag { flex: none; }
+
+/* --- the API screens --- */
+.api-note {
+  display: flex; align-items: flex-start; gap: var(--sp-3);
+  background: var(--wash-teal); border-left: 3px solid var(--teal);
+  padding: var(--sp-4); border-radius: 0 var(--radius) var(--radius) 0;
+  color: var(--teal-ink); max-width: none; margin-bottom: var(--sp-5);
+}
+.api-note svg { flex: none; margin-top: 2px; }
+
+.api-down {
+  border: 2px dashed var(--line-strong); border-radius: var(--radius);
+  padding: var(--sp-6); text-align: center; background: var(--surface);
+}
+.api-down h2 { margin: var(--sp-4) 0 var(--sp-2); font-size: var(--step-2); }
+.api-down p { margin-inline: auto; margin-bottom: var(--sp-5); }
+.api-down .btn { margin: 0 var(--sp-2) var(--sp-2); }

@@ -159,7 +159,7 @@ function buildPanel() {
     ]),
 
     el('p', { class: 'companion-scope', 'data-testid': 'companion-scope',
-      text: 'Your progress, today’s mission, the lesson you were recommended and today’s historical event. Open a lesson for the history itself.' }),
+      text: 'I can guide your progress, recommend what to study next and explain today’s activities. Open any lesson to study history from its verified textbook source.' }),
 
     el('div', { class: 'companion-suggestions', 'data-testid': 'companion-suggestions' },
       SUGGESTIONS.map((q) => el('button', {

@@ -9,7 +9,7 @@
  */
 
 import { el, clear, xpBar, tag } from './ui.js';
-import { icon, levelEmblem, badgeArt, artefactArt, eraIcon } from './icons.js';
+import { icon, levelEmblem, badgeArt, artefactArt, eraIcon, eraEmblem, milestoneFlag } from './icons.js';
 import * as store from './storage.js';
 import * as gamify from './gamify.js';
 import { todayKey, prettyDate, lastNDateKeys, daysBetween } from './daily.js';
@@ -97,16 +97,26 @@ export function renderProgress(view) {
     el('span', { class: 'meta', text: prettyDate(today) })
   ]));
 
-  /* --- the number that matters: how far through this class --- */
+  /* --- the number that matters: how far through this class, with a flag
+     marking the milestone being walked towards --- */
+  const milestone = nextMilestone(completed, totalLessons, lp);
   view.append(el('section', { class: 'section', 'data-testid': 'passport-head' }, [
     el('div', { class: 'passport-head' }, [
-      el('div', {}, [
+      el('div', { class: 'passport-figure' }, [
         el('span', { class: 'big-figure', 'data-testid': 'course-figure', text: `${completed} of ${totalLessons}` }),
         el('p', { class: 'lede', style: 'margin:.35rem 0 0', text: `${scopeLabel} read — ${pct}% of the course.` })
       ]),
-      completed < totalLessons
-        ? el('a', { class: 'btn btn-primary', href: '#/library', text: 'Continue reading' })
-        : el('span', { class: 'stamp stamp-done' }, [icon('check', 15), 'Course complete'])
+      el('div', { class: 'milestone', 'data-testid': 'milestone' }, [
+        milestoneFlag(milestone.percent, 52),
+        el('div', {}, [
+          el('span', { class: 'ms-kicker', text: 'Next milestone' }),
+          el('b', { text: milestone.label }),
+          el('span', { class: 'hint', text: milestone.note })
+        ]),
+        completed < totalLessons
+          ? el('a', { class: 'btn btn-primary', href: '#/library', text: 'Continue reading' })
+          : el('span', { class: 'stamp stamp-done' }, [icon('check', 15), 'Course complete'])
+      ])
     ]),
     el('div', {
       class: 'rail rail-lg', 'data-testid': 'progress-rail', role: 'img',
@@ -374,6 +384,29 @@ export function renderProgress(view) {
 }
 
 /* -------------------------------------------------------------- helpers */
+
+/**
+ * The next thing worth walking towards: finishing the class if that is close,
+ * otherwise the next level. Both are computed from stored activity.
+ */
+function nextMilestone(completed, total, lp) {
+  const left = total - completed;
+  if (left > 0 && (left <= 3 || !lp.next)) {
+    return {
+      label: `${left} lesson${left === 1 ? '' : 's'} to finish the course`,
+      note: `${completed} of ${total} read so far.`,
+      percent: total ? (completed / total) * 100 : 0
+    };
+  }
+  if (lp.next) {
+    return {
+      label: `Level ${lp.next.level} — ${lp.next.name}`,
+      note: `${lp.toNext} XP to go.`,
+      percent: lp.percent
+    };
+  }
+  return { label: 'Every level reached', note: 'Keep reading to finish the course.', percent: 100 };
+}
 
 function badgeArtFor(id, earned) {
   const art = badgeArt(id, 62);

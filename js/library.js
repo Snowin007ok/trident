@@ -1,7 +1,7 @@
 /** Library browsing and the lesson reader (exploration pages). */
 
 import { el, clear, toast, citationBlock, tag, xpBar, pages } from './ui.js';
-import { icon, eraIcon } from './icons.js';
+import { icon, eraIcon, eraEmblem } from './icons.js';
 import * as store from './storage.js';
 import * as gamify from './gamify.js';
 import { todayKey } from './daily.js';
@@ -311,17 +311,26 @@ function renderResults(host) {
     const book = bookById(bookId);
     const mine = lessonsFor(bookId);
     const doneAll = mine.filter((l) => state.completedLessons[l.id]).length;
+    const eraIds = [...new Set(lessons.map((l) => l.era))].filter(Boolean);
+    const groupEra = eraIds.length === 1 ? gamify.ERAS.find((e) => e.id === eraIds[0]) : null;
     host.append(el('section', { class: 'section book-block' }, [
       el('div', { class: 'section-head' }, [
+        el('span', { class: 'block-emblem' }, [eraEmblem(groupEra ? groupEra.id : eraIds[0], 26)]),
         el('h2', { text: book.title }),
+        groupEra ? el('span', { class: 'era-chip', style: `--era: var(--era-${groupEra.id})`, text: groupEra.label }) : null,
         el('span', { class: 'meta', text: `${doneAll} of ${mine.length} read` })
-      ]),
+      ].filter(Boolean)),
       el('ul', { class: 'lesson-list' }, lessons.map((l) => {
         const done = !!state.completedLessons[l.id];
         const outside = isOutsideClass(l);
         const chap = l.chapterId ? chapterLabel(book, l.chapterId) : null;
+        const era = gamify.ERAS.find((e) => e.id === l.era);
         return el('li', { class: `lesson-row${done ? ' is-done' : ''}` }, [
-          el('span', { class: 'lr-mark', 'aria-hidden': 'true' }, [icon(done ? 'check' : 'learn', 18)]),
+          // the era emblem marks the period; the tick only ever means finished
+          el('span', {
+            class: 'lr-era', title: era ? era.label : '',
+            'aria-label': era ? `${era.label} era` : null, role: era ? 'img' : null
+          }, [eraEmblem(l.era, 20)]),
           el('a', { class: 'lr-main', href: `#/lesson/${l.id}` }, [
             el('span', { class: 'lr-title', text: l.title }),
             el('span', { class: 'lr-meta', text: chap ? `${chap}, ${pages(l.citation)}` : pages(l.citation) })
@@ -329,7 +338,7 @@ function renderResults(host) {
           el('span', { class: 'lr-side' }, [
             outside ? el('span', { class: 'stamp stamp-warn', text: `Class ${l.classLevel}` }) : null,
             el('span', { class: 'lr-time', text: `${l.readingMinutes} min` }),
-            done ? el('span', { class: 'stamp stamp-done', text: 'Read' }) : null
+            done ? el('span', { class: 'lr-done', 'aria-label': 'Read' }, [icon('check', 18)]) : null
           ].filter(Boolean))
         ]);
       }))
@@ -431,6 +440,11 @@ export function renderLesson(view, lessonId) {
 
     outside ? el('p', { class: 'stamp stamp-warn', 'data-testid': 'outside-class' },
       [icon('info', 15), `This lesson is from Class ${lesson.classLevel}, not your own class.`]) : null,
+
+    el('div', { class: 'chapter-emblem', 'data-testid': 'chapter-emblem' }, [
+      eraEmblem(lesson.era, 30),
+      era ? el('span', { class: 'era-chip', style: `--era: var(--era-${era.id})`, text: era.label }) : null
+    ].filter(Boolean)),
 
     el('h1', { class: 'title-serif reader-title', text: lesson.title }),
 

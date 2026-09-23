@@ -508,6 +508,264 @@ async function main() {
     fail('15. No console errors, no horizontal overflow', `overflow: ${overflow.join(', ') || 'none'}; errors: ${realErrors.slice(0, 3).join(' | ') || 'none'}`);
   }
 
+  /* ======================================================================
+     16. At 0%, every segment is empty
+     ====================================================================== */
+  await open('#/dashboard');
+  await evaluate(`localStorage.setItem('trident.state', JSON.stringify(Object.assign(
+    JSON.parse(localStorage.getItem('trident.state')), { completedLessons: {} })))`);
+  await open('#/dashboard');
+  const zero = await evaluate(`(() => {
+    const filled = (el) => {
+      const bg = getComputedStyle(el).backgroundColor;
+      const m = (bg.match(/[\d.]+/g) || []).map(Number);
+      if (m.length < 3) return false;
+      if (m.length > 3 && m[3] === 0) return false;
+      // "filled" means a saturated mark, not the paper-coloured empty segment
+      const max = Math.max(m[0], m[1], m[2]); const min = Math.min(m[0], m[1], m[2]);
+      return (max - min) > 40;
+    };
+    const out = {};
+    document.querySelectorAll('.rail').forEach((rail, i) => {
+      const segs = [...rail.querySelectorAll('i')];
+      out['rail' + i] = { total: segs.length, filled: segs.filter(filled).length };
+    });
+    return out;
+  })()`);
+  const anyFilled = Object.values(zero).filter((r) => r.filled > 0);
+  if (Object.keys(zero).length && !anyFilled.length) {
+    pass('16. At 0% every segment is empty', Object.entries(zero).map(([k, v]) => `${k}: 0 of ${v.total} filled`).join(', '));
+  } else {
+    fail('16. At 0% every segment is empty', JSON.stringify(zero));
+  }
+
+  /* ======================================================================
+     17. n of m fills exactly n, and a finished rail is all green
+     ====================================================================== */
+  const tn7 = await evaluate(`(async () => (await (await fetch('data/lessons.json')).json()).lessons
+    .filter((l) => l.path === 'tn' && l.classLevel === '7').map((l) => l.id))()`);
+  const counts = [];
+  for (const n of [0, 1, 2, tn7.length]) {
+    // the page is reloaded from the harness, not from inside the page, so the
+    // execution context survives
+    await evaluate(`(() => {
+      const s = JSON.parse(localStorage.getItem('trident.state'));
+      const done = {};
+      ${JSON.stringify(tn7)}.slice(0, ${n}).forEach((id) => { done[id] = '2026-09-20T09:00:00.000Z'; });
+      s.completedLessons = done;
+      localStorage.setItem('trident.state', JSON.stringify(s));
+      return true;
+    })()`);
+    await open('#/dashboard');
+    const m = await evaluate(`(() => {
+      const rail = document.querySelector('[data-testid="home-rail"]');
+      const segs = [...rail.querySelectorAll('i')];
+      return {
+        total: segs.length,
+        done: segs.filter((s) => s.classList.contains('is-done')).length,
+        green: segs.filter((s) => getComputedStyle(s).backgroundColor === 'rgb(19, 138, 75)').length
+      };
+    })()`);
+    counts.push({ n, ...m });
+  }
+  const wrong = counts.filter((c) => c.done !== c.n || c.green !== c.n);
+  if (!wrong.length && counts.length === 4) {
+    pass('17. n of m fills exactly n, and a finished rail is all green',
+      counts.map((c) => `${c.n} of ${c.total} → ${c.green} green`).join(', '));
+  } else {
+    fail('17. n of m fills exactly n, and a finished rail is all green', JSON.stringify(counts));
+  }
+  await evaluate(`localStorage.setItem('trident.state', ${JSON.stringify(JSON.stringify(SEED))})`);
+
+  /* ======================================================================
+     18. Quiz completion advances only once a question is answered
+     ====================================================================== */
+  await open('#/quiz');
+  const quizAdvance = await evaluate(`(async () => {
+    const pct = () => (document.querySelector('[data-testid="quiz-percent"]') || {}).textContent;
+    const railFilled = () => [...document.querySelectorAll('[data-testid="quiz-rail"] i')]
+      .filter((s) => s.classList.contains('is-done') || s.classList.contains('is-wrong')).length;
+    const before = { pct: pct(), filled: railFilled(), pos: (document.querySelector('[data-testid="quiz-position"]')||{}).textContent };
+    const first = document.querySelector('.options input, .match-row select');
+    if (first) {
+      if (first.tagName === 'SELECT') {
+        [...document.querySelectorAll('.match-row select')].forEach((s) => {
+          s.selectedIndex = 1; s.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+      } else { first.checked = true; first.dispatchEvent(new Event('change', { bubbles: true })); }
+    }
+    const afterChoose = { pct: pct(), filled: railFilled() };
+    document.querySelector('[data-testid="quiz-check"]').click();
+    await new Promise((r) => setTimeout(r, 200));
+    return { before, afterChoose, afterCheck: { pct: pct(), filled: railFilled() } };
+  })()`);
+  if (/0% complete/.test(quizAdvance.before.pct) && quizAdvance.before.filled === 0
+      && quizAdvance.afterChoose.filled === 0 && quizAdvance.afterCheck.filled === 1
+      && /20% complete/.test(quizAdvance.afterCheck.pct)) {
+    pass('18. Quiz completion advances only on answering',
+      `${quizAdvance.before.pos.trim()} at ${quizAdvance.before.pct.trim()} with an empty rail; after checking, ${quizAdvance.afterCheck.pct.trim()} and one segment`);
+  } else {
+    fail('18. Quiz completion advances only on answering', JSON.stringify(quizAdvance));
+  }
+
+  /* ======================================================================
+     19. Wikimedia is visibly the live external source
+     ====================================================================== */
+  await open('#/dashboard');
+  const homeTag = await evaluate("(document.querySelector('[data-testid=\"home-api-tag\"]')||{}).textContent");
+  await open('#/event');
+  await sleep(2000);
+  const eventLabels = await evaluate(`({
+    badge: (document.querySelector('[data-testid="wikimedia-label"]')||{}).textContent,
+    note: (document.querySelector('[data-testid="api-note"]')||{}).textContent,
+    teal: getComputedStyle(document.querySelector('[data-testid="wikimedia-label"]')).color
+  })`);
+  if (/wikimedia/i.test(homeTag) && /live/i.test(homeTag)
+      && /Wikimedia API/i.test(eventLabels.badge) && /not TRIDENT syllabus material/i.test(eventLabels.note)) {
+    pass('19. Wikimedia is visibly the live external source',
+      `Home row tagged "${homeTag.trim()}"; the event page badges "${eventLabels.badge.trim()}" and separates API content from textbook content`);
+  } else {
+    fail('19. Wikimedia is visibly the live external source', JSON.stringify({ homeTag, ...eventLabels }));
+  }
+
+  /* ======================================================================
+     20. An API failure invents nothing and grants nothing
+     ====================================================================== */
+  await open('#/dashboard');
+  await evaluate(`(() => {
+    const d = new Date();
+    const today = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    localStorage.removeItem('trident:wikimedia-event:' + today);
+    return true;
+  })()`);
+  await evaluate("window.fetch = ((orig) => (u, o) => (/wikimedia|wikipedia/i.test(String(u)) ? Promise.reject(new Error('blocked')) : orig(u, o)))(window.fetch); true");
+  await open('#/event');
+  await sleep(2500);
+  const down = await evaluate(`(() => {
+    const state = JSON.parse(localStorage.getItem('trident.state'));
+    const offline = document.querySelector('[data-testid="event-offline"], [data-testid="event-empty"]');
+    return {
+      offline: !!offline,
+      message: offline ? (offline.querySelector('h2') || {}).textContent : null,
+      retry: !!document.querySelector('[data-testid="event-retry"]'),
+      card: !!document.querySelector('[data-testid="event-card"]'),
+      eventXp: Object.keys(state.awardedRewards || {}).filter((k) => k.startsWith('event:')).length
+    };
+  })()`);
+  if (down.offline && down.retry && !down.card && down.eventXp === 0
+      && /could not be loaded/i.test(down.message || '')) {
+    pass('20. An API failure invents nothing', `"${down.message.trim()}" with a Retry button, no event card and no event XP recorded`);
+  } else {
+    fail('20. An API failure invents nothing', JSON.stringify(down));
+  }
+
+  /* ======================================================================
+     21. Today's activities carry visible actions
+     ====================================================================== */
+  await open('#/dashboard');
+  const actions = await evaluate(`(() => {
+    const rows = [...document.querySelectorAll('.station')];
+    return rows.map((r) => {
+      const go = r.querySelector('.station-go, .stamp');
+      const mark = r.querySelector('.station-mark');
+      const link = r.querySelector('.station-link');
+      return {
+        action: go ? go.textContent.trim() : null,
+        markPx: mark ? Math.round(mark.getBoundingClientRect().width) : 0,
+        wholeRowClickable: !!(link && link.tagName === 'A' && link.getAttribute('href'))
+      };
+    });
+  })()`);
+  const labelsOk = actions.length === 3
+    && actions.every((a) => a.action && a.markPx >= 38 && a.markPx <= 44 && a.wholeRowClickable);
+  if (labelsOk) {
+    pass("21. Today's activities carry visible actions",
+      actions.map((a) => `${a.action} (${a.markPx}px mark)`).join(', ') + ' — each row is one link');
+  } else {
+    fail("21. Today's activities carry visible actions", JSON.stringify(actions));
+  }
+
+  /* ======================================================================
+     22. Era colours appear only as small markers
+     ====================================================================== */
+  const eraMisuse = [];
+  for (const s of ['#/library', '#/lesson/l-tn7-chola-local-government', '#/timeline']) {
+    await open(s);
+    const big = await evaluate(`(() => {
+      const ERA = ['rgb(110, 113, 106)', 'rgb(8, 127, 140)', 'rgb(107, 79, 161)', 'rgb(177, 79, 50)', 'rgb(19, 138, 75)'];
+      const out = [];
+      document.querySelectorAll('#view *').forEach((el) => {
+        const bg = getComputedStyle(el).backgroundColor;
+        if (!ERA.includes(bg)) return;
+        const r = el.getBoundingClientRect();
+        if (r.width * r.height > 44 * 44) out.push(el.className + ' ' + Math.round(r.width) + 'x' + Math.round(r.height));
+      });
+      return out;
+    })()`);
+    big.forEach((b) => eraMisuse.push(`${s}: ${b}`));
+  }
+  if (!eraMisuse.length) {
+    pass('22. Era colours stay small markers', 'no element larger than a 44px marker uses an era accent as its background');
+  } else {
+    fail('22. Era colours stay small markers', eraMisuse.join(' | '));
+  }
+
+  /* ======================================================================
+     23. Timeline citations appear only after checking
+     ====================================================================== */
+  await open('#/timeline');
+  const tlCite = await evaluate(`(async () => {
+    const before = {
+      cites: document.querySelectorAll('.tl-card .tl-cite').length,
+      years: document.querySelectorAll('.tl-card .tl-year').length,
+      eras: document.querySelectorAll('.tl-card .tl-era').length,
+      controls: document.querySelectorAll('.tl-card .order-controls').length
+    };
+    document.querySelector('[data-testid="tl-check"]').click();
+    await new Promise((r) => setTimeout(r, 250));
+    return { before, after: {
+      cites: document.querySelectorAll('.tl-card .tl-cite').length,
+      years: document.querySelectorAll('.tl-card .tl-year').length,
+      answer: !!document.querySelector('.tl-answer'),
+      answerCites: document.querySelectorAll('.tl-answer .tl-cite').length
+    } };
+  })()`);
+  if (tlCite.before.cites === 0 && tlCite.before.years === 0 && tlCite.before.eras === 4
+      && tlCite.before.controls === 4 && tlCite.after.years === 4 && tlCite.after.answerCites === 4) {
+    pass('23. Timeline citations wait for the check',
+      'before: four titles with era markers and movement controls, no dates and no citations; after: four dates and four full citations');
+  } else {
+    fail('23. Timeline citations wait for the check', JSON.stringify(tlCite));
+  }
+
+  /* ======================================================================
+     24. The companion leaps once, and rests
+     ====================================================================== */
+  await open('#/dashboard');
+  const fish = await evaluate(`(async () => {
+    const root = document.querySelector('.companion');
+    const btn = document.querySelector('[data-testid="companion-launcher"]');
+    const hashBefore = location.hash;
+    btn.dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'mouse', bubbles: true }));
+    const leapt = root.classList.contains('is-leaping');
+    // a pointer resting on the launcher must not restart the animation
+    btn.dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'mouse', bubbles: true }));
+    await new Promise((r) => setTimeout(r, 700));
+    const stillAfter = root.classList.contains('is-leaping');
+    btn.dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'mouse', bubbles: true }));
+    const repeated = root.classList.contains('is-leaping');
+    btn.click();
+    await new Promise((r) => setTimeout(r, 250));
+    const open = !!document.querySelector('[data-testid="companion-panel"], .companion-panel');
+    return { leapt, stillAfter, repeated, open, hashUnchanged: location.hash === hashBefore };
+  })()`);
+  if (fish.leapt && !fish.stillAfter && !fish.repeated && fish.open && fish.hashUnchanged) {
+    pass('24. The companion leaps once and rests',
+      'one leap on hover, the class clears when it ends, a resting pointer does not restart it, and opening the drawer leaves the URL alone');
+  } else {
+    fail('24. The companion leaps once and rests', JSON.stringify(fish));
+  }
+
   /* ---- report ---- */
   console.log('\nTRIDENT redesign verification\n' + '='.repeat(64));
   results.forEach((r) => {

@@ -6,7 +6,7 @@
  */
 
 import { el, clear, toast } from './ui.js';
-import { icon, tricolourRule } from './icons.js';
+import { icon, tricolourRule, eraEmblem } from './icons.js';
 import * as store from './storage.js';
 import * as gamify from './gamify.js';
 import { todayKey, prettyDate, hashString, seededShuffle } from './daily.js';
@@ -117,10 +117,17 @@ export function render(view) {
         el('span', { class: 'tl-pos', text: String(i + 1) }),
         el('span', { class: 'tl-body' }, [
           el('span', { class: 'tl-label', text: ev.label }),
-          // the date is the answer, so it appears only once the order is checked
-          checked ? el('span', { class: 'tl-year', text: ev.year }) : null,
-          el('span', { class: 'tl-cite', text: citationLine(ev.citation) })
+          // Before checking, a card carries the title and its era and nothing
+          // else: the date is the answer, and the citation names the book the
+          // date can be looked up in. Both appear once the order is checked.
+          checked
+            ? el('span', { class: 'tl-cite', text: citationLine(ev.citation) })
+            : el('span', { class: 'tl-era' }, [
+              eraEmblem(eraOf(ev), 16),
+              el('span', { text: eraLabel(ev) })
+            ])
         ]),
+        checked ? el('span', { class: 'tl-year', text: ev.year }) : null,
         checked
           ? el('span', { class: correctHere ? 'tag tag-done' : 'tag' }, [
             icon(correctHere ? 'check' : 'cross', 13),
@@ -192,14 +199,17 @@ export function render(view) {
     feedback.append(el('div', { class: `explanation ${solved ? 'is-correct' : 'is-wrong'}`, 'data-testid': 'tl-feedback' }, [
       el('h4', { text: solved ? 'Correct order' : 'Not the right order' }),
       el('p', { text: solved
-        ? `All four are in sequence. ${xpLine}`
-        : 'Here is the correct sequence, with the date each book gives. Nothing is hidden — read the reasoning and try tomorrow’s challenge.' }),
-      el('ol', { class: 'timeline', style: 'border-left:2px solid var(--line-gold); list-style:none; padding-left:0' },
+        ? `All four are in sequence, earliest first. ${xpLine}`
+        : 'Here is the sequence, earliest first, with the date and the page each one is dated from.' }),
+      el('ol', { class: 'tl-answer' },
         solution.map((ev) => el('li', {}, [
           el('span', { class: 't-year', text: ev.year }),
-          el('span', { class: 't-event', text: ev.label }),
-          el('span', { class: 'tl-cite', style: 'display:block', text: citationLine(ev.citation) })
-        ])))
+          el('span', {}, [
+            el('span', { class: 't-event', text: ev.label }),
+            el('span', { class: 'tl-cite', text: citationLine(ev.citation) })
+          ])
+        ]))),
+      el('p', { class: 'hint', text: 'Each date is the one given by the textbook cited beside it — that is what puts these four in this order.' })
     ]));
     liveRegion.textContent = solved
       ? `Correct. ${xpLine}`
@@ -221,6 +231,25 @@ export function render(view) {
   view.append(el('p', { class: 'hint', text: 'A new set of four events appears tomorrow.' }));
 
   paint();
+}
+
+/** The era a timeline event sits in, taken from the year it is dated to. */
+function eraOf(ev) {
+  const y = Number(ev.sortYear);
+  if (!Number.isFinite(y)) return 'ancient';
+  if (y < -600) return 'origins';
+  if (y < 600) return 'ancient';
+  if (y < 1750) return 'medieval';
+  if (y < 1947) return 'colonial';
+  return 'independence';
+}
+
+function eraLabel(ev) {
+  const map = {
+    origins: 'Origins', ancient: 'Ancient India', medieval: 'Medieval India',
+    colonial: 'Colonial India', independence: 'Independence'
+  };
+  return map[eraOf(ev)] || 'Ancient India';
 }
 
 function citationLine(c) {
