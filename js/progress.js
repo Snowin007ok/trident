@@ -88,218 +88,58 @@ export function renderProgress(view) {
   const xp = state.xp || 0;
   const lp = gamify.levelProgress(xp);
 
+  const pct = totalLessons ? Math.round((completed / totalLessons) * 100) : 0;
+  const nextLevel = lp.next ? `${lp.toNext} XP to ${lp.next.name}` : 'Highest level reached';
+  const questToday = gamify.questProgress(state, today);
+
   view.append(el('div', { class: 'section-head' }, [
-    el('span', { class: 'eyebrow', text: 'Your record' }),
-    el('h1', { text: 'Historian’s Passport' }),
-    el('span', { class: 'hint', text: prettyDate(today) })
+    el('h1', { text: 'Your progress' }),
+    el('span', { class: 'meta', text: prettyDate(today) })
   ]));
 
-  /* ------------------------------------------------------------- header */
-  view.append(...[el('section', { class: 'passport-head', 'data-testid': 'passport-head' }, [
-    levelEmblem(lp.current.level, 78, 'passport-emblem'),
-    el('div', { class: 'stack' }, [
+  /* --- the number that matters: how far through this class --- */
+  view.append(el('section', { class: 'section', 'data-testid': 'passport-head' }, [
+    el('div', { class: 'passport-head' }, [
       el('div', {}, [
-        el('span', { class: 'eyebrow', text: `Level ${lp.current.level}` }),
-        el('h2', { style: 'margin:2px 0 0', text: lp.current.name })
+        el('span', { class: 'big-figure', 'data-testid': 'course-figure', text: `${completed} of ${totalLessons}` }),
+        el('p', { class: 'lede', style: 'margin:.35rem 0 0', text: `${scopeLabel} read — ${pct}% of the course.` })
       ]),
-      xpBar(
-        lp.percent,
-        `<strong>${xp}</strong> XP`,
-        lp.next ? `${lp.toNext} XP to ${lp.next.name}` : 'Highest level reached',
-        'passport-xp'
-      ),
-      el('div', { class: 'pill-row' }, [
-        tag(`${streak}-day streak`, streak ? 'done' : null, 'flame'),
-        tag(`Best ${state.streak.best || 0} days`, null, 'star'),
-        tag(`${completed} of ${totalLessons} ${scopeLabel}`, null, 'learn'),
-        completedAnywhere > completed
-          ? tag(`${completedAnywhere} finished in all`, null, 'check')
-          : null,
-        tag(activeMinutes ? `${activeMinutes} min studied` : 'Study time not yet recorded', null, 'clock')
-      ])
-    ])
-  ])].filter(Boolean));
-
-  /* ------------------------------------------------- compact statistics */
-  view.append(el('div', { class: 'strip strip-5 section', 'data-testid': 'passport-strip' }, [
-    stripItem(String(xp), 'total XP'),
-    stripItem(`${acc.pct}%`, `quiz accuracy (${acc.correct}/${acc.asked})`),
-    stripItem(String(Object.keys(state.badges || {}).length), `of ${gamify.BADGES.length} badges`),
-    stripItem(String(Object.keys(state.artefacts || {}).length), `of ${gamify.ARTEFACTS.length} artefacts`),
-    stripItem(String(Object.keys(state.dailyQuizByDate || {}).length), 'daily quizzes taken')
-  ]));
-
-  /* ----------------------------------------- the learner's own path first */
-  const prof = profile.current(state);
-  if (prof) {
-    const mine = profile.pathId(prof) === 'tnpsc'
-      ? lessons
-      : lessons.filter((l) => l.path === profile.pathId(prof)
-          && (!profile.classLevel(prof) || l.classLevel === profile.classLevel(prof)));
-    const mineDone = mine.filter((l) => state.completedLessons[l.id]).length;
-    view.append(el('section', { class: 'panel edge-saffron section', 'data-testid': 'passport-profile' }, [
-      el('div', { class: 'section-head' }, [
-        el('span', { class: 'eyebrow', text: 'Your learning path' }),
-        el('h2', { style: 'margin:0', text: profile.label(prof) }),
-        el('a', { class: 'btn btn-ghost btn-sm push', href: '#/profile', text: 'Change' })
-      ]),
-      xpBar(mine.length ? (mineDone / mine.length) * 100 : 0,
-        `<strong>${mineDone}</strong> of ${mine.length} lessons on this path`,
-        `${Math.round(mine.length ? (mineDone / mine.length) * 100 : 0)}%`,
-        'passport-profile-bar'),
-      el('p', { class: 'hint', text: 'Everything you have completed on any path still counts towards your XP, badges and streak — the figures below cover all of it.' })
-    ]));
-  }
-
-  /* ------------------------------------------------- learning-path bars */
-  const pathRows = DATA.library.paths.map((p) => {
-    const inPath = lessons.filter((l) => l.path === p.id);
-    const done = inPath.filter((l) => state.completedLessons[l.id]).length;
-    return { id: p.id, name: p.shortName || p.name, done, total: inPath.length };
-  });
-
-  view.append(el('section', { class: 'panel panel-green section' }, [
-    el('h2', { text: 'Learning paths' }),
-    el('div', { class: 'path-progress' }, pathRows.map((r) => {
-      const pct = r.total ? (r.done / r.total) * 100 : 0;
-      return el('div', { class: 'path-progress-row' }, [
-        el('div', { class: 'pp-head' }, [
-          el('span', { text: r.name }),
-          el('span', { class: 'hint', text: r.total ? `${r.done} of ${r.total}` : 'no lessons indexed yet' })
-        ]),
-        el('div', {
-          class: 'pp-track', role: 'progressbar',
-          'aria-valuenow': String(Math.round(pct)), 'aria-valuemin': '0', 'aria-valuemax': '100',
-          'aria-label': `${r.name}: ${r.done} of ${r.total} lessons complete`
-        }, [el('div', { class: `pp-fill ${r.id}`, style: `width:${pct}%` })])
-      ]);
-    }))
-  ]));
-
-  /* ----------------------------------------------------- eras completed */
-  const eras = gamify.eraStatus(lessons, state);
-  view.append(el('section', { class: 'panel panel-green section' }, [
-    el('h2', { text: 'Eras' }),
-    el('p', { class: 'hint', text: 'An era is marked complete only when every indexed lesson in it is complete.' }),
-    el('ul', { class: 'list', 'data-testid': 'passport-eras' }, eras.map((era) => el('li', { class: 'list-item' }, [
-      el('div', { class: 'row' }, [
-        eraIcon(era.id, 22),
-        el('div', { class: 'li-main' }, [
-          el('div', { class: 'li-title', text: era.label }),
-          el('div', { class: 'li-meta', text: `${era.period} · ${era.completed} of ${era.total} lessons` })
-        ])
-      ]),
-      era.status === 'complete'
-        ? el('span', { class: 'badge badge-ok', text: 'Complete' })
-        : era.status === 'locked'
-          ? el('span', { class: 'badge', text: 'No lessons indexed yet' })
-          : el('span', { class: 'badge', text: era.status === 'current' ? 'In progress' : 'Available' })
-    ])))
-  ]));
-
-  /* --------------------------------------------------------- badge shelf */
-  const badges = gamify.earnedBadges(state);
-  view.append(...[el('section', { class: 'panel section' }, [
-    el('div', { class: 'section-head' }, [
-      el('h2', { text: 'Badge shelf' }),
-      el('span', { class: 'hint', text: `${badges.filter((b) => b.earnedAt).length} of ${badges.length} earned` }),
-      el('a', { class: 'btn btn-ghost btn-sm push', href: '#/collection', text: 'Open collection' })
+      completed < totalLessons
+        ? el('a', { class: 'btn btn-primary', href: '#/library', text: 'Continue reading' })
+        : el('span', { class: 'stamp stamp-done' }, [icon('check', 15), 'Course complete'])
     ]),
-    el('div', { class: 'shelf', 'data-testid': 'passport-badges' }, badges.map((b) => el('div', {
-      class: `badge-tile${b.earnedAt ? ' is-earned' : ' is-locked'}`,
-      'data-testid': `badge-${b.id}`
-    }, [
-      badgeArtFor(b.id, !!b.earnedAt),
-      el('div', { class: 'b-name', text: b.name }),
-      el('div', { class: 'b-req', text: b.earnedAt ? `Earned ${prettyDate(b.earnedAt.slice(0, 10))}` : b.requirement }),
-      el('span', { class: 'b-state' }, b.earnedAt ? ['Earned'] : [icon('lock', 14), ' Locked']),
-      b.earnedAt ? el('span', { class: 'ribbon', 'aria-hidden': 'true' }, [el('i'), el('i'), el('i')]) : null
-    ])))
-  ])].filter(Boolean));
-
-  /* --------------------------------------------------- artefact collection */
-  const artefacts = gamify.collectedArtefacts(state);
-  view.append(el('section', { class: 'panel section' }, [
-    el('div', { class: 'section-head' }, [
-      el('h2', { text: 'Artefact collection' }),
-      el('span', { class: 'hint', text: `${artefacts.filter((a) => a.unlockedAt).length} of ${artefacts.length} recovered` })
-    ]),
-    el('div', { class: 'shelf', 'data-testid': 'passport-artefacts' }, artefacts.map((a) => el('div', {
-      class: `artefact-tile${a.unlockedAt ? ' is-unlocked' : ' is-locked'}`,
-      'data-testid': `artefact-${a.id}`
-    }, [
-      artefactArt(a.id, 88),
-      el('div', { class: 'a-name', text: a.name }),
-      el('div', { class: 'a-note', text: a.unlockedAt ? a.note : `Locked — ${a.requirement}` })
-    ]))),
-    el('p', { class: 'hint', text: gamify.ARTEFACT_DISCLAIMER })
+    el('div', {
+      class: 'rail rail-lg', 'data-testid': 'progress-rail', role: 'img',
+      'aria-label': `${completed} of ${totalLessons} lessons complete`
+    }, scope.map((l) => el('i', { class: state.completedLessons[l.id] ? 'is-done' : '', title: l.title })))
   ]));
 
-  /* --------------------------------------------------- quiz performance */
-  const week = lastNDateKeys(10, today);
-  const trendData = week.map((k) => {
-    const rec = state.dailyQuizByDate[k];
-    return {
-      key: k,
-      score: rec ? rec.score : null,
-      total: rec ? rec.total : 5
-    };
-  });
-  view.append(el('section', { class: 'panel section' }, [
-    el('h2', { text: 'Daily quiz trend' }),
-    el('p', { class: 'hint', text: 'Score out of five on each of the last ten days. A day with no quiz is shown as an empty column.' }),
-    el('div', { class: 'trend', role: 'img', 'data-testid': 'trend',
-      'aria-label': trendLabel(trendData) },
-      trendData.map((d) => {
-        const pct = d.score === null ? 0 : (d.score / (d.total || 5)) * 100;
-        const perfect = d.score !== null && d.total && d.score === d.total;
-        return el('div', { class: 'trend-col' }, [
-          el('span', { class: 'trend-label', text: d.score === null ? '—' : String(d.score) }),
-          el('div', {
-            class: `trend-bar${perfect ? ' is-perfect' : ''}${d.score === null ? ' is-empty' : ''}`,
-            style: `height:${d.score === null ? 4 : Math.max(6, pct)}%`
-          }),
-          el('span', { class: 'trend-label', text: d.key.slice(8) })
-        ]);
-      })),
-    el('p', { class: 'hint', text: 'Green columns are perfect scores.' })
-  ]));
-
-  /* ------------------------------------------------------ revision queue */
-  const revise = revisionSuggestions(state, today);
-  const strong = strongTopics(state);
-  view.append(el('div', { class: 'grid grid-2 section' }, [
-    el('section', { class: 'panel' }, [
-      el('h2', { text: 'Revision queue' }),
-      revise.length
-        ? el('ul', { class: 'list' }, revise.slice(0, 6).map((t) => el('li', { class: 'list-item' }, [
-          el('div', { class: 'li-main' }, [
-            el('div', { class: 'li-title', text: t.topic }),
-            el('div', { class: 'li-meta', text: t.ageDays === 0
-              ? `Missed today · ${Math.round(t.accuracy * 100)}% accuracy`
-              : `Last missed ${t.ageDays} day${t.ageDays === 1 ? '' : 's'} ago · ${Math.round(t.accuracy * 100)}% accuracy` })
-          ]),
-          el('a', { class: 'btn btn-ghost btn-sm', href: '#/library', text: 'Revise' })
-        ])))
-        : el('p', { class: 'empty', text: 'Nothing flagged for revision yet.' })
+  /* --- four systems, kept apart so none is mistaken for another --- */
+  view.append(el('div', { class: 'figure-grid', 'data-testid': 'passport-figures' }, [
+    el('div', { class: 'figure is-course' }, [
+      el('b', { text: `${acc.pct}%` }),
+      el('span', { text: acc.asked ? `quiz accuracy, ${acc.correct} of ${acc.asked} right` : 'no questions answered yet' })
     ]),
-    el('section', { class: 'panel' }, [
-      el('h2', { text: 'Strong topics' }),
-      strong.length
-        ? el('ul', { class: 'list' }, strong.slice(0, 6).map((t) => el('li', { class: 'list-item' }, [
-          el('div', { class: 'li-main' }, [
-            el('div', { class: 'li-title', text: t.topic }),
-            el('div', { class: 'li-meta', text: `${t.correct} of ${t.asked} correct` })
-          ]),
-          el('span', { class: 'badge badge-ok', text: `${Math.round(t.accuracy * 100)}%` })
-        ])))
-        : el('p', { class: 'empty', text: 'Answer a few quizzes and your strongest topics will appear here.' })
+    el('div', { class: 'figure is-streak' }, [
+      el('b', { text: String(streak) }),
+      el('span', { text: `day streak — best ${state.streak.best || 0}` })
+    ]),
+    el('div', { class: 'figure is-level' }, [
+      el('b', { text: `Level ${lp.current.level}` }),
+      el('span', { text: nextLevel })
+    ]),
+    el('div', { class: 'figure' }, [
+      el('b', { text: `${questToday.done} of ${questToday.total}` }),
+      el('span', { text: 'of today\u2019s activities done' })
     ])
   ]));
+
+  // everything below the surface figures collects here and folds away
+  const detail = el('div', { 'data-testid': 'passport-detail' });
 
   /* ------------------------------------------------------ recent activity */
-  view.append(...[el('section', { class: 'panel section' }, [
-    el('h2', { text: 'Recent activity' }),
+  view.append(...[el('section', { class: 'section' }, [
+    el('div', { class: 'section-head' }, [el('h2', { text: 'Recent activity' })]),
     (() => {
       const items = recentActivity(state, lessons).slice(0, 10);
       return items.length
@@ -321,7 +161,7 @@ export function renderProgress(view) {
   const dailyHistory = Object.entries(state.dailyQuizByDate)
     .sort((a, b) => (a[0] < b[0] ? 1 : -1))
     .slice(0, 10);
-  view.append(el('section', { class: 'panel section' }, [
+  detail.append(el('section', { class: 'panel section' }, [
     el('h2', { text: 'Daily quiz history' }),
     dailyHistory.length
       ? el('ul', { class: 'list' }, dailyHistory.map(([k, r]) => el('li', { class: 'list-item' }, [
@@ -338,7 +178,7 @@ export function renderProgress(view) {
   const savedLessons = state.savedLessons.map(lessonById).filter(Boolean);
   const savedStories = state.savedStories
     .map((id) => DATA.stories.stories.find((s) => s.id === id)).filter(Boolean);
-  view.append(el('div', { class: 'grid grid-2 section' }, [
+  detail.append(el('div', { class: 'grid grid-2 section' }, [
     el('section', { class: 'panel' }, [
       el('h2', { text: 'Saved lessons' }),
       savedLessons.length
@@ -374,7 +214,163 @@ export function renderProgress(view) {
     ])
   ]));
 
-  view.append(el('p', { class: 'hint', text: 'Study time is measured only while a lesson or quiz is open and this tab is visible. It is not an estimate.' }));
+
+  /* --- the rest folds away --- */
+
+  /* ------------------------------------------------- learning-path bars */
+  const pathRows = DATA.library.paths.map((p) => {
+    const inPath = lessons.filter((l) => l.path === p.id);
+    const done = inPath.filter((l) => state.completedLessons[l.id]).length;
+    return { id: p.id, name: p.shortName || p.name, done, total: inPath.length };
+  });
+
+  detail.append(el('section', { class: 'panel panel-green section' }, [
+    el('h2', { text: 'Learning paths' }),
+    el('div', { class: 'path-progress' }, pathRows.map((r) => {
+      const pct = r.total ? (r.done / r.total) * 100 : 0;
+      return el('div', { class: 'path-progress-row' }, [
+        el('div', { class: 'pp-head' }, [
+          el('span', { text: r.name }),
+          el('span', { class: 'hint', text: r.total ? `${r.done} of ${r.total}` : 'no lessons indexed yet' })
+        ]),
+        el('div', {
+          class: 'pp-track', role: 'progressbar',
+          'aria-valuenow': String(Math.round(pct)), 'aria-valuemin': '0', 'aria-valuemax': '100',
+          'aria-label': `${r.name}: ${r.done} of ${r.total} lessons complete`
+        }, [el('div', { class: `pp-fill ${r.id}`, style: `width:${pct}%` })])
+      ]);
+    }))
+  ]));
+
+  /* ----------------------------------------------------- eras completed */
+  const eras = gamify.eraStatus(lessons, state);
+  detail.append(el('section', { class: 'panel panel-green section' }, [
+    el('h2', { text: 'Eras' }),
+    el('p', { class: 'hint', text: 'An era is marked complete only when every indexed lesson in it is complete.' }),
+    el('ul', { class: 'list', 'data-testid': 'passport-eras' }, eras.map((era) => el('li', { class: 'list-item' }, [
+      el('div', { class: 'row' }, [
+        eraIcon(era.id, 22),
+        el('div', { class: 'li-main' }, [
+          el('div', { class: 'li-title', text: era.label }),
+          el('div', { class: 'li-meta', text: `${era.period} · ${era.completed} of ${era.total} lessons` })
+        ])
+      ]),
+      era.status === 'complete'
+        ? el('span', { class: 'badge badge-ok', text: 'Complete' })
+        : era.status === 'locked'
+          ? el('span', { class: 'badge', text: 'No lessons indexed yet' })
+          : el('span', { class: 'badge', text: era.status === 'current' ? 'In progress' : 'Available' })
+    ])))
+  ]));
+
+  /* --------------------------------------------------------- badge shelf */
+  const badges = gamify.earnedBadges(state);
+  detail.append(...[el('section', { class: 'panel section' }, [
+    el('div', { class: 'section-head' }, [
+      el('h2', { text: 'Badge shelf' }),
+      el('span', { class: 'hint', text: `${badges.filter((b) => b.earnedAt).length} of ${badges.length} earned` }),
+      el('a', { class: 'btn btn-ghost btn-sm push', href: '#/collection', text: 'Open collection' })
+    ]),
+    el('div', { class: 'shelf', 'data-testid': 'passport-badges' }, badges.map((b) => el('div', {
+      class: `badge-tile${b.earnedAt ? ' is-earned' : ' is-locked'}`,
+      'data-testid': `badge-${b.id}`
+    }, [
+      badgeArtFor(b.id, !!b.earnedAt),
+      el('div', { class: 'b-name', text: b.name }),
+      el('div', { class: 'b-req', text: b.earnedAt ? `Earned ${prettyDate(b.earnedAt.slice(0, 10))}` : b.requirement }),
+      el('span', { class: 'b-state' }, b.earnedAt ? ['Earned'] : [icon('lock', 14), ' Locked']),
+      b.earnedAt ? el('span', { class: 'ribbon', 'aria-hidden': 'true' }, [el('i'), el('i'), el('i')]) : null
+    ])))
+  ])].filter(Boolean));
+
+  /* --------------------------------------------------- artefact collection */
+  const artefacts = gamify.collectedArtefacts(state);
+  detail.append(el('section', { class: 'panel section' }, [
+    el('div', { class: 'section-head' }, [
+      el('h2', { text: 'Artefact collection' }),
+      el('span', { class: 'hint', text: `${artefacts.filter((a) => a.unlockedAt).length} of ${artefacts.length} recovered` })
+    ]),
+    el('div', { class: 'shelf', 'data-testid': 'passport-artefacts' }, artefacts.map((a) => el('div', {
+      class: `artefact-tile${a.unlockedAt ? ' is-unlocked' : ' is-locked'}`,
+      'data-testid': `artefact-${a.id}`
+    }, [
+      artefactArt(a.id, 88),
+      el('div', { class: 'a-name', text: a.name }),
+      el('div', { class: 'a-note', text: a.unlockedAt ? a.note : `Locked — ${a.requirement}` })
+    ]))),
+    el('p', { class: 'hint', text: gamify.ARTEFACT_DISCLAIMER })
+  ]));
+
+  /* --------------------------------------------------- quiz performance */
+  const week = lastNDateKeys(10, today);
+  const trendData = week.map((k) => {
+    const rec = state.dailyQuizByDate[k];
+    return {
+      key: k,
+      score: rec ? rec.score : null,
+      total: rec ? rec.total : 5
+    };
+  });
+  detail.append(el('section', { class: 'panel section' }, [
+    el('h2', { text: 'Daily quiz trend' }),
+    el('p', { class: 'hint', text: 'Score out of five on each of the last ten days. A day with no quiz is shown as an empty column.' }),
+    el('div', { class: 'trend', role: 'img', 'data-testid': 'trend',
+      'aria-label': trendLabel(trendData) },
+      trendData.map((d) => {
+        const pct = d.score === null ? 0 : (d.score / (d.total || 5)) * 100;
+        const perfect = d.score !== null && d.total && d.score === d.total;
+        return el('div', { class: 'trend-col' }, [
+          el('span', { class: 'trend-label', text: d.score === null ? '—' : String(d.score) }),
+          el('div', {
+            class: `trend-bar${perfect ? ' is-perfect' : ''}${d.score === null ? ' is-empty' : ''}`,
+            style: `height:${d.score === null ? 4 : Math.max(6, pct)}%`
+          }),
+          el('span', { class: 'trend-label', text: d.key.slice(8) })
+        ]);
+      })),
+    el('p', { class: 'hint', text: 'Green columns are perfect scores.' })
+  ]));
+
+  /* ------------------------------------------------------ revision queue */
+  const revise = revisionSuggestions(state, today);
+  const strong = strongTopics(state);
+  detail.append(el('div', { class: 'grid grid-2 section' }, [
+    el('section', { class: 'panel' }, [
+      el('h2', { text: 'Revision queue' }),
+      revise.length
+        ? el('ul', { class: 'list' }, revise.slice(0, 6).map((t) => el('li', { class: 'list-item' }, [
+          el('div', { class: 'li-main' }, [
+            el('div', { class: 'li-title', text: t.topic }),
+            el('div', { class: 'li-meta', text: t.ageDays === 0
+              ? `Missed today · ${Math.round(t.accuracy * 100)}% accuracy`
+              : `Last missed ${t.ageDays} day${t.ageDays === 1 ? '' : 's'} ago · ${Math.round(t.accuracy * 100)}% accuracy` })
+          ]),
+          el('a', { class: 'btn btn-ghost btn-sm', href: '#/library', text: 'Revise' })
+        ])))
+        : el('p', { class: 'empty', text: 'Nothing flagged for revision yet.' })
+    ]),
+    el('section', { class: 'panel' }, [
+      el('h2', { text: 'Strong topics' }),
+      strong.length
+        ? el('ul', { class: 'list' }, strong.slice(0, 6).map((t) => el('li', { class: 'list-item' }, [
+          el('div', { class: 'li-main' }, [
+            el('div', { class: 'li-title', text: t.topic }),
+            el('div', { class: 'li-meta', text: `${t.correct} of ${t.asked} correct` })
+          ]),
+          el('span', { class: 'badge badge-ok', text: `${Math.round(t.accuracy * 100)}%` })
+        ])))
+        : el('p', { class: 'empty', text: 'Answer a few quizzes and your strongest topics will appear here.' })
+    ])
+  ]));
+
+  detail.append(el('p', { class: 'hint', text: 'Study time is measured only while a lesson or quiz is open and this tab is visible. It is not an estimate.' }));
+
+  view.append(
+    el('details', { class: 'drawer', 'data-testid': 'drawer-detail' }, [
+      el('summary', { text: 'Boards, eras, badges, quiz history and saved items' }),
+      detail
+    ])
+  );
 }
 
 /* -------------------------------------------------------------- helpers */

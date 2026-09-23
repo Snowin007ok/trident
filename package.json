@@ -10,7 +10,8 @@
   "scripts": {
     "start": "node --env-file-if-exists=.env server/server.js",
     "test": "node docs/server-tests.mjs",
-    "diagnose": "node --env-file-if-exists=.env server/diagnose.js"
+    "diagnose": "node --env-file-if-exists=.env server/diagnose.js",
+    "test:ui": "node docs/redesign-checks.mjs"
   },
   "dependencies": {
     "@google/genai": "^2.24.0"

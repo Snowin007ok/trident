@@ -111,7 +111,7 @@ export function render(view, { change = false, onDone = null, onCancel = null } 
 
   function stepBoard() {
     step = 'board';
-    shell(2, change ? 4 : 3, 'Choose your board', null,
+    shell(change ? 2 : 1, change ? 4 : 3, 'Which board do you study?', null,
       el('div', { class: 'ob-cards ob-cards-2' }, profile.BOARDS.map((b) => {
         const count = profile.lessonsFor({ path: b.pathId }).length;
         return card({
@@ -122,7 +122,13 @@ export function render(view, { change = false, onDone = null, onCancel = null } 
         });
       })),
       [
-        el('button', { class: 'btn btn-ghost', type: 'button', 'data-testid': 'ob-back', onclick: stepGoal }, [icon('up', 16), 'Go back']),
+        change
+          ? el('button', { class: 'btn btn-ghost', type: 'button', 'data-testid': 'ob-back', onclick: stepGoal }, [icon('up', 16), 'Go back'])
+          : el('button', {
+            class: 'btn btn-quiet', type: 'button', 'data-testid': 'ob-exam-instead',
+            onclick: () => { draft.mode = 'competitive'; draft.board = null; stepExam(); },
+            text: 'I am preparing for a competitive exam instead'
+          }),
         backToCallerButton()
       ]);
   }
@@ -133,18 +139,27 @@ export function render(view, { change = false, onDone = null, onCancel = null } 
     step = 'class';
     const board = profile.boardByValue(draft.board);
     const rows = profile.classesForBoard(draft.board);
-    shell(2, change ? 4 : 3, 'Choose your class',
-      `${board.name}. Only classes with verified, indexed lessons can be selected.`,
-      el('div', { class: 'ob-cards ob-cards-3', 'data-testid': 'ob-classes' }, rows.map((r) => card({
-        id: `ob-class-${r.classLevel}`,
-        title: `Class ${r.classLevel}`,
-        meta: r.note,
-        selected: draft.classLevel === r.classLevel,
-        disabled: !r.selectable,
-        disabledLabel: r.selectable ? null : (r.state === 'coming_soon' ? 'Content coming soon' : 'Not available yet'),
-        disabledReason: r.disabledReason,
-        onSelect: () => { draft.classLevel = r.classLevel; announce(`Class ${r.classLevel} selected.`); stepConfirm(); }
-      }))),
+    const ready = rows.filter((r) => r.selectable);
+    const later = rows.filter((r) => !r.selectable);
+
+    // classes that are not ready are named in one quiet line, not shown as a
+    // row of large cards a learner is invited to try and then refused
+    const laterLine = later.length
+      ? el('p', { class: 'classes-later', 'data-testid': 'ob-classes-later',
+        text: `Classes ${later.map((r) => r.classLevel).join(', ')} are coming later.` })
+      : null;
+
+    shell(change ? 3 : 2, change ? 4 : 3, 'Which class are you in?', board.name,
+      el('div', {}, [
+        el('div', { class: 'ob-cards ob-cards-3', 'data-testid': 'ob-classes' }, ready.map((r) => card({
+          id: `ob-class-${r.classLevel}`,
+          title: `Class ${r.classLevel}`,
+          meta: r.note,
+          selected: draft.classLevel === r.classLevel,
+          onSelect: () => { draft.classLevel = r.classLevel; announce(`Class ${r.classLevel} selected.`); stepConfirm(); }
+        }))),
+        laterLine
+      ].filter(Boolean)),
       [
         el('button', { class: 'btn btn-ghost', type: 'button', 'data-testid': 'ob-back', onclick: stepBoard }, [icon('up', 16), 'Go back']),
         backToCallerButton()
@@ -180,44 +195,42 @@ export function render(view, { change = false, onDone = null, onCancel = null } 
   function stepConfirm() {
     step = 'confirm';
     const summary = profile.describe(draft);
-    const rows = draft.mode === 'school'
-      ? [['Goal', 'School Education'], ['Board', profile.boardByValue(draft.board).name], ['Class', draft.classLevel]]
-      : [['Goal', 'Competitive Examination'], ['Examination', `${profile.examByValue(draft.exam).name} — ${profile.examByValue(draft.exam).statusLabel}`]];
 
-    const body = el('div', { class: 'stack' }, [
-      el('div', { class: 'panel ob-summary', 'data-testid': 'ob-summary' }, [
-        el('h2', { text: 'Your learning profile' }),
-        el('dl', { class: 'ob-summary-list' }, rows.flatMap(([k, v]) => [
-          el('dt', { text: k }), el('dd', { text: String(v) })
-        ])),
-        el('p', { class: 'hint', text: 'Your dashboard, lessons and daily practice will be personalised using this selection.' })
-      ]),
-      change ? el('div', { class: 'notice', 'data-testid': 'ob-change-warning' }, [
-        el('p', {}, [
-          el('strong', { text: 'Changing your learning path will personalise future recommendations. ' }),
-          'Your existing XP, completed lessons, quiz history, badges, artefacts and saved items will not be deleted.'
-        ])
-      ]) : null,
-      el('p', { class: 'hint', text: 'Nothing is hidden. Lessons from other boards and classes stay in the library, and everything you have already done stays in your Passport.' })
+    // what the learner is about to start: how many lessons, what they cover,
+    // and roughly how long the whole thing takes. Every figure is counted from
+    // the indexed lessons, not estimated.
+    const mine = draft.mode === 'school'
+      ? profile.lessonsFor({ path: profile.boardByValue(draft.board).pathId, classLevel: draft.classLevel })
+      : profile.lessonsFor({ path: 'tnpsc' });
+    const minutes = mine.reduce((sum, l) => sum + (l.readingMinutes || 4), 0);
+    const topics = [...new Set(mine.map((l) => l.topic))];
+
+    const body = el('div', { class: 'ob-summary', 'data-testid': 'ob-summary' }, [
+      el('h2', { text: draft.mode === 'school' ? `Class ${draft.classLevel} history` : 'Your practice set' }),
+      el('p', { class: 'lede', 'data-testid': 'ob-preview',
+        text: `${mine.length} lesson${mine.length === 1 ? '' : 's'}, about ${minutes} minutes of reading in all.` }),
+      topics.length ? el('div', { class: 'pill-row' }, topics.slice(0, 8).map((x) => el('span', { class: 'pill', text: x }))) : null,
+      change ? el('p', { class: 'hint', 'data-testid': 'ob-change-warning',
+        text: 'Changing your class only changes what you are shown first. Your XP, completed lessons, quiz history, badges and saved items all stay exactly as they are.' })
+        : el('p', { class: 'hint', text: 'Nothing is locked. Other classes and boards stay open in the library.' })
     ].filter(Boolean));
 
     shell(change ? 4 : 3, change ? 4 : 3,
-      change ? 'Confirm your new learning path' : 'Confirm your learning profile',
+      change ? 'Confirm your new path' : 'Ready to start',
       summary.detail, body,
       [
         el('button', {
-          class: 'btn btn-primary btn-lg', type: 'button', 'data-testid': 'ob-confirm',
-          onclick: save
-        }, [icon('check', 18), change ? 'Save New Path' : 'Confirm and Start Learning']),
+          class: 'btn btn-primary btn-lg', type: 'button', 'data-testid': 'ob-confirm', onclick: save
+        }, [icon('check', 18), change ? 'Save this path' : 'Start my first lesson']),
         el('button', {
-          class: 'btn btn-secondary', type: 'button', 'data-testid': 'ob-confirm-back',
+          class: 'btn btn-ghost', type: 'button', 'data-testid': 'ob-confirm-back',
           onclick: () => (draft.mode === 'school' ? stepClass() : stepExam())
-        }, [icon('up', 16), 'Go Back']),
+        }, [icon('up', 16), 'Go back']),
         change ? el('button', {
-          class: 'btn btn-ghost', type: 'button', 'data-testid': 'ob-cancel',
+          class: 'btn btn-quiet', type: 'button', 'data-testid': 'ob-cancel',
           onclick: () => { toast('Learning path unchanged.'); if (onCancel) onCancel(); }
         }, 'Cancel') : null
-      ]);
+      ].filter(Boolean));
   }
 
   function save() {
@@ -246,5 +259,8 @@ export function render(view, { change = false, onDone = null, onCancel = null } 
     draft.classLevel = existing.classLevel;
     draft.exam = existing.exam;
   }
-  stepGoal();
+  // A first visit is three steps: board, class, then the preview it starts
+  // from. Changing an existing path still begins with the goal question,
+  // because that is the thing a learner is most likely changing.
+  if (change) stepGoal(); else { draft.mode = 'school'; stepBoard(); }
 }

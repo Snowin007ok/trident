@@ -224,187 +224,179 @@ export function renderDailyQuiz(view) {
   const existing = state.dailyQuizByDate[dateKey];
   const prof = profile.current(state);
 
-  view.append(el('div', { class: 'section-head' }, [
-    el('span', { class: 'eyebrow', 'data-testid': 'quiz-kicker', text: set.mixed ? 'Mixed History Challenge' : 'Daily challenge' }),
-    el('h1', { text: set.mixed ? 'Mixed History Challenge' : 'Daily Quiz' }),
-    el('span', { class: 'hint', text: prettyDate(dateKey) })
-  ]));
-
-  // when a class does not yet have five questions of its own, say so plainly
-  // rather than passing another class's questions off as this one's
-  if (set.mixed && prof) {
-    view.append(el('p', { class: 'notice section', 'data-testid': 'quiz-mixed-note' }, [
-      el('strong', { text: 'Mixed History Challenge. ' }),
-      `${profile.label(prof)} has ${set.matching} verified question${set.matching === 1 ? '' : 's'} so far — `
-      + 'fewer than the five a day needs, so today\u2019s set is drawn from every class in the verified library. '
-      + 'Every question still cites the textbook and page it came from.'
-    ]));
-  } else if (prof) {
-    view.append(el('p', { class: 'hint section', 'data-testid': 'quiz-profile-note',
-      text: `Five questions from ${profile.label(prof)}.` }));
-  }
-
+  /* ---- already done today: the record, not the form ---- */
   if (existing) {
     const alreadyAnswers = questions.map((q) => {
       const rec = (existing.answers || []).find((a) => a.questionId === q.id);
       return rec ? rec.answer : blankAnswer(q);
     });
     view.append(
-      trail(questions, alreadyAnswers, true, -1),
+      el('div', { class: 'quiz-head' }, [
+        el('h1', { text: set.mixed ? 'Mixed History Challenge' : 'Today\u2019s questions' }),
+        el('p', { class: 'lede', text: `You scored ${existing.score} of ${existing.total} today.` })
+      ]),
       summaryPanel(questions, alreadyAnswers, existing.score, existing.total, {
         alreadyDone: true, timedOut: existing.timedOut, xpLine: xpLineFor(dateKey, existing)
       }),
-      el('div', { class: 'notice section', 'data-testid': 'quiz-locked' }, [
-        el('p', {}, [
-          'The same five questions stay in place for the rest of today, and the XP for today is already recorded. A new set appears tomorrow.'
-        ])
+      el('div', { class: 'next-step' }, [
+        el('p', { text: 'A new set of five appears tomorrow.' }),
+        el('a', { class: 'btn btn-primary', href: '#/timeline', text: 'Try the Timeline Challenge' })
       ])
     );
     renderReview(view, questions, existing.answers);
     return;
   }
 
+  /* ---- state for the run ---- */
   const answers = questions.map((q) => blankAnswer(q));
   const touched = new Set();
-  let submitted = false;
+  const revealed = questions.map(() => false);
+  let at = 0;
   let timerId = null;
   let remaining = TIMER_SECONDS;
   let timedOut = false;
   let timerStarted = false;
-  let currentIndex = 0;
+  let finished = false;
 
-  const trailHost = el('div');
+  const stage = el('div', { class: 'quiz-stage', 'data-testid': 'quiz-stage' });
   const timerNode = el('span', { class: 'timer', text: '05:00', role: 'timer', 'aria-live': 'off' });
-  const timerStatus = el('p', { class: 'hint', 'aria-live': 'polite', text: 'The timer is optional. Nothing is locked when it ends, and no answers are taken away.' });
-
-  const startTimerBtn = el('button', {
-    class: 'btn btn-secondary btn-sm', type: 'button',
+  const timerBtn = el('button', {
+    class: 'btn btn-quiet btn-sm', type: 'button', 'data-testid': 'quiz-timer',
     onclick: () => {
       if (timerStarted) return;
       timerStarted = true;
-      startTimerBtn.disabled = true;
+      timerBtn.remove();
+      timerNode.hidden = false;
       timerId = setInterval(tick, 1000);
-      timerStatus.textContent = 'Timer running. You can still answer after it reaches zero.';
     }
-  }, [icon('clock', 16), 'Start 5-minute timer']);
+  }, [icon('clock', 15), 'Time me']);
+  timerNode.hidden = true;
 
   function fmt(sec) {
     const m = Math.floor(sec / 60);
     const s = sec % 60;
     return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   }
-
   function tick() {
     remaining -= 1;
     timerNode.textContent = fmt(Math.max(0, remaining));
     timerNode.classList.toggle('is-low', remaining <= 60 && remaining > 0);
     if (remaining <= 0) {
-      clearInterval(timerId);
-      timerId = null;
-      timedOut = true;
+      clearInterval(timerId); timerId = null; timedOut = true;
       timerNode.classList.remove('is-low');
       timerNode.classList.add('is-out');
       timerNode.textContent = 'Time up';
-      timerStatus.textContent = 'Time is up. The attempt is recorded as timed out, but you can still finish it and read every explanation.';
     }
   }
 
-  const host = el('div', { class: 'section stack' });
-  const summaryHost = el('div', { class: 'section' });
-  const submitBtn = el('button', { class: 'btn btn-primary', type: 'button', text: 'Submit answers' });
-
-  function paintTrail() {
-    clear(trailHost);
-    trailHost.append(trail(questions, answers, submitted, currentIndex, touched));
+  /* ---- the rail: one segment per question ---- */
+  function railNode() {
+    return el('div', {
+      class: 'rail', 'data-testid': 'quiz-rail', role: 'img',
+      'aria-label': `Question ${at + 1} of ${questions.length}`
+    }, questions.map((q, i) => el('i', {
+      class: revealed[i] ? (isCorrect(q, answers[i]) ? 'is-done' : 'is-wrong') : (i === at ? 'is-now' : '')
+    })));
   }
 
   function paint() {
-    clear(host);
-    questions.forEach((q, qi) => {
-      const name = `q-${qi}`;
-      let body;
-      if (q.type === 'match') {
-        body = matchRows(q, name, submitted, answers[qi]);
-        body.addEventListener('change', (e) => {
-          if (e.target.tagName === 'SELECT') {
-            const idx = Number(e.target.id.split('-m-')[1]);
-            answers[qi][idx] = e.target.value;
-            currentIndex = qi;
-            paintTrail();
-          }
-        });
-      } else if (q.type === 'chronology') {
-        body = orderList(q, name, submitted, answers[qi], (pos, dir) => {
-          const arr = answers[qi];
-          const target = pos + dir;
-          if (target < 0 || target >= arr.length) return;
-          [arr[pos], arr[target]] = [arr[target], arr[pos]];
-          touched.add(q.id);
-          currentIndex = qi;
-          paint();
-          paintTrail();
-        });
-      } else {
-        body = optionList(q, name, submitted, answers[qi]);
-        body.addEventListener('change', (e) => {
-          if (e.target.type === 'radio') {
-            answers[qi] = Number(e.target.value);
-            currentIndex = qi;
-            paintTrail();
-          }
-        });
-      }
+    clear(stage);
+    if (finished) return;
+    const q = questions[at];
+    const name = `q-${at}`;
+    const isOpen = !revealed[at];
+    const pct = Math.round((at / questions.length) * 100);
 
-      const era = eraForQuestion(q);
-      const article = el('article', {
-        class: `question${!submitted && qi === currentIndex ? ' is-current' : ''}`,
-        'data-testid': `question-${qi}`
-      }, [
-        el('div', { class: 'question-head' }, [
-          el('span', { class: 'question-index', text: `Q${qi + 1}` }),
-          el('span', { class: 'question-type', text: TYPE_LABEL[q.type] || q.type }),
-          el('span', { class: 'pill', text: q.topic }),
-          era ? el('span', { class: 'pill', text: era }) : null,
-          el('span', { class: 'pill', text: `Class ${q.classLevel}` }),
-          el('span', { class: 'question-xp', text: submitted ? '' : `${qi + 1} of ${questions.length}` })
-        ]),
-        el('h2', { class: 'question-prompt', text: q.prompt }),
-        body,
-        submitted ? explanationBlock(q, isCorrect(q, answers[qi])) : null
-      ]);
-      article.addEventListener('focusin', () => {
-        if (submitted || currentIndex === qi) return;
-        currentIndex = qi;
-        paintTrail();
-        questions.forEach((_, i) => {
-          const node = host.children[i];
-          if (node) node.classList.toggle('is-current', i === qi);
-        });
+    let body;
+    if (q.type === 'match') {
+      body = matchRows(q, name, !isOpen, answers[at]);
+      body.addEventListener('change', (e) => {
+        if (e.target.tagName === 'SELECT') {
+          answers[at][Number(e.target.id.split('-m-')[1])] = e.target.value;
+          touched.add(q.id);
+          refreshAction();
+        }
       });
-      host.append(article);
-    });
+    } else if (q.type === 'chronology') {
+      body = orderList(q, name, !isOpen, answers[at], (posn, dir) => {
+        const arr = answers[at];
+        const target = posn + dir;
+        if (target < 0 || target >= arr.length) return;
+        [arr[posn], arr[target]] = [arr[target], arr[posn]];
+        touched.add(q.id);
+        paint();
+      });
+    } else {
+      body = optionList(q, name, !isOpen, answers[at]);
+      body.addEventListener('change', (e) => {
+        if (e.target.type === 'radio') {
+          answers[at] = Number(e.target.value);
+          touched.add(q.id);
+          refreshAction();
+        }
+      });
+    }
+
+    const action = el('div', { class: 'quiz-action' });
+
+    stage.append(el('article', { class: 'question', 'data-testid': `question-${at}` }, [
+      el('div', { class: 'q-progress' }, [
+        el('div', { class: 'rail-legend' }, [
+          el('b', { 'data-testid': 'quiz-position', text: `Question ${at + 1} of ${questions.length}` }),
+          el('span', { 'data-testid': 'quiz-percent', text: `${pct}% complete` })
+        ]),
+        railNode(),
+        el('div', { class: 'q-timer' }, [timerBtn, timerNode])
+      ]),
+      el('h1', { class: 'question-prompt', text: q.prompt }),
+      body,
+      revealed[at] ? explanationBlock(q, isCorrect(q, answers[at])) : null,
+      action
+    ].filter(Boolean)));
+
+    function refreshAction() {
+      clear(action);
+      if (revealed[at]) {
+        const last = at === questions.length - 1;
+        action.append(el('button', {
+          class: 'btn btn-primary btn-block', type: 'button', 'data-testid': 'quiz-next',
+          text: last ? 'See your result' : 'Next question',
+          onclick: () => { if (last) finish(); else { at += 1; paint(); focusStage(); } }
+        }));
+        return;
+      }
+      // the action is always there: an unanswered question is pointed at
+      // rather than the button being taken away
+      action.append(el('button', {
+        class: 'btn btn-primary btn-block', type: 'button', 'data-testid': 'quiz-check',
+        text: 'Check answer',
+        onclick: () => {
+          if (!answered(q, answers[at], touched) && !timedOut) {
+            toast('Choose an answer first.');
+            const firstInput = stage.querySelector('input, select');
+            if (firstInput) firstInput.focus();
+            return;
+          }
+          revealed[at] = true; paint(); focusStage();
+        }
+      }));
+    }
+    refreshAction();
   }
 
-  submitBtn.addEventListener('click', () => {
-    if (submitted) return;
-    const missing = questions.findIndex((q, i) => !answered(q, answers[i], touched));
-    if (missing >= 0 && !timedOut) {
-      toast(`Question ${missing + 1} has no answer yet.`);
-      const node = host.children[missing];
-      if (node) {
-        node.scrollIntoView({ block: 'center', behavior: reducedMotion() ? 'auto' : 'smooth' });
-        const first = node.querySelector('input, select, button');
-        if (first) first.focus();
-      }
-      return;
-    }
-    submitted = true;
+  function focusStage() {
+    window.scrollTo({ top: 0, behavior: reducedMotion() ? 'auto' : 'smooth' });
+    const h = stage.querySelector('.question-prompt');
+    if (h) { h.setAttribute('tabindex', '-1'); h.focus({ preventScroll: true }); }
+  }
+
+  function finish() {
+    finished = true;
     if (timerId) { clearInterval(timerId); timerId = null; }
 
     const detail = questions.map((q, i) => ({
       questionId: q.id, topic: q.topic, path: q.path, classLevel: q.classLevel,
-      correct: isCorrect(q, answers[i]), at: new Date().toISOString(),
-      answer: answers[i]
+      correct: isCorrect(q, answers[i]), at: new Date().toISOString(), answer: answers[i]
     }));
     const score = detail.filter((d) => d.correct).length;
     const before = store.load().streak.current;
@@ -414,65 +406,97 @@ export function renderDailyQuiz(view) {
     });
     const after = store.load().streak.current;
 
-    // XP: the quiz itself, then the perfect-score bonus. Both key on the date.
     const ctx = { lessons: DATA.lessons.lessons };
     const quizAward = gamify.award('quiz', dateKey, ctx);
     let bonus = 0;
     if (score === questions.length) bonus = gamify.award('quizPerfect', dateKey, ctx).xp;
     const gained = quizAward.xp + bonus;
+    const streakMsg = after > before ? ` Your streak is now ${after} day${after === 1 ? '' : 's'}.` : '';
 
-    submitBtn.disabled = true;
-    paint();
-    paintTrail();
-
-    const streakMsg = after > before ? ` Streak is now ${after} day${after === 1 ? '' : 's'}.` : '';
-    clear(summaryHost);
-    summaryHost.append(summaryPanel(questions, answers, score, questions.length, {
-      timedOut,
-      xpLine: gained > 0
-        ? `+${gained} XP added${bonus ? ` (${gamify.XP_RULES.quiz} for the quiz, ${gamify.XP_RULES.quizPerfect} perfect-score bonus)` : ''}.`
-        : 'Today’s quiz XP was already recorded, so no XP was added this time.',
-      streakMsg
-    }));
-    summaryHost.scrollIntoView({ block: 'start', behavior: reducedMotion() ? 'auto' : 'smooth' });
-
+    clear(stage);
+    stage.append(
+      summaryPanel(questions, answers, score, questions.length, {
+        timedOut,
+        xpLine: gained > 0
+          ? `+${gained} XP added${bonus ? `, including the ${gamify.XP_RULES.quizPerfect} bonus for a perfect score` : ''}.`
+          : 'Today\u2019s quiz XP was already recorded, so nothing was added this time.',
+        streakMsg
+      }),
+      el('div', { class: 'next-step' }, [
+        el('a', { class: 'btn btn-primary', href: '#/timeline', text: 'Try the Timeline Challenge' }),
+        el('a', { class: 'btn btn-ghost', href: '#/library', text: 'Back to Learn' })
+      ])
+    );
     const resultNode = view.querySelector('#quizResult');
     resultNode.hidden = false;
-    resultNode.textContent =
-      `You scored ${score} of ${questions.length}${timedOut ? ' (timed out)' : ''}.${streakMsg}`;
-
-    toast(`Scored ${score} of ${questions.length}.${streakMsg}`, gained ? 'xp' : '');
+    resultNode.textContent = `You scored ${score} of ${questions.length}${timedOut ? ', timed out' : ''}.${streakMsg}`;
+    toast(`${score} of ${questions.length} right.${streakMsg}`, gained ? 'xp' : '');
     if (score === questions.length) celebrate();
     document.dispatchEvent(new CustomEvent('trident:hud'));
-  });
+    window.scrollTo({ top: 0, behavior: reducedMotion() ? 'auto' : 'smooth' });
+    renderReview(view, questions, detail);
+  }
 
-  view.append(
-    el('div', { class: 'panel row' }, [
-      el('div', {}, [
-        el('h2', { text: 'Five questions, one per format' }),
-        el('p', { class: 'hint', text: 'Every question is drawn from a verified textbook passage and shows the page it came from.' }),
-        el('div', { class: 'pill-row', style: 'margin-top:var(--sp-3)' }, [
-          tag(`+${gamify.XP_RULES.quiz} XP for finishing`, 'xp', 'bolt'),
-          tag(`+${gamify.XP_RULES.quizPerfect} XP bonus for 5 of 5`, 'gold', 'star')
-        ])
-      ]),
-      el('div', { class: 'row push' }, [timerNode, startTimerBtn])
-    ]),
-    timerStatus,
-    trailHost,
-    summaryHost,
-    host,
-    el('p', { id: 'quizResult', class: 'notice', hidden: true }),
-    el('div', { class: 'reader-actions' }, [submitBtn]),
-    el('p', { class: 'hint', text: 'There are no lives and nothing is locked. A wrong answer still shows you the explanation and the page it came from.' })
-  );
+  /* ---- the page ---- */
+  view.append(el('div', { class: 'quiz-head' }, [
+    el('h1', { 'data-testid': 'quiz-title', text: set.mixed ? 'Mixed History Challenge' : 'Today\u2019s questions' }),
+    set.mixed && prof
+      ? el('p', { class: 'lede', 'data-testid': 'quiz-mixed-note' },
+        [`${profile.label(prof)} has only ${set.matching} verified question${set.matching === 1 ? '' : 's'} so far, `
+          + 'so today\u2019s five come from across the whole verified library. Every one still cites its textbook and page.'])
+      : el('p', { class: 'lede', 'data-testid': 'quiz-profile-note',
+        text: 'Five questions from your class. Nothing is lost for a wrong answer.' })
+  ]));
+  view.append(stage);
+  view.append(el('p', { id: 'quizResult', class: 'sr-only', role: 'status', 'aria-live': 'polite', hidden: true }));
 
   paint();
-  paintTrail();
 
   view.addEventListener('trident:teardown', () => {
     if (timerId) clearInterval(timerId);
   }, { once: true });
+}
+
+/**
+ * One question at the end of a lesson. It is a check, not a test: it records
+ * nothing, grants no XP, and shows the explanation either way.
+ */
+export function renderLessonCheck(host, lesson) {
+  if (!host || !lesson) return;
+  // questions are tied to a lesson by its topic, board and class — the same
+  // three things that decide whether a lesson is the learner's own
+  const single = (x) => ['mcq', 'cause', 'date'].includes(x.type) && Array.isArray(x.options);
+  const pool = DATA.questions.questions.filter(single);
+  const q = pool.find((x) => x.topic === lesson.topic
+      && x.path === lesson.path && String(x.classLevel) === String(lesson.classLevel))
+    || pool.find((x) => x.topic === lesson.topic);
+  if (!q) return;
+
+  let chosen = null;
+  let shown = false;
+  const box = el('section', { class: 'check', 'data-testid': 'check' });
+
+  function paint() {
+    clear(box);
+    const list = optionList(q, 'check', shown, chosen);
+    list.addEventListener('change', (e) => {
+      if (e.target.type === 'radio') { chosen = Number(e.target.value); paint(); }
+    });
+    box.append(
+      el('h2', { text: 'Quick check' }),
+      el('p', { class: 'question-prompt', text: q.prompt }),
+      list,
+      shown
+        ? explanationBlock(q, isCorrect(q, chosen))
+        : el('button', {
+          class: 'btn btn-ghost', type: 'button', 'data-testid': 'check-reveal',
+          disabled: chosen === null, text: 'Check my answer',
+          onclick: () => { shown = true; paint(); }
+        })
+    );
+  }
+  paint();
+  host.append(box);
 }
 
 /* --------------------------------------------------------------- summary */
@@ -550,7 +574,7 @@ function renderReview(view, questions, savedAnswers) {
  */
 function celebrate() {
   if (reducedMotion()) return;
-  const colours = ['var(--india-saffron)', 'var(--ivory)', 'var(--india-green)', 'var(--gold)'];
+  const colours = ['var(--saffron)', 'var(--gold)', 'var(--green)', 'var(--teal)'];
   const wrap = el('div', { class: 'confetti', 'aria-hidden': 'true', 'data-testid': 'confetti' });
   for (let i = 0; i < 28; i += 1) {
     wrap.append(el('i', {
@@ -604,7 +628,7 @@ export function renderMiniQuiz(container, story) {
     });
   }
 
-  const btn = el('button', { class: 'btn btn-primary', type: 'button', text: 'Check answers' });
+  const btn = el('button', { class: 'btn btn-ghost', type: 'button', text: 'Check answers' });
   btn.addEventListener('click', () => {
     if (done) return;
     if (answers.some((a) => a === null)) { toast('Answer all three questions first.'); return; }

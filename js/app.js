@@ -1,7 +1,7 @@
 /** TRIDENT application shell: data loading, chrome, dashboard, features, settings. */
 
 import { el, clear, toast, openModal, citationBlock, tag, xpBar, announceToScreenReader, pages } from './ui.js';
-import { icon, levelEmblem, gatewayMotif, journeyThreads, expeditionPath, tricolourRule, badgeArt, artefactArt } from './icons.js';
+import { icon, iconSolid, levelEmblem, gatewayMotif, journeyThreads, expeditionPath, tricolourRule, badgeArt, artefactArt } from './icons.js';
 import * as store from './storage.js';
 import { route, setNotFound, start, go, onAfterNavigate, currentPath } from './router.js';
 import { todayKey, prettyDate, pickDailyStory, pickDailyEvent } from './daily.js';
@@ -59,52 +59,130 @@ function requireGuest() {
 
 /* ------------------------------------------------------------- the chrome */
 
+/* The four destinations. Everything else in TRIDENT lives inside one of them:
+   Learn holds the library, the daily story and today's event; Practice holds
+   the daily quiz and the Timeline Challenge; Progress holds the passport and
+   the collection. Settings and the learning path sit in the profile menu. */
+const DESTINATIONS = [
+  { nav: 'home', href: '#/dashboard', label: 'Home', ic: 'home' },
+  { nav: 'learn', href: '#/library', label: 'Learn', ic: 'learn' },
+  { nav: 'practice', href: '#/quiz', label: 'Practice', ic: 'practice' },
+  { nav: 'progress', href: '#/progress', label: 'Progress', ic: 'progress' }
+];
+
+/** Which destination a route belongs to. */
+const ROUTE_HOME = {
+  dashboard: 'home', event: 'learn', library: 'learn', lesson: 'learn', story: 'learn',
+  quiz: 'practice', timeline: 'practice',
+  progress: 'progress', collection: 'progress', settings: 'progress', profile: 'progress'
+};
+
+/** Put the family icons into the header links once, at boot. */
+function decoratePrimaryNav() {
+  DESTINATIONS.forEach((d) => {
+    const a = document.querySelector(`#primaryNav a[data-nav="${d.nav}"]`);
+    if (!a || a.querySelector('svg')) return;
+    a.prepend(icon(d.ic, 19));
+  });
+}
+
+/** Swap outline for solid on the destination the learner is currently on. */
+function paintNavIcons(active) {
+  DESTINATIONS.forEach((d) => {
+    document.querySelectorAll(`[data-nav="${d.nav}"]`).forEach((a) => {
+      const size = a.closest('.bottom-nav') ? 22 : 19;
+      const svg = a.querySelector('svg');
+      const want = d.nav === active ? iconSolid(d.ic, size) : icon(d.ic, size);
+      if (svg) svg.replaceWith(want); else a.prepend(want);
+    });
+  });
+}
+
+/**
+ * The header's right-hand side: how far through the class, the streak, the XP,
+ * and the profile button that holds settings and the learning path.
+ *
+ * The board and class are named here once. No screen repeats them.
+ */
 function renderHud() {
   const hud = document.getElementById('hud');
   clear(hud);
   const state = store.load();
   const today = todayKey();
-  const prog = gamify.levelProgress(state.xp || 0);
   const streak = store.effectiveStreak(state, today);
+  const course = library.courseProgress(state);
 
   hud.append(
-    el('a', { class: 'hud-level', href: '#/progress', 'data-testid': 'hud-level' }, [
-      levelEmblem(prog.current.level, 30, 'hud-emblem'),
-      el('span', { class: 'hud-level-text' }, [
-        el('b', { text: `Level ${prog.current.level}` }),
-        el('span', { text: `${state.xp || 0} XP` })
-      ])
+    el('a', {
+      class: 'hud-course', href: '#/progress', 'data-testid': 'hud-course',
+      'aria-label': `${course.label}: ${course.done} of ${course.total} lessons complete`
+    }, [
+      el('b', { text: course.label }),
+      el('span', { text: `${course.done} of ${course.total} lessons` })
     ]),
     el('span', {
       class: 'hud-streak', 'data-testid': 'hud-streak',
-      title: `${streak} day streak`, 'aria-label': `Current streak: ${streak} ${streak === 1 ? 'day' : 'days'}`
-    }, [icon('flame', 15), String(streak)])
+      'aria-label': `Current streak: ${streak} ${streak === 1 ? 'day' : 'days'}`
+    }, [icon('flame', 15), String(streak)]),
+    el('span', { class: 'hud-xp', 'data-testid': 'hud-xp', 'aria-label': `${state.xp || 0} experience points` },
+      [icon('xp', 15), String(state.xp || 0)]),
+    profileControl(state)
   );
-
-  const prof = profile.current(state);
-  if (prof) {
-    hud.append(el('a', {
-      class: 'hud-profile', href: '#/settings', 'data-testid': 'hud-profile',
-      'aria-label': `Learning path: ${profile.label(prof)}. Change it in Settings.`
-    }, [icon('learn', 15), el('span', { text: profile.label(prof) })]));
-  }
 }
 
-const BOTTOM_NAV = [
-  { href: '#/dashboard', nav: 'dashboard', label: 'Home', ic: 'home' },
-  { href: '#/library', nav: 'library', label: 'Learn', ic: 'learn' },
-  { href: '#/quiz', nav: 'quiz', label: 'Quest', ic: 'quest' },
-  { href: '#/collection', nav: 'collection', label: 'Saved', ic: 'saved' },
-  { href: '#/progress', nav: 'progress', label: 'Progress', ic: 'progress' }
-];
+/** The profile button and its menu: settings, learning path, theme. */
+function profileControl(state) {
+  const prof = profile.current(state);
+  const wrap = el('div', { class: 'profile-wrap' });
+  const btn = el('button', {
+    class: 'profile-btn', type: 'button', 'data-testid': 'profile-btn',
+    'aria-haspopup': 'true', 'aria-expanded': 'false',
+    'aria-label': 'Your profile, settings and learning path'
+  }, [el('span', { class: 'avatar', 'aria-hidden': 'true', text: 'L' }), icon('down', 14)]);
+
+  let menu = null;
+  function close() {
+    if (!menu) return;
+    menu.remove(); menu = null;
+    btn.setAttribute('aria-expanded', 'false');
+    document.removeEventListener('keydown', onKey, true);
+    document.removeEventListener('mousedown', onOutside, true);
+  }
+  function onKey(e) { if (e.key === 'Escape') { close(); btn.focus(); } }
+  function onOutside(e) { if (!wrap.contains(e.target)) close(); }
+
+  btn.addEventListener('click', () => {
+    if (menu) { close(); return; }
+    menu = el('div', { class: 'profile-menu', role: 'menu', 'data-testid': 'profile-menu' }, [
+      el('div', { class: 'pm-head' }, [
+        el('b', { text: 'Guest learner' }),
+        el('span', { 'data-testid': 'profile-path', text: prof ? profile.label(prof) : 'No learning path chosen' })
+      ]),
+      el('a', { href: '#/profile', role: 'menuitem', onclick: close },
+        [icon('learn', 17), 'Change class or board']),
+      el('a', { href: '#/collection', role: 'menuitem', onclick: close },
+        [icon('collection', 17), 'Your collection']),
+      el('a', { href: '#/settings', role: 'menuitem', onclick: close },
+        [icon('settings', 17), 'Settings'])
+    ]);
+    wrap.append(menu);
+    btn.setAttribute('aria-expanded', 'true');
+    document.addEventListener('keydown', onKey, true);
+    document.addEventListener('mousedown', onOutside, true);
+    (menu.querySelector('a') || menu).focus();
+  });
+
+  wrap.append(btn);
+  return wrap;
+}
 
 function buildBottomNav() {
   const list = document.getElementById('bottomNavList');
   clear(list);
-  BOTTOM_NAV.forEach((item) => {
+  DESTINATIONS.forEach((item) => {
     list.append(el('li', {}, [
       el('a', { href: item.href, 'data-nav': item.nav, 'data-testid': `bottomnav-${item.nav}` }, [
-        icon(item.ic, 21), el('span', { text: item.label })
+        icon(item.ic, 22), el('span', { text: item.label })
       ])
     ]));
   });
@@ -219,89 +297,98 @@ function showAccountModal() {
  * The learner's board and class appear once, in the header chip, and are not
  * repeated here.
  */
+/**
+ * Home answers three questions the moment it opens, in this order:
+ * what should I do now, how far have I come, and what do I get next.
+ *
+ * Nothing else is on it. The board and class are named in the header and
+ * never repeated here; the library, statistics, story and event all live
+ * behind the four destinations.
+ */
 function renderDashboard() {
   if (!requireGuest()) return;
   const v = beginView();
   const state = store.load();
   const today = todayKey();
-  const prog = gamify.levelProgress(state.xp || 0);
   const streak = store.effectiveStreak(state, today);
   const quest = gamify.questProgress(state, today);
-
-  /* ---- 1. where you are, and the one thing to do next ---- */
+  const course = library.courseProgress(state);
   const cont = library.continueLesson();
-  const pos = cont ? state.readingPositions[cont.id] : null;
-  const book = cont ? library.bookById(cont.bookId) : null;
+  const resuming = cont ? !!state.readingPositions[cont.id] : false;
+  const outside = cont ? library.isOutsideClass(cont) : false;
 
-  v.append(el('section', { class: 'panel standing section', 'data-testid': 'standing' }, [
-    journeyThreads(),
-    el('div', { class: 'standing-top' }, [
-      el('div', { class: 'standing-who' }, [
-        levelEmblem(prog.current.level, 44),
-        el('div', { class: 'stack-tight' }, [
-          el('span', { class: 'eyebrow', 'data-testid': 'greeting', text: 'Welcome back' }),
-          el('h1', { class: 'standing-level', text: `Level ${prog.current.level} — ${prog.current.name}` })
-        ])
+  /* ---- 1. the one thing to do now ---- */
+  v.append(el('section', { class: 'mission', 'data-testid': 'mission' }, [
+    el('div', { class: 'mission-body' }, [
+      el('span', { class: 'mission-kicker', 'data-testid': 'greeting',
+        text: resuming ? 'Carry on where you stopped' : 'Your next lesson' }),
+      cont
+        ? el('h1', { class: 'title-serif mission-title', 'data-testid': 'continue-title', text: cont.title })
+        : el('h1', { class: 'title-serif mission-title', text: 'You have read every lesson in your class' }),
+      outside ? el('span', { class: 'stamp stamp-warn', 'data-testid': 'mission-outside' },
+        [icon('info', 15), `From Class ${cont.classLevel}`]) : null,
+      cont
+        ? el('a', {
+          class: 'btn btn-primary btn-lg', href: `#/lesson/${cont.id}`, 'data-testid': 'continue-learning',
+          text: resuming ? 'Continue reading' : 'Start lesson'
+        })
+        : el('a', { class: 'btn btn-primary btn-lg', href: '#/quiz', 'data-testid': 'continue-learning', text: 'Answer today\u2019s questions' })
+    ].filter(Boolean)),
+    el('div', { class: 'mission-progress' }, [
+      el('div', { class: 'rail-legend' }, [
+        el('b', { text: course.label }),
+        el('span', { 'data-testid': 'course-figure', text: `${course.done} of ${course.total} lessons — ${course.percent}%` })
       ]),
-      el('div', { class: 'standing-figures', 'data-testid': 'standing-figures' }, [
-        el('span', {}, [el('b', { text: String(state.xp || 0) }), ' XP']),
-        el('span', { class: 'hud-streak' }, [icon('flame', 14), `${streak} day streak`])
+      el('div', {
+        class: 'rail rail-lg', 'data-testid': 'home-rail', role: 'img',
+        'aria-label': `${course.done} of ${course.total} lessons complete`
+      }, course.lessons.map((l) => el('i', {
+        class: state.completedLessons[l.id] ? 'is-done' : (cont && l.id === cont.id ? 'is-now' : ''),
+        title: l.title
+      }))),
+      el('div', { class: 'mission-meta' }, [
+        el('span', { class: 'hud-streak', 'data-testid': 'home-streak' },
+          [icon('flame', 15), `${streak} day${streak === 1 ? '' : 's'} in a row`])
       ])
-    ]),
-
-    xpBar(prog.percent, 'Experience', prog.next ? `${prog.toNext} XP to ${prog.next.name}` : 'Highest level reached', 'standing-xp'),
-
-    cont
-      ? el('div', { class: 'standing-next' }, [
-        el('div', { class: 'stack-tight' }, [
-          el('span', { class: 'brief-label', text: pos ? 'Pick up where you stopped' : 'Start here' }),
-          el('p', { class: 'standing-next-title', 'data-testid': 'continue-title', text: cont.title }),
-          el('span', { class: 'hint', text: `${book ? book.title : ''} · Class ${cont.classLevel}` })
-        ]),
-        el('a', {
-          class: 'btn btn-primary btn-lg standing-go', href: `#/lesson/${cont.id}`, 'data-testid': 'continue-learning'
-        }, [icon('arrowRight', 18), 'Continue Learning'])
-      ])
-      : el('div', { class: 'standing-next' }, [
-        el('p', { class: 'standing-next-title', text: 'Every lesson on your path is complete.' }),
-        el('a', { class: 'btn btn-primary standing-go', href: '#/library', 'data-testid': 'continue-learning' },
-          [icon('arrowRight', 18), 'Browse the library'])
-      ])
+    ])
   ]));
 
-  /* ---- 2. today's quest ---- */
-  v.append(el('section', { class: 'panel quest section', 'data-testid': 'quest-panel' }, [
-    el('div', { class: 'quest-head' }, [
-      el('span', { class: 'eyebrow', text: 'Today’s quest' }),
-      el('span', { class: 'quest-count', 'data-testid': 'quest-count', text: `${quest.done}/${quest.total} complete` })
+  /* ---- 2. today, as a three-station traverse ---- */
+  v.append(el('section', { class: 'today section', 'data-testid': 'quest-panel' }, [
+    el('div', { class: 'section-head' }, [
+      el('h2', { text: 'Today' }),
+      el('span', { class: 'meta', 'data-testid': 'quest-count', text: `${quest.done} of ${quest.total} done` })
     ]),
-    el('ul', { class: 'quest-list' }, quest.tasks.map((t) => el('li', {
-      class: `quest-item${t.done ? ' is-done' : ''}`, 'data-testid': `quest-${t.id}`
+    el('ol', { class: 'traverse' }, quest.tasks.map((task) => el('li', {
+      class: `station${task.done ? ' is-done' : ''}`, 'data-testid': `quest-${task.id}`
     }, [
-      el('span', { class: 'q-icon' }, [icon(t.done ? 'check' : t.icon, 21)]),
-      el('span', { class: 'q-main' }, [
-        el('span', { class: 'q-title', text: t.title }),
-        el('span', { class: 'q-sub', text: t.sub })
+      el('a', { class: 'station-link', href: task.href }, [
+        el('span', { class: 'station-mark', 'aria-hidden': 'true' }, [icon(task.done ? 'check' : task.icon, 20)]),
+        el('span', { class: 'station-main' }, [
+          el('span', { class: 'station-title', text: task.title }),
+          el('span', { class: 'station-sub', text: task.done ? 'Done today' : task.sub })
+        ]),
+        task.done
+          ? el('span', { class: 'stamp stamp-done', text: 'Done' })
+          : el('span', { class: 'station-xp', text: `+${task.xp} XP` })
       ]),
-      el('span', { class: 'q-xp', text: `+${t.xp} XP` }),
-      t.done
-        ? el('span', { class: 'quest-stamp', text: 'Done' })
-        : el('a', { class: 'btn btn-secondary btn-sm', href: t.href, text: 'Start' }),
-      el('span', { class: 'sr-only', text: t.done ? `${t.title}: complete, ${t.xp} XP earned.` : `${t.title}: not started, worth ${t.xp} XP.` })
+      el('span', { class: 'sr-only', text: task.done ? `${task.title}: done today.` : `${task.title}: worth ${task.xp} XP.` })
     ])))
   ]));
 
-  /* ---- 3. the daily briefing ---- */
-  const briefHost = el('section', { class: 'panel brief section', 'data-testid': 'daily-brief' });
-  v.append(briefHost);
-  brief.render(briefHost);
-
-  /* ---- a quiet line to everything that moved ---- */
-  v.append(el('nav', { class: 'moved-to section', 'data-testid': 'moved-to', 'aria-label': 'More of TRIDENT' }, [
-    el('a', { href: '#/library' }, [icon('learn', 15), 'Gateways and the era journey']),
-    el('a', { href: '#/progress' }, [icon('progress', 15), 'Your statistics']),
-    el('a', { href: '#/timeline' }, [icon('quest', 15), 'Timeline Challenge'])
-  ]));
+  /* ---- 3. the next thing that unlocks ---- */
+  const reward = gamify.nextReward ? gamify.nextReward(state) : null;
+  if (reward) {
+    v.append(el('section', { class: 'next-reward section', 'data-testid': 'next-reward' }, [
+      el('div', { class: 'nr-art' }, [badgeArt(reward.id, 52)]),
+      el('div', { class: 'nr-body' }, [
+        el('span', { class: 'nr-kicker', text: 'Next to unlock' }),
+        el('b', { text: reward.name }),
+        el('span', { class: 'hint', text: reward.requirement })
+      ]),
+      el('a', { class: 'btn btn-ghost btn-sm', href: '#/collection', text: 'Your collection' })
+    ]));
+  }
 
   renderHud();
 }
@@ -327,88 +414,6 @@ function renderEventPage() {
   v.append(host);
   renderEventOfTheDay(host);
   v.append(el('a', { class: 'btn btn-ghost btn-sm section', href: '#/dashboard', text: '← Back to the dashboard' }));
-}
-
-/* ------------------------------------- sections that moved to the library */
-
-/** The learning gateways, including the TNPSC practice area. */
-function gatewaysSection(state) {
-  return el('section', { class: 'section' }, [
-    el('div', { class: 'section-head' }, [el('h2', { text: 'Learning gateways' })]),
-    el('div', { class: 'gateways', 'data-testid': 'gateways' }, DATA.library.paths.map((p) => gatewayCard(p, state)))
-  ]);
-}
-
-function gatewayCard(p, state) {
-  const lessons = DATA.lessons.lessons.filter((l) => l.path === p.id);
-  const done = lessons.filter((l) => state.completedLessons[l.id]).length;
-  const classes = [...new Set(DATA.library.books.filter((b) => b.path === p.id).map((b) => b.classLevel))]
-    .sort((a, b) => Number(a) - Number(b));
-  const pct = lessons.length ? Math.round((done / lessons.length) * 100) : 0;
-
-  return el('a', {
-    class: `gateway gateway-${p.id}`, href: '#/library', 'data-testid': `gateway-${p.id}`,
-    onclick: () => { store.setPath(p.id); library.setPathFilter(p.id); }
-  }, [
-    gatewayMotif(p.id),
-    el('div', { class: 'row' }, [
-      el('span', { class: 'g-name', text: p.name }),
-      p.status === 'beta' ? tag('Beta', 'beta') : null
-    ]),
-    el('p', { class: 'g-blurb', text: p.blurb }),
-    el('div', { class: 'g-stats' }, [
-      el('span', { class: 'g-stat' }, [
-        el('span', { text: p.id === 'tnpsc' ? 'Practice set' : 'Classes' }),
-        el('b', { text: p.id === 'tnpsc' ? 'Verified only' : classes.join(', ') || '—' })
-      ]),
-      el('span', { class: 'g-stat' }, [el('span', { text: 'Lessons completed' }), el('b', { text: `${done} / ${lessons.length}` })]),
-      xpBar(pct, '', '', null)
-    ]),
-    el('span', { class: 'btn btn-secondary btn-sm g-action' }, [
-      p.id === 'tnpsc' ? 'Open practice area' : 'Enter gateway', icon('arrowRight', 16)
-    ])
-  ]);
-}
-
-function eraMap(state) {
-  const eras = gamify.eraStatus(DATA.lessons.lessons, state);
-  const selected = state.selectedEra;
-  // the era journey is a progress view, so it sits on the progress surface
-  return el('section', { class: 'section panel panel-green era-map', 'data-testid': 'era-map' }, [
-    el('div', { class: 'section-head' }, [
-      el('h2', { text: 'Era journey' }),
-      el('span', { class: 'hint', text: 'Choose an era to filter the library' }),
-      selected ? el('button', {
-        class: 'btn btn-ghost btn-sm', type: 'button', text: 'Clear era filter',
-        onclick: () => { store.setSelectedEra(null); renderDashboard(); }
-      }) : null
-    ]),
-    el('ol', { class: 'era-track' }, eras.map((era) => {
-      const locked = era.status === 'locked';
-      return el('li', { style: 'display:contents' }, [
-        el('button', {
-          type: 'button',
-          class: `era-node is-${era.status}`,
-          'data-testid': `era-${era.id}`,
-          'aria-pressed': String(selected === era.id),
-          disabled: locked,
-          'aria-label': `${era.label}, ${era.period}. ${locked ? 'No lessons indexed yet.' : `${era.completed} of ${era.total} lessons complete.`}`,
-          onclick: () => {
-            if (locked) return;
-            const next = selected === era.id ? null : era.id;
-            store.setSelectedEra(next);
-            library.setEraFilter(next);
-            if (next) go('/library'); else renderDashboard();
-          }
-        }, [
-          el('span', { class: 'era-marker' }, [icon(era.status === 'complete' ? 'check' : 'map', 20)]),
-          el('span', { class: 'era-label', text: era.label }),
-          el('span', { class: 'era-sub', text: locked ? 'Coming soon' : `${era.completed}/${era.total}` }),
-          el('span', { class: 'era-sub', text: era.period })
-        ])
-      ]);
-    }))
-  ]);
 }
 
 /* ------------------------------------------------------- event of the day */
@@ -481,47 +486,62 @@ async function renderEventOfTheDay(host) {
     renderQuestPanelIfPresent();
   });
 
-  body.replaceWith(el('article', { class: 'feature-event', 'data-testid': 'event-card' }, [
-    el('div', {}, [
-      evt.image ? eventImage(evt) : noImagePlaceholder(),
-      el('div', { class: 'f-year', style: 'margin-top:.6rem', text: evt.year })
-    ]),
-    el('div', { class: 'stack' }, [
-      el('span', { class: 'f-kicker', text: 'On this day' }),
-      el('h3', { style: 'margin:0', text: evt.title }),
+  const indian = /india|indian|tamil|delhi|mughal|chola|bengal|punjab|asia|asian|china|japan|persia|ceylon|sri lanka|burma|nepal|pakistan/i
+    .test(`${evt.title} ${evt.text}`);
+
+  body.replaceWith(el('article', { class: 'event-card', 'data-testid': 'event-card' }, [
+    evt.image ? eventImage(evt) : noImagePlaceholder(),
+    el('div', { class: 'event-body' }, [
+      el('div', { class: 'event-meta' }, [
+        el('span', { class: 'event-year', text: evt.year }),
+        el('span', { class: 'stamp stamp-live', 'data-testid': 'event-scope',
+          text: indian ? 'On this day' : 'World history today' })
+      ]),
+      el('h2', { class: 'title-serif', text: evt.title }),
       el('p', { text: evt.text }),
       detail,
-      el('div', { class: 'row' }, [exploreBtn, saveBtn,
-        el('a', { class: 'btn btn-ghost btn-sm', href: evt.url, target: '_blank', rel: 'noopener noreferrer', text: 'Read on Wikipedia' })]),
-      el('p', { class: 'citation', 'data-testid': 'event-attribution' }, [
-        el('strong', { text: 'Source: ' }), evt.source
+      el('div', { class: 'event-actions' }, [
+        exploreBtn, saveBtn,
+        el('a', { class: 'btn btn-quiet btn-sm', href: evt.url, target: '_blank', rel: 'noopener noreferrer', text: 'Read on Wikipedia' })
       ]),
-      el('p', { class: 'hint', 'data-testid': 'event-loaded-for' }, [
-        icon('info', 14),
-        ` Live data from Wikimedia · loaded for ${prettyDate(today)}`,
-        result.status === 'cache'
-          ? ' · shown from this device’s copy because the feed could not be reached just now'
-          : result.status === 'cache-hit' ? ' · already fetched today, served from this device' : ''
+      el('p', { class: 'hint', 'data-testid': 'event-attribution' }, [
+        `${evt.source} — fetched for ${prettyDate(today)}`,
+        result.status === 'cache' ? ', from this device\u2019s copy because the feed could not be reached'
+          : result.status === 'cache-hit' ? ', already fetched today' : ''
       ])
     ])
   ]));
 }
 
 function noImagePlaceholder() {
-  return el('div', { class: 'state-box', style: 'min-height:110px;display:grid;place-items:center' }, [
-    el('span', { class: 'hint', text: 'No image available' })
-  ]);
+  const box = el('div', { class: 'event-motif', 'data-testid': 'event-motif', role: 'img', 'aria-label': 'No photograph available for this event' });
+  box.innerHTML = `
+    <svg viewBox="0 0 120 90" preserveAspectRatio="xMidYMid slice" focusable="false" aria-hidden="true">
+      <rect width="120" height="90" fill="var(--wash-teal)"/>
+      <g fill="none" stroke="var(--teal)" stroke-width="1.2" opacity="0.5">
+        <path d="M0 62c14-8 24 4 38-2s24 6 40-2 28 2 42-4"/>
+        <path d="M0 72c16-7 26 5 40-1s24 6 40-3 26 3 40-3"/>
+      </g>
+      <g fill="none" stroke="var(--teal)" stroke-width="1.6">
+        <circle cx="60" cy="34" r="13"/>
+        <path d="m65 29-3.4 8.2L53 40.6l3.4-8.2z"/>
+      </g>
+    </svg>
+    <span>No picture for this one</span>`;
+  return box;
 }
 
-/** A thumbnail that quietly becomes the placeholder if the remote file 404s. */
+/** A thumbnail that becomes the drawn motif if the remote file cannot load. */
 function eventImage(evt) {
+  const frame = el('div', { class: 'event-frame' });
   const img = el('img', {
     src: evt.image.src,
-    alt: `Image from the Wikipedia article “${evt.title}”`,
-    loading: 'lazy', width: evt.image.width || null, height: evt.image.height || null
+    alt: `Picture from the Wikipedia article on ${evt.title}`,
+    loading: 'lazy'
   });
-  img.addEventListener('error', () => { img.replaceWith(noImagePlaceholder()); }, { once: true });
-  return img;
+  img.addEventListener('error', () => { frame.replaceWith(noImagePlaceholder()); }, { once: true });
+  frame.append(img);
+  return frame;
 }
 
 /** After an XP-granting action, refresh the quest panel in place if it is on screen. */
@@ -544,126 +564,238 @@ function renderQuestPanelIfPresent() {
 
 /* ------------------------------------------------------------ daily story */
 
+/**
+ * The daily story, read in four beats: the hook, the turn, what followed and
+ * what to take away. The narrative paragraphs the source provides are mapped
+ * onto those beats in order; nothing is rewritten or invented.
+ */
+const STORY_BEATS = ['How it begins', 'The turning point', 'What followed'];
+
 function renderStory() {
   if (!requireGuest()) return;
   const v = beginView();
   const today = todayKey();
   const story = pickDailyStory(DATA.stories.stories, today, profile.preferStoryFn());
   if (!story) {
-    v.append(el('div', { class: 'state-box' }, [el('p', { text: 'No story available.' })]));
+    v.append(el('div', { class: 'empty-state' }, [
+      el('h3', { text: 'No story for today' }),
+      el('a', { class: 'btn btn-primary', href: '#/library', text: 'Open the library' })
+    ]));
     return;
   }
   const state = store.load();
+  const prof = profile.current(state);
   const saved = state.savedStories.includes(story.id);
   const alreadyRead = store.hasReward(gamify.rewardId('story', today));
+  const otherClass = prof && prof.mode === 'school'
+    && story.citations && story.citations.length
+    && String(story.citations[0].classLevel) !== String(prof.classLevel)
+    ? story.citations[0].classLevel : null;
 
   const saveBtn = el('button', {
-    class: 'btn btn-secondary', type: 'button', 'data-testid': 'save-story',
-    'aria-pressed': String(saved), text: saved ? 'Saved' : 'Save story'
-  });
+    class: 'btn btn-ghost btn-sm', type: 'button', 'data-testid': 'save-story',
+    'aria-pressed': String(saved)
+  }, [icon('saved', 16), saved ? 'Saved' : 'Save']);
   saveBtn.addEventListener('click', () => {
     const s = store.toggleSavedStory(story.id);
     const on = s.savedStories.includes(story.id);
-    saveBtn.textContent = on ? 'Saved' : 'Save story';
+    clear(saveBtn);
+    saveBtn.append(icon('saved', 16), on ? 'Saved' : 'Save');
     saveBtn.setAttribute('aria-pressed', String(on));
     gamify.checkUnlocks({ lessons: DATA.lessons.lessons });
-    toast(on ? 'Story saved.' : 'Story removed from saved items.');
+    toast(on ? 'Story saved to your collection.' : 'Removed from your collection.');
   });
 
   const readBtn = el('button', {
-    class: 'btn btn-primary', type: 'button', 'data-testid': 'finish-story',
-    disabled: alreadyRead,
-    text: alreadyRead ? 'Read today · +30 XP earned' : `Mark as read (+${gamify.XP_RULES.story} XP)`
+    class: `btn ${alreadyRead ? 'btn-done' : 'btn-primary'} btn-block`, type: 'button',
+    'data-testid': 'finish-story', disabled: alreadyRead,
+    text: alreadyRead ? 'Read today' : 'Mark as read'
   });
   readBtn.addEventListener('click', () => {
     const res = gamify.award('story', today, { lessons: DATA.lessons.lessons });
     readBtn.disabled = true;
-    readBtn.textContent = 'Read today · +30 XP earned';
-    if (res.xp > 0) renderHud();
+    readBtn.className = 'btn btn-done btn-block';
+    readBtn.textContent = 'Read today';
+    if (res.xp > 0) document.dispatchEvent(new CustomEvent('trident:hud'));
   });
+
+  const paras = story.narrative.split('\n\n').filter(Boolean);
+  const perBeat = Math.max(1, Math.ceil(paras.length / STORY_BEATS.length));
+  const beats = STORY_BEATS.map((name, i) => ({
+    name, paras: paras.slice(i * perBeat, (i + 1) * perBeat)
+  })).filter((b) => b.paras.length);
 
   const related = library.relatedLessonForTopic(story.topic);
 
-  v.append(...[
-    el('div', { class: 'section-head' }, [
-      el('h1', { text: 'Daily Story' }),
-      el('span', { class: 'hint', text: prettyDate(today) }),
-      tag(`+${gamify.XP_RULES.story} XP`, null, 'bolt')
+  v.append(el('article', { class: 'story', 'data-testid': 'story-article' }, [
+    el('div', { class: 'reader-top' }, [
+      el('a', { class: 'back-link', href: '#/dashboard' }, [icon('left', 16), 'Home']),
+      el('span', { class: 'reader-time', text: `${story.readingMinutes} min read` }),
+      saveBtn
     ]),
-    el('article', { class: 'feature-story section', 'data-testid': 'story-article' }, [
-      el('span', { class: 'f-kicker', text: `${story.topic} · ${story.readingMinutes} minute read` }),
-      el('div', { class: 'f-era', style: 'margin:.3rem 0 .2rem', text: story.title }),
-      el('div', { style: 'height:2px;background:linear-gradient(90deg,var(--india-saffron),transparent);margin:.8rem 0 1.2rem' }),
-      ...story.narrative.split('\n\n').map((p) => el('p', { text: p }))
+    otherClass ? el('p', { class: 'stamp stamp-warn', 'data-testid': 'story-other-class' },
+      [icon('info', 15), `Today\u2019s story comes from Class ${otherClass}.`]) : null,
+    el('h1', { class: 'title-serif story-title', text: story.title }),
+    storyMotif(),
+    ...beats.flatMap((b) => [
+      el('h2', { class: 'beat', text: b.name }),
+      ...b.paras.map((para) => el('p', { text: para }))
     ]),
-    el('div', { class: 'keyfact section' }, [
-      el('span', { class: 'eyebrow', text: 'Key takeaway' }),
-      el('p', { style: 'margin:0', text: story.takeaway })
+    el('section', { class: 'takeaway' }, [
+      el('h2', { text: 'What to take away' }),
+      el('p', { text: story.takeaway })
     ]),
-    el('div', { class: 'section stack' }, story.citations.map((c) => citationBlock(c, `${c.board}, class ${c.classLevel}`))),
-    el('p', { class: 'hint', text: DATA.stories.authoring }),
-    el('div', { class: 'reader-actions' }, [
-      readBtn, saveBtn,
-      related ? el('a', { class: 'btn btn-ghost', href: `#/lesson/${related.id}`, text: `Related lesson: ${related.title}` }) : null
+    el('details', { class: 'source' }, [
+      el('summary', {}, [icon('evidence', 16), el('span', { class: 'src-line', text: 'Where this comes from' }),
+        el('span', { class: 'src-more', text: 'View sources' })]),
+      el('div', {}, story.citations.map((c) => citationBlock(c, `${c.board}, class ${c.classLevel}`)))
     ]),
+    el('div', { class: 'reader-finish' }, [readBtn]),
+    related ? el('p', {}, [
+      'Related lesson: ',
+      el('a', { href: `#/lesson/${related.id}`, text: related.title })
+    ]) : null,
     el('section', { class: 'section' }, [el('h2', { text: 'Three quick questions' })])
-  ].filter(Boolean));
-  const quizHost = el('div', { class: 'stack' });
+  ].filter(Boolean)));
+
+  const quizHost = el('div');
   v.append(quizHost);
   quiz.renderMiniQuiz(quizHost, story);
 }
 
+/**
+ * An original map-style motif for the head of the story: contour lines and a
+ * survey marker, drawn here. It illustrates nothing specific and stands in for
+ * no textbook picture.
+ */
+function storyMotif() {
+  const wrap = el('div', { class: 'story-motif', 'aria-hidden': 'true' });
+  wrap.innerHTML = `
+    <svg viewBox="0 0 640 96" preserveAspectRatio="none" focusable="false">
+      <g fill="none" stroke="var(--saffron)" stroke-width="1.4" opacity="0.5">
+        <path d="M-10 62c70-30 130 18 210-6s150 22 230-8 150 10 220-14"/>
+      </g>
+      <g fill="none" stroke="var(--teal)" stroke-width="1.4" opacity="0.55">
+        <path d="M-10 78c80-26 140 16 220-6s150 20 230-10 140 8 210-10"/>
+      </g>
+      <g fill="none" stroke="var(--ink)" stroke-width="1.6" opacity="0.65">
+        <circle cx="320" cy="44" r="13"/>
+        <path d="M320 24v-8M320 72v-8M296 44h-8M352 44h-8"/>
+      </g>
+    </svg>`;
+  return wrap;
+}
+
 /* ------------------------------------------------- collection (badges etc) */
 
+/**
+ * The collection leads with the one reward actually within reach and what
+ * earns it. Everything still locked is folded away, so a learner who has just
+ * arrived does not meet twelve grey squares.
+ */
 function renderCollection() {
   if (!requireGuest()) return;
   const v = beginView();
   const state = store.load();
   const badges = gamify.earnedBadges(state);
   const artefacts = gamify.collectedArtefacts(state);
+  const earned = badges.filter((b) => b.earnedAt);
+  const locked = badges.filter((b) => !b.earnedAt);
+  const next = locked[0] || null;
+  const gotArtefacts = artefacts.filter((a) => a.unlockedAt);
 
-  v.append(...[
-    el('div', { class: 'section-head' }, [
-      el('h1', { text: 'Collection' }),
-      el('span', { class: 'hint', text: `${badges.filter((b) => b.earnedAt).length} of ${badges.length} badges · ${artefacts.filter((a) => a.unlockedAt).length} of ${artefacts.length} artefacts` })
-    ]),
-    el('section', { class: 'section' }, [
-      el('h2', { text: 'Badges' }),
-      el('div', { class: 'shelf', 'data-testid': 'badge-shelf' }, badges.map((b) => el('div', {
-        class: `badge-tile ${b.earnedAt ? 'is-earned' : 'is-locked'}`, 'data-testid': `badge-${b.id}`
+  v.append(el('div', { class: 'section-head' }, [
+    el('h1', { text: 'Your collection' }),
+    el('span', { class: 'meta', text: `${earned.length} of ${badges.length} badges earned` })
+  ]));
+
+  /* ---- the one to go for next ---- */
+  if (next) {
+    v.append(el('section', { class: 'goal section', 'data-testid': 'next-goal' }, [
+      el('div', { class: 'goal-art' }, [badgeArtFor(next.id, false)]),
+      el('div', { class: 'goal-body' }, [
+        el('span', { class: 'goal-kicker', text: 'Next badge' }),
+        el('h2', { text: next.name }),
+        el('p', { text: next.requirement }),
+        el('a', { class: 'btn btn-primary', href: goalHref(next.id), text: goalAction(next.id) })
+      ])
+    ]));
+  } else {
+    v.append(el('section', { class: 'goal section', 'data-testid': 'next-goal' }, [
+      el('div', { class: 'goal-body' }, [
+        el('h2', { text: 'Every badge earned' }),
+        el('p', { text: 'All six badges and their artefacts are yours.' })
+      ])
+    ]));
+  }
+
+  /* ---- what you already hold ---- */
+  if (earned.length) {
+    v.append(el('section', { class: 'section' }, [
+      el('div', { class: 'section-head' }, [el('h2', { text: 'Earned' })]),
+      el('div', { class: 'shelf', 'data-testid': 'badge-shelf' }, earned.map((b) => el('div', {
+        class: 'badge-tile is-earned', 'data-testid': `badge-${b.id}`
       }, [
-        b.earnedAt ? el('span', { class: 'ribbon', 'aria-hidden': 'true' }, [el('i'), el('i'), el('i')]) : null,
-        badgeArtFor(b.id, !!b.earnedAt),
+        badgeArtFor(b.id, true),
         el('div', { class: 'b-name', text: b.name }),
-        el('div', { class: 'b-req', text: b.requirement }),
-        el('span', { class: 'b-state', text: b.earnedAt ? 'Earned' : 'Locked' })
+        el('div', { class: 'b-req', text: b.requirement })
       ])))
-    ]),
-    el('section', { class: 'section' }, [
-      el('h2', { text: 'Artefacts' }),
+    ]));
+  }
+
+  if (gotArtefacts.length) {
+    v.append(el('section', { class: 'section' }, [
+      el('div', { class: 'section-head' }, [el('h2', { text: 'Artefacts recovered' })]),
       el('p', { class: 'hint', text: gamify.ARTEFACT_DISCLAIMER }),
-      el('div', { class: 'shelf', 'data-testid': 'artefact-shelf' }, artefacts.map((a) => el('div', {
-        class: `artefact-tile ${a.unlockedAt ? 'is-unlocked' : 'is-locked'}`, 'data-testid': `artefact-${a.id}`
+      el('div', { class: 'shelf', 'data-testid': 'artefact-shelf' }, gotArtefacts.map((a) => el('div', {
+        class: 'artefact-tile is-unlocked', 'data-testid': `artefact-${a.id}`
       }, [
         artefactArtFor(a.id),
         el('div', { class: 'a-name', text: a.name }),
-        el('div', { class: 'a-note', text: a.unlockedAt ? `Recovered with the ${a.badgeName} badge. ${a.note}` : `Locked — ${a.requirement}` }),
-        a.unlockedAt ? null : el('span', { class: 'b-state', style: 'color:var(--text-muted)' }, [icon('lock', 14), ' Locked'])
+        el('div', { class: 'a-note', text: a.note })
       ])))
-    ]),
-    el('section', { class: 'section' }, [
-      el('div', { class: 'section-head' }, [
-        el('h2', { text: 'Saved items' }),
-        (state.savedBooks || []).length
-          ? el('span', { class: 'hint', text: `${state.savedBooks.length} book suggestion${state.savedBooks.length === 1 ? '' : 's'} kept` })
-          : null
-      ].filter(Boolean)),
-      savedItemsList(state),
-      (state.savedBooks || []).length
-        ? el('p', { class: 'hint', text: `${openlibrary.ATTRIBUTION}. Saved books are reading suggestions, not verified syllabus sources, and they earn no XP.` })
-        : null
-    ].filter(Boolean))
-  ].filter(Boolean));
+    ]));
+  }
+
+  /* ---- the rest, folded away ---- */
+  if (locked.length > 1) {
+    v.append(el('details', { class: 'section locked-drawer', 'data-testid': 'locked-drawer' }, [
+      el('summary', { text: `View all locked rewards (${locked.length})` }),
+      el('div', { class: 'shelf' }, locked.map((b) => el('div', {
+        class: 'badge-tile is-locked', 'data-testid': `badge-${b.id}`
+      }, [
+        badgeArtFor(b.id, false),
+        el('div', { class: 'b-name', text: b.name }),
+        el('div', { class: 'b-req', text: b.requirement })
+      ])))
+    ]));
+  }
+
+  /* ---- saved items ---- */
+  v.append(el('section', { class: 'section' }, [
+    el('div', { class: 'section-head' }, [el('h2', { text: 'Saved' })]),
+    savedItemsList(state),
+    (state.savedBooks || []).length
+      ? el('p', { class: 'hint', text: `${openlibrary.ATTRIBUTION}. Saved books are reading suggestions, not verified syllabus sources, and they earn no XP.` })
+      : null
+  ].filter(Boolean)));
+}
+
+/** Where a learner goes to earn a given badge, and what the button says. */
+function goalHref(badgeId) {
+  const map = {
+    'first-step': '#/library', timekeeper: '#/quiz', 'perfect-recall': '#/quiz',
+    'three-day-flame': '#/quiz', 'ancient-explorer': '#/library', 'story-keeper': '#/story'
+  };
+  return map[badgeId] || '#/library';
+}
+function goalAction(badgeId) {
+  const map = {
+    'first-step': 'Read a lesson', timekeeper: 'Answer today\u2019s questions',
+    'perfect-recall': 'Answer today\u2019s questions', 'three-day-flame': 'Answer today\u2019s questions',
+    'ancient-explorer': 'Open the library', 'story-keeper': 'Read today\u2019s story'
+  };
+  return map[badgeId] || 'Keep going';
 }
 
 function badgeArtFor(id, earned) {
@@ -839,15 +971,12 @@ function applyTheme(theme) {
 }
 
 function highlightNav(name) {
+  const active = ROUTE_HOME[name] || null;
   document.querySelectorAll('[data-nav]').forEach((a) => {
-    const alias = { lesson: 'library', collection: 'collection', story: 'story', timeline: 'timeline' };
-    const target = alias[name] || name;
-    const bottomAlias = { quiz: 'quiz', timeline: 'quiz', story: 'library', lesson: 'library', settings: 'progress' };
-    const isBottom = a.closest('.bottom-nav');
-    const want = isBottom ? (bottomAlias[name] || target) : target;
-    if (a.dataset.nav === want) a.setAttribute('aria-current', 'page');
+    if (a.dataset.nav === active) a.setAttribute('aria-current', 'page');
     else a.removeAttribute('aria-current');
   });
+  paintNavIcons(active);
 }
 
 function setupActiveTimeTracking() {
@@ -921,15 +1050,13 @@ async function boot() {
   route('/profile', renderChangePath);
   route('/dashboard', renderDashboard);
   route('/event', renderEventPage);
-  route('/library', () => {
+  route('/library', () => { if (requireGuest()) library.renderLibrary(beginView()); });
+  route('/lesson/:id', (p) => {
     if (!requireGuest()) return;
     const v = beginView();
-    library.renderLibrary(v);
-    // the gateways and the era journey live here now, above the catalogue
-    v.prepend(gatewaysSection(store.load()));
-    v.append(eraMap(store.load()));
+    library.renderLesson(v, p.id);
+    quiz.renderLessonCheck(v.querySelector('.check-host'), library.lessonById(p.id));
   });
-  route('/lesson/:id', (p) => { if (requireGuest()) library.renderLesson(beginView(), p.id); });
   route('/quiz', () => { if (requireGuest()) quiz.renderDailyQuiz(beginView()); });
   route('/timeline', () => { if (requireGuest()) timeline.render(beginView()); });
   route('/story', renderStory);
@@ -960,6 +1087,10 @@ async function boot() {
     companion.setVisible(!chromeHidden && !setupOnly);
     if (!chromeHidden) renderHud();
     highlightNav(name);
+    // a route change always lands at the top. The one exception is a lesson
+    // the learner genuinely stopped part-way through, which restores its own
+    // saved position after it renders.
+    if (name !== 'lesson') window.scrollTo({ top: 0, behavior: 'auto' });
     document.getElementById('main').focus({ preventScroll: true });
   });
 
@@ -969,6 +1100,8 @@ async function boot() {
   if (!window.location.hash) {
     window.location.hash = store.load().profile.mode ? '/dashboard' : '/welcome';
   }
+
+  if ('scrollRestoration' in window.history) window.history.scrollRestoration = 'manual';
 
   setupActiveTimeTracking();
   start();

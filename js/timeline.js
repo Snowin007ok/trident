@@ -60,16 +60,25 @@ export function render(view) {
 
   view.append(
     el('div', { class: 'section-head' }, [
-      el('h1', { text: mixed ? 'Mixed History Challenge' : 'Timeline Challenge' }),
-      el('span', { class: 'hint', text: prettyDate(dateKey) }),
-      el('span', { class: 'tag', 'data-testid': 'tl-xp' }, [icon('bolt', 13), `+${gamify.XP_RULES.timeline} XP`]),
-      mixed ? el('span', { class: 'tag', 'data-testid': 'tl-mixed', text: 'Mixed History Challenge' }) : null
+      el('h1', { 'data-testid': 'tl-title', text: 'Timeline Challenge' }),
+      el('span', { class: 'meta', 'data-testid': 'tl-xp', text: `+${gamify.XP_RULES.timeline} XP` })
     ]),
-    el('p', { class: 'hint', text: 'Put the four events in order, earliest first. Drag a card, or use the arrow buttons — both do the same thing. Every date shown afterwards comes from the book cited on the card.' })
+    el('p', { class: 'tl-intro', text: 'Drag the cards, or use the arrows, until the four are in order with the earliest at the top. The dates appear once you check.' })
   );
 
+  // the challenge is labelled before it starts whenever the four events are
+  // not all from the learner's own class
+  const myClass = (profile.current() || {}).classLevel || null;
+  const offClass = myClass
+    && solution.some((e) => e.citation && String(e.citation.classLevel) !== String(myClass));
+  if (mixed || offClass) {
+    view.append(el('p', { class: 'stamp stamp-warn', 'data-testid': 'tl-mixed' },
+      [icon('info', 15), 'Mixed History Challenge — today\u2019s four events come from more than one class.']));
+  }
+
   const threads = el('div', { html: threadsSVG() }).firstElementChild;
-  const board = el('ol', { class: 'tl-board', 'data-testid': 'tl-board' });
+  const board = el('ol', { class: 'tl-cards', 'data-testid': 'tl-board' });
+  const rail = el('div', { class: 'tl-rail' }, [board]);
   const liveRegion = el('p', { class: 'sr-only', 'aria-live': 'polite', 'data-testid': 'tl-live' });
   const feedback = el('div', {});
 
@@ -88,6 +97,13 @@ export function render(view) {
     [order[index], order[target]] = [order[target], order[index]];
     liveRegion.textContent = `${order[target].label} moved to position ${target + 1} of ${order.length}.`;
     paint(target);
+    // a card that just moved says so for a beat, so the change is visible and
+    // not only announced
+    const moved = board.children[target];
+    if (moved) {
+      moved.classList.add('is-moving');
+      setTimeout(() => moved.classList.remove('is-moving'), 420);
+    }
   }
 
   function paint(focusIndex = null) {
@@ -95,7 +111,7 @@ export function render(view) {
     order.forEach((ev, i) => {
       const correctHere = checked && solution[i].id === ev.id;
       const card = el('li', {
-        class: `tl-card${checked ? (correctHere ? ' is-right' : ' is-wrongpos') : ''}${checked ? ' is-revealed' : ''}`,
+        class: `tl-card${checked ? (correctHere ? ' is-right' : ' is-wrong') : ''}${checked ? ' is-revealed' : ''}`,
         draggable: !checked, 'data-idx': String(i), 'data-testid': `tl-card-${i}`
       }, [
         el('span', { class: 'tl-pos', text: String(i + 1) }),
@@ -111,6 +127,7 @@ export function render(view) {
             correctHere ? 'In place' : 'Move me'
           ])
           : el('span', { class: 'order-controls' }, [
+            el('span', { class: 'tl-grip', 'aria-hidden': 'true' }, [icon('grip', 18)]),
             el('button', {
               class: 'btn btn-ghost btn-sm', type: 'button', disabled: i === 0,
               'aria-label': `Move "${ev.label}" earlier`, 'data-testid': `tl-up-${i}`,
@@ -121,8 +138,7 @@ export function render(view) {
               'aria-label': `Move "${ev.label}" later`, 'data-testid': `tl-down-${i}`,
               onclick: () => move(i, 1)
             }, [icon('down', 16)])
-          ]),
-        checked ? null : el('span', { class: 'tl-grip', 'aria-hidden': 'true' }, [icon('grip', 18)])
+          ])
       ]);
 
       if (!checked) {
@@ -191,13 +207,12 @@ export function render(view) {
     if (solved) toast(xpLine || 'Timeline solved.', 'xp');
   });
 
-  view.append(el('div', { class: 'panel stack' }, [
-    threads,
-    board,
+  view.append(
+    rail,
     liveRegion,
-    el('div', { class: 'reader-actions' }, [checkBtn, resetBtn]),
+    el('div', { class: 'next-step' }, [checkBtn, resetBtn]),
     feedback
-  ]));
+  );
   if (alreadySolved) {
     view.append(el('div', { class: 'notice section', 'data-testid': 'tl-already' }, [
       el('p', { text: 'You already solved today’s challenge. You can replay it for practice, but the 75 XP is awarded once per date.' })

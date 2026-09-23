@@ -1,140 +1,99 @@
 /* ==========================================================================
-   Desktop refinements (>= 1200px)
+   Responsive — three sizes the app is checked at: 1440, 768 and 375.
+   The mobile bar appears below 860px, so the header's four links give way to
+   the four at the foot of the screen rather than being duplicated.
    ========================================================================== */
-@media (min-width: 1200px) {
-  .adventure { padding: var(--sp-7) var(--sp-7); }
-  .adventure-inner { grid-template-columns: 1.35fr 1fr; align-items: center; }
-  .adventure-inner > .adventure-mission-col { grid-column: 2; grid-row: 1 / span 3; }
-}
 
-/* ==========================================================================
-   Tablet (<= 1024px)
-   ========================================================================== */
-@media (max-width: 1024px) {
-  .gateways { grid-template-columns: repeat(2, 1fr); }
-  .gateway-tnpsc { grid-column: span 2; min-height: 200px; }
-  .expedition { grid-template-columns: 1fr 160px; }
-  .hud-xp { min-width: 100px; }
-}
-
-/* ==========================================================================
-   Below 1000px — the header's own nav collapses and the bottom bar takes over
-   ========================================================================== */
-@media (max-width: 1200px) {
+/* --- tablet and below: the bottom bar takes over navigation --- */
+@media (max-width: 860px) {
   .primary-nav { display: none; }
-  .nav-toggle { display: none; }
-
-  .header-inner { gap: var(--sp-3); }
-  .hud { margin-left: auto; gap: var(--sp-3); }
-  .hud-level-text span { display: none; }
-  .hud-xp { min-width: 84px; }
-
   .bottom-nav { display: block; }
-  body { padding-bottom: 62px; }
-  .app-footer { margin-bottom: var(--sp-4); }
-  .source-bar { top: 64px; }
+  .hud { margin-left: auto; }
+  .hud-course { display: none; }
+  body { padding-bottom: 76px; }
+  #main { padding-bottom: var(--sp-6); }
+
+  .mission { grid-template-columns: minmax(0, 1fr); gap: var(--sp-5); }
+  .mission-progress { border-left: 0; border-top: 1px solid var(--line); padding-left: 0; padding-top: var(--sp-4); }
+
+  .event-card { grid-template-columns: minmax(0, 1fr); }
+  .event-frame, .event-motif { max-width: 340px; }
+
+  .companion-launcher { bottom: calc(76px + env(safe-area-inset-bottom, 0px)); right: var(--sp-4); }
+
+  /* The companion owns the bottom-right corner on small screens, so nothing
+     you can press is allowed to reach into it: full-width actions stop short
+     of that corner, and the last block on a page keeps clear of it. */
+  #view .btn-block { max-width: calc(100% - 84px); }
+  #view > *:last-child { margin-bottom: 96px; }
+  .next-reward, .goal, .course-top { padding-right: 84px; }
 }
 
-/* ==========================================================================
-   Mobile (<= 720px)
-   ========================================================================== */
 @media (max-width: 720px) {
-  .grid-3, .grid-2, .gateways { grid-template-columns: 1fr; }
-  .gateway-tnpsc { grid-column: auto; }
-  .gateway { min-height: 0; }
-  .gateway .g-motif { width: 104px; height: 104px; }
+  .filter-row { grid-template-columns: minmax(0, 1fr); gap: var(--sp-3); }
 
-  .adventure { padding: var(--sp-5) var(--sp-4); }
-  .adventure h1 { font-size: var(--step-2); }
-  .adventure-level { gap: var(--sp-3); }
-  .level-emblem { width: 46px; height: 46px; }
+  .course-top { align-items: flex-start; }
+  .course-top .btn { width: 100%; }
 
-  .expedition { grid-template-columns: 1fr; }
-  .expedition-mini { height: 64px; }
+  /* the journey rail turns on its side */
+  .journey-track { flex-direction: column; border-top: 0; border-left: 2px solid var(--line-strong); padding-top: 0; padding-left: var(--sp-5); gap: var(--sp-2); }
+  .waypoint::before { top: 50%; left: calc(var(--sp-5) * -1); width: var(--sp-5); height: 2px; }
+  .wp-btn { flex-direction: row; justify-content: flex-start; text-align: left; }
+  .wp-count { margin-left: auto; }
 
-  .strip, .strip-5 { grid-template-columns: 1fr 1fr; }
-  .strip-cell:nth-child(2) { border-right: 0; }
-  .strip-cell:nth-child(1), .strip-cell:nth-child(2) { border-bottom: 1px solid var(--line); }
+  .lesson-row { grid-template-columns: 28px minmax(0, 1fr); row-gap: 0; }
+  .lr-side { grid-column: 2; padding-bottom: var(--sp-3); }
 
-  .feature-event { grid-template-columns: 1fr; }
-  .match-row { grid-template-columns: 1fr; gap: var(--sp-2); }
-  .passport-head { grid-template-columns: 1fr; text-align: center; justify-items: center; }
+  .goal { flex-direction: column; text-align: center; }
+  .goal-body p { margin-inline: auto; }
 
-  .era-track { padding-bottom: var(--sp-3); -webkit-overflow-scrolling: touch; }
-  .era-node { min-width: 128px; }
+  .passport-head { grid-template-columns: minmax(0, 1fr); }
 
-  .panel, .folio { padding: var(--sp-4); }
-  .folio { clip-path: none; border: 1px solid var(--line-gold); border-radius: var(--radius); }
-  .folio::before { display: none; }
-  .gateway-tn, .gateway-tnpsc { clip-path: none; border-radius: var(--radius-xs); }
+  .tl-card { grid-template-columns: 40px minmax(0, 1fr); row-gap: var(--sp-2); }
+  .tl-year { grid-column: 2; }
 
-  .parchment { padding: var(--sp-4); font-size: 1rem; }
-  .welcome h1 { letter-spacing: 0.12em; }
-  .welcome-actions .btn { width: 100%; }
-  .reader-actions .btn { flex: 1 1 auto; }
-  .list-item { flex-direction: column; align-items: flex-start; gap: var(--sp-3); }
-  .list-item .row { width: 100%; }
-  .quiz-trail .step { width: 26px; height: 26px; }
-  .shelf { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+  .next-step .btn, .after-lesson .btn { width: 100%; }
 
-  /* quest rows stack: icon + text on one line, reward and action beneath */
-  .quest-item {
-    display: grid; grid-template-columns: 38px 1fr; gap: var(--sp-2) var(--sp-3);
-    align-items: start; padding: var(--sp-4);
+  .companion-panel {
+    right: 0; left: 0; top: auto; width: auto;
+    max-height: 86vh; border-left: 0; border-top: 2px solid var(--ink);
+    border-radius: var(--radius) var(--radius) 0 0;
+    padding-bottom: env(safe-area-inset-bottom, 0);
   }
-  .quest-item .q-main { grid-column: 2; }
-  .quest-item .q-xp { grid-column: 2; }
-  .quest-item .btn, .quest-item .quest-stamp { grid-column: 2; justify-self: start; }
-  .quest-head, .quest-reward { padding-left: var(--sp-4); padding-right: var(--sp-4); }
 }
 
-/* ==========================================================================
-   Small phones (<= 420px)
-   ========================================================================== */
-@media (max-width: 420px) {
-  .filters { grid-template-columns: 1fr; }
-  .brand-text em { display: none; }
-  .hud-level-text { display: none; }
-  .trend { height: 100px; }
-  .shelf { grid-template-columns: 1fr 1fr; }
-  .bottom-nav a { font-size: 0.58rem; }
+/* --- phone --- */
+@media (max-width: 480px) {
+  :root { --sp-6: 1.5rem; --sp-7: 2.25rem; }
+
+  .shell { width: min(100% - 1.5rem, var(--shell)); }
+  .mission { padding: var(--sp-5); }
+  .mission-title { font-size: var(--step-4); }
+  .reader-title, .story-title { font-size: var(--step-4); }
+  .question-prompt { font-size: var(--step-2); }
+
+  .brand-text strong { font-size: 0.92rem; }
+  .hud-xp { display: none; }
+
+  .src-detail { grid-template-columns: minmax(0, 1fr); gap: 2px var(--sp-3); }
+  .src-detail dt { margin-top: var(--sp-2); }
+
+  .shelf { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+  .figure-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+  /* the fish keeps clear of the bar and of any answer control */
+  .companion-launcher {
+    width: 54px; height: 54px;
+    right: var(--sp-3);
+    bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+  }
+  #view .btn-block { max-width: calc(100% - 72px); }
+  .next-reward, .goal, .course-top { padding-right: 70px; }
+  .companion-tip { display: none; }
+  .toast { bottom: calc(84px + env(safe-area-inset-bottom, 0px)); }
 }
 
-/* ==========================================================================
-   Print — reading surfaces only
-   ========================================================================== */
-@media print {
-  .app-header, .app-footer, .bottom-nav, .companion, .reader-actions, .reader-nav, .quest, .adventure { display: none !important; }
-  body { background: #fff; color: #000; }
-  body::before { display: none; }
-  .parchment { border: 1px solid #999; box-shadow: none; }
-}
-
-/* ==========================================================================
-   Learning-profile flow
-   ========================================================================== */
-/* Below 1200px the header's own nav does not fit beside the status cluster, so
-   the mobile bottom bar takes over and the profile label moves into the page. */
-@media (max-width: 1200px) {
-  .hud-profile { display: none; }
-}
-@media (max-width: 720px) {
-  .ob-cards-2, .ob-cards-3 { grid-template-columns: 1fr; }
-  .ob-card { min-height: 0; padding: var(--sp-4); }
-  .ob-card-meta { margin-left: 0; }
-  .ob-actions .btn { flex: 1 1 auto; }
-  .ob-summary-list { grid-template-columns: 1fr; gap: var(--sp-1) 0; }
-  .ob-summary-list dd { margin-bottom: var(--sp-3); }
-  .profile-card { flex-direction: column; align-items: flex-start; }
-  .profile-card .push { margin-left: 0; }
-}
-
-@media (max-width: 720px) {
-  .book-grid { grid-template-columns: 1fr; }
-  .books-body, .books-summary, .books-attribution { padding-inline: var(--sp-4); }
-}
-
-@media (max-width: 720px) {
-  .ask-form { flex-direction: column; }
-  .ask-suggestions .btn { width: 100%; }
+/* --- wide screens: the reading column stays put, the page does not sprawl */
+@media (min-width: 1500px) {
+  :root { --shell: 1240px; }
 }

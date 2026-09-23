@@ -48,6 +48,37 @@ export function chapterLabel(book, chapterId) {
   return c ? c.label : null;
 }
 
+/**
+ * How far through their OWN class the learner is. This is the figure the
+ * header, Home and Progress all show, so they can never disagree: board and
+ * class together, never the whole board.
+ */
+export function courseProgress(state) {
+  const s = state || store.load();
+  const prof = profile.current(s);
+  const scope = profile.scopedLessons(prof);
+  const done = scope.filter((l) => s.completedLessons[l.id]).length;
+  const total = scope.length;
+  return {
+    done,
+    total,
+    percent: total ? Math.round((done / total) * 100) : 0,
+    label: courseLabel(prof),
+    lessons: scope
+  };
+}
+
+/** "Class 7 history" — named once, and never repeated on the same screen. */
+export function courseLabel(prof) {
+  const p = prof === undefined ? profile.current() : prof;
+  if (!p) return 'History';
+  if (p.mode === 'competitive') {
+    const e = profile.examByValue(p.exam);
+    return `${e ? e.name : 'Exam'} practice`;
+  }
+  return `Class ${p.classLevel} history`;
+}
+
 export function bookProgress(bookId) {
   const state = store.load();
   const all = lessonsFor(bookId);
@@ -89,112 +120,159 @@ function selectField(id, label, options, value, onChange) {
 
 export function renderLibrary(view) {
   clear(view);
-  const books = DATA.library.books;
+  const state = store.load();
+  const course = courseProgress(state);
   const rerender = () => renderLibrary(view);
 
-  const pathOptions = [{ value: 'all', label: 'All learning paths' }]
-    .concat(DATA.library.paths.map((p) => ({ value: p.id, label: p.name })));
+  /* ---- where you are in your own class ---- */
+  view.append(el('section', { class: 'course-head section', 'data-testid': 'course-head' }, [
+    el('div', { class: 'course-top' }, [
+      el('div', {}, [
+        el('h1', { text: course.label }),
+        el('p', { class: 'lede', 'data-testid': 'course-count',
+          text: `${course.done} of ${course.total} lessons read — ${course.percent}% of the course.` })
+      ]),
+      course.done < course.total
+        ? el('a', { class: 'btn btn-primary', href: `#/lesson/${(continueLesson() || {}).id || ''}`, text: 'Continue reading' })
+        : el('span', { class: 'stamp stamp-done' }, [icon('check', 15), 'Course complete'])
+    ]),
+    railFor(course.lessons, state, 'course-rail')
+  ]));
+
+  /* ---- the chapter journey: books as waypoints on one line ---- */
+  view.append(chapterJourney(state));
+
+  /* ---- three filters, and a drawer for the rest ---- */
+  view.append(filterBar(rerender));
+
+  const results = el('div', { 'data-testid': 'library-results' });
+  view.append(results);
+  renderResults(results);
+}
+
+/** One segment per lesson, filled as they are read. The app's signature. */
+function railFor(lessons, state, testId) {
+  const nextId = (continueLesson() || {}).id;
+  return el('div', {
+    class: 'rail rail-lg', 'data-testid': testId || null, role: 'img',
+    'aria-label': `${lessons.filter((l) => state.completedLessons[l.id]).length} of ${lessons.length} lessons complete`
+  }, lessons.map((l) => el('i', {
+    class: state.completedLessons[l.id] ? 'is-done' : (l.id === nextId ? 'is-now' : ''),
+    title: l.title
+  })));
+}
+
+/**
+ * The chapter journey — the books of this class strung along one line, each
+ * showing how much of it has been read. Clicking a waypoint filters to it.
+ */
+function chapterJourney(state) {
+  const prof = profile.current(state);
+  const scope = profile.scopedLessons(prof);
+  const bookIds = [...new Set(scope.map((l) => l.bookId))];
+  if (bookIds.length < 2) return el('div');
+
+  return el('section', { class: 'journey section', 'data-testid': 'chapter-journey' }, [
+    el('div', { class: 'section-head' }, [el('h2', { text: 'Your journey through the books' })]),
+    el('ol', { class: 'journey-track' }, bookIds.map((id, i) => {
+      const book = bookById(id);
+      const mine = scope.filter((l) => l.bookId === id);
+      const done = mine.filter((l) => state.completedLessons[l.id]).length;
+      const complete = done === mine.length;
+      const started = done > 0;
+      return el('li', { class: `waypoint${complete ? ' is-complete' : started ? ' is-started' : ''}` }, [
+        el('button', {
+          type: 'button', class: 'wp-btn', 'data-testid': `waypoint-${i}`,
+          'aria-label': `${book.title}: ${done} of ${mine.length} lessons read. Show only this book.`,
+          onclick: () => { filters.bookId = id; filters.chapterId = 'all'; renderLibrary(document.getElementById('view')); }
+        }, [
+          el('span', { class: 'wp-mark', 'aria-hidden': 'true' }, [icon(complete ? 'check' : 'learn', 18)]),
+          el('span', { class: 'wp-name', text: shortBookName(book) }),
+          el('span', { class: 'wp-count', text: `${done}/${mine.length}` })
+        ])
+      ]);
+    }))
+  ]);
+}
+
+/** "Term I" out of "Social Science, Standard Seven, Term I (Volume 3)". */
+function shortBookName(book) {
+  const m = book.title.match(/Term\s+[IVX]+/i);
+  if (m) return m[0];
+  const parts = book.title.split(',');
+  return parts[parts.length - 1].trim().replace(/\s*\(.*\)$/, '') || book.title;
+}
+
+function filterBar(rerender) {
   const classOptions = [{ value: 'all', label: 'All classes' }]
     .concat(['6', '7', '8', '9', '10', '11', '12'].map((c) => {
       const avail = DATA.library.classAvailability[c];
-      return { value: c, label: `Class ${c}${avail.state === 'available' ? '' : ` — ${avail.label}`}` };
+      return { value: c, label: `Class ${c}${avail.state === 'available' ? '' : ' — coming later'}` };
     }));
-  const bookPool = books
+  const eraOptions = [{ value: 'all', label: 'All eras' }]
+    .concat(gamify.ERAS.map((e) => ({ value: e.id, label: e.label })));
+
+  const search = el('input', {
+    type: 'search', id: 'lib-q', value: filters.q, placeholder: 'Search lessons',
+    'data-testid': 'library-search'
+  });
+  let timer = null;
+  search.addEventListener('input', (e) => {
+    clearTimeout(timer);
+    const v = e.target.value;
+    timer = setTimeout(() => { filters.q = v; rerender(); requestAnimationFrame(() => {
+      const box = document.getElementById('lib-q');
+      if (box) { box.focus(); box.setSelectionRange(v.length, v.length); }
+    }); }, 260);
+  });
+
+  const books = DATA.library.books
     .filter((b) => filters.path === 'all' || b.path === filters.path)
     .filter((b) => filters.classLevel === 'all' || b.classLevel === filters.classLevel);
-  const bookOptions = [{ value: 'all', label: 'All books' }]
-    .concat(bookPool.map((b) => ({ value: b.id, label: `${b.title} (class ${b.classLevel})` })));
   const selectedBook = filters.bookId !== 'all' ? bookById(filters.bookId) : null;
-  const chapterOptions = [{
-    value: 'all',
-    label: selectedBook && !selectedBook.chaptersDetected ? 'Chapters not recorded' : 'All chapters'
-  }].concat(selectedBook ? selectedBook.chapters.map((c) => ({ value: c.id, label: c.label })) : []);
-  const eraOptions = [{ value: 'all', label: 'All eras' }]
-    .concat(gamify.ERAS.map((e) => ({ value: e.id, label: `${e.label} · ${e.period}` })));
 
-  view.append(
-    el('div', { class: 'section-head' }, [
-      el('h1', { text: 'Library' }),
-      el('span', { class: 'hint', text: `${DATA.lessons.lessons.length} lessons from ${books.length} verified books` })
-    ]),
-    el('div', { class: 'panel stack' }, [
-      el('div', { class: 'filters' }, [
-        selectField('f-path', 'Board or path', pathOptions, filters.path, (v) => {
-          filters.path = v; filters.bookId = 'all'; filters.chapterId = 'all'; rerender();
-        }),
-        selectField('f-class', 'Class', classOptions, filters.classLevel, (v) => {
-          filters.classLevel = v; filters.bookId = 'all'; filters.chapterId = 'all'; rerender();
-        }),
-        selectField('f-era', 'Era', eraOptions, filters.era, (v) => {
-          filters.era = v; store.setSelectedEra(v === 'all' ? null : v); rerender();
-        }),
-        selectField('f-book', 'Book', bookOptions, filters.bookId, (v) => {
-          filters.bookId = v; filters.chapterId = 'all'; rerender();
-        }),
-        selectField('f-chapter', 'Chapter', chapterOptions, filters.chapterId, (v) => {
-          filters.chapterId = v; rerender();
-        }),
-        el('div', { class: 'field' }, [
-          el('label', { for: 'f-search', text: 'Search' }),
-          el('input', {
-            id: 'f-search', type: 'search', value: filters.q, placeholder: 'Plassey, Harappa, mills…',
-            oninput: (e) => { filters.q = e.target.value; renderResults(resultsHost); }
-          })
-        ])
-      ]),
-      el('div', { class: 'row' }, [
-        el('button', {
-          class: 'btn btn-ghost btn-sm', type: 'button', text: 'Show everything',
-          onclick: () => {
-            filters.path = 'all'; filters.classLevel = 'all'; filters.bookId = 'all';
-            filters.chapterId = 'all'; filters.era = 'all'; filters.q = '';
-            store.setSelectedEra(null); rerender();
-          }
-        })
-      ])
+  const more = el('details', { class: 'more-filters', 'data-testid': 'more-filters' }, [
+    el('summary', { text: 'More filters' }),
+    el('div', { class: 'filter-grid' }, [
+      selectField('f-path', 'Board', [{ value: 'all', label: 'All boards' }]
+        .concat(DATA.library.paths.map((x) => ({ value: x.id, label: x.name }))),
+      filters.path, (v) => { setPathFilter(v); rerender(); }),
+      selectField('f-book', 'Book', [{ value: 'all', label: 'All books' }]
+        .concat(books.map((b) => ({ value: b.id, label: b.title }))),
+      filters.bookId, (v) => { filters.bookId = v; filters.chapterId = 'all'; rerender(); }),
+      selectField('f-chapter', 'Chapter', [{ value: 'all', label: 'All chapters' }]
+        .concat(selectedBook ? (selectedBook.chapters || []).map((c) => ({ value: c.id, label: c.label })) : []),
+      filters.chapterId, (v) => { filters.chapterId = v; rerender(); })
     ])
-  );
+  ]);
 
-  const prof = profile.current();
-  if (prof) {
-    const showingMine = filters.path === profile.pathId(prof)
-      || (profile.pathId(prof) === 'tnpsc' && filters.path === 'all');
-    view.append(el('div', { class: 'notice section', 'data-testid': 'library-profile-note' }, [
-      el('p', {}, [
-        el('strong', { text: `${profile.label(prof)}. ` }),
-        showingMine
-          ? 'These filters start on your own learning path. Change any of them, or use “Show everything”, to read outside it — nothing is locked.'
-          : 'You are browsing outside your learning path. Everything here is open to you; your path only decides what TRIDENT suggests first.'
+  const dirty = filters.path !== 'all' || filters.bookId !== 'all'
+    || filters.chapterId !== 'all' || filters.era !== 'all' || filters.q;
+
+  return el('section', { class: 'filters section', 'data-testid': 'library-filters' }, [
+    el('div', { class: 'filter-row' }, [
+      selectField('f-class', 'Class', classOptions, filters.classLevel,
+        (v) => { filters.classLevel = v; filters.bookId = 'all'; filters.chapterId = 'all'; rerender(); }),
+      selectField('f-era', 'Era', eraOptions, filters.era, (v) => { setEraFilter(v); store.setSelectedEra(v === 'all' ? null : v); rerender(); }),
+      el('div', { class: 'field field-search' }, [
+        el('label', { for: 'lib-q', text: 'Search' }),
+        el('div', { class: 'search-wrap' }, [icon('search', 17), search])
       ])
-    ]));
-  }
-
-  if (filters.era !== 'all') {
-    const era = gamify.ERAS.find((e) => e.id === filters.era);
-    if (era) {
-      view.append(el('div', { class: 'notice section', 'data-testid': 'era-notice' }, [
-        el('p', {}, [el('strong', { text: `${era.label}. ` }), `Showing lessons from ${era.period}.`])
-      ]));
-    }
-  }
-  if (filters.classLevel !== 'all') {
-    const avail = DATA.library.classAvailability[filters.classLevel];
-    const note = DATA.library.notices[filters.classLevel];
-    if (avail.state !== 'available') {
-      view.append(el('div', { class: 'notice section' }, [
-        el('p', {}, [el('strong', { text: `Class ${filters.classLevel}: ${avail.label}. ` }), note || ''])
-      ]));
-    }
-  }
-  if (filters.path === 'tnpsc') {
-    view.append(el('div', { class: 'notice section' }, [
-      el('p', {}, [el('strong', { text: 'TNPSC preparation is in beta. ' }), DATA.library.notices.tnpsc])
-    ]));
-  }
-
-  const resultsHost = el('div', { class: 'section' });
-  view.append(resultsHost);
-  renderResults(resultsHost);
+    ]),
+    el('div', { class: 'filter-foot' }, [
+      more,
+      dirty ? el('button', {
+        class: 'btn btn-quiet btn-sm', type: 'button', text: 'Clear filters',
+        onclick: () => {
+          filters.path = 'all'; filters.bookId = 'all'; filters.chapterId = 'all';
+          filters.era = 'all'; filters.q = '';
+          store.setSelectedEra(null);
+          applyProfileDefaults();
+          rerender();
+        }
+      }) : null
+    ].filter(Boolean))
+  ]);
 }
 
 function renderResults(host) {
@@ -202,15 +280,23 @@ function renderResults(host) {
   const state = store.load();
   const list = visibleLessons();
 
-  if (filters.classLevel === '11') {
-    host.append(el('div', { class: 'state-box' }, [
-      el('p', { text: 'No verified class 11 history material is indexed yet. Content coming soon.' })
-    ]));
-    return;
-  }
   if (!list.length) {
-    host.append(el('div', { class: 'state-box' }, [
-      el('p', { text: 'No lessons match these filters. Try clearing the search box or choosing another era.' })
+    const avail = DATA.library.classAvailability[filters.classLevel];
+    host.append(el('div', { class: 'empty-state', 'data-testid': 'library-empty' }, [
+      el('h3', { text: avail && avail.state !== 'available'
+        ? `Class ${filters.classLevel} is not ready yet`
+        : 'No lessons match those filters' }),
+      el('p', { text: avail && avail.state !== 'available'
+        ? 'Verified source material exists for this class, but its lessons are still being prepared.'
+        : 'Widen the search, or go back to your own class.' }),
+      el('button', {
+        class: 'btn btn-primary', type: 'button', text: 'Back to my class',
+        onclick: () => {
+          filters.q = ''; filters.era = 'all'; filters.bookId = 'all'; filters.chapterId = 'all';
+          applyProfileDefaults();
+          renderLibrary(document.getElementById('view'));
+        }
+      })
     ]));
     return;
   }
@@ -221,37 +307,33 @@ function renderResults(host) {
     byBook.get(l.bookId).push(l);
   });
 
-  host.append(el('p', { class: 'hint', text: `${list.length} lesson${list.length === 1 ? '' : 's'}` }));
-
   byBook.forEach((lessons, bookId) => {
     const book = bookById(bookId);
-    const avail = DATA.library.classAvailability[book.classLevel];
-    const prog = bookProgress(bookId);
-    host.append(...[el('section', { class: 'section' }, [
+    const mine = lessonsFor(bookId);
+    const doneAll = mine.filter((l) => state.completedLessons[l.id]).length;
+    host.append(el('section', { class: 'section book-block' }, [
       el('div', { class: 'section-head' }, [
         el('h2', { text: book.title }),
-        el('span', { class: 'pill', text: `${book.board} · Class ${book.classLevel}` }),
-        avail.state !== 'available' ? tag(avail.label, avail.state === 'limited' ? 'limited' : 'soon') : null,
-        el('span', { class: 'hint push', text: `${prog.completed}/${prog.total} complete` })
+        el('span', { class: 'meta', text: `${doneAll} of ${mine.length} read` })
       ]),
-      book.note ? el('p', { class: 'hint', text: book.note }) : null,
-      el('ul', { class: 'list' }, lessons.map((l) => {
+      el('ul', { class: 'lesson-list' }, lessons.map((l) => {
         const done = !!state.completedLessons[l.id];
-        const saved = state.savedLessons.includes(l.id);
+        const outside = isOutsideClass(l);
         const chap = l.chapterId ? chapterLabel(book, l.chapterId) : null;
-        return el('li', { class: 'list-item' }, [
-          el('div', { class: 'li-main' }, [
-            el('div', { class: 'li-title', text: l.title }),
-            el('div', { class: 'li-meta', text: `${l.topic} · ${chap ? `${chap} · ` : ''}${pages(l.citation)} · ${l.readingMinutes} min` })
+        return el('li', { class: `lesson-row${done ? ' is-done' : ''}` }, [
+          el('span', { class: 'lr-mark', 'aria-hidden': 'true' }, [icon(done ? 'check' : 'learn', 18)]),
+          el('a', { class: 'lr-main', href: `#/lesson/${l.id}` }, [
+            el('span', { class: 'lr-title', text: l.title }),
+            el('span', { class: 'lr-meta', text: chap ? `${chap}, ${pages(l.citation)}` : pages(l.citation) })
           ]),
-          el('div', { class: 'row' }, [
-            done ? tag('Completed', 'done', 'check') : tag(`+${gamify.XP_RULES.lesson} XP`, null, 'bolt'),
-            saved ? tag('Saved', null, 'saved') : null,
-            el('a', { class: 'btn btn-secondary btn-sm', href: `#/lesson/${l.id}` }, ['Open', icon('arrowRight', 16)])
-          ])
+          el('span', { class: 'lr-side' }, [
+            outside ? el('span', { class: 'stamp stamp-warn', text: `Class ${l.classLevel}` }) : null,
+            el('span', { class: 'lr-time', text: `${l.readingMinutes} min` }),
+            done ? el('span', { class: 'stamp stamp-done', text: 'Read' }) : null
+          ].filter(Boolean))
         ]);
       }))
-    ])].filter(Boolean));
+    ]));
   });
 }
 
@@ -261,9 +343,10 @@ export function renderLesson(view, lessonId) {
   clear(view);
   const lesson = lessonById(lessonId);
   if (!lesson) {
-    view.append(el('div', { class: 'state-box is-error' }, [
-      el('p', { text: 'That lesson could not be found.' }),
-      el('a', { class: 'btn btn-secondary', href: '#/library', text: 'Back to the library' })
+    view.append(el('div', { class: 'empty-state' }, [
+      el('h3', { text: 'That lesson is not in the library' }),
+      el('p', { text: 'The link may be out of date.' }),
+      el('a', { class: 'btn btn-primary', href: '#/library', text: 'Back to Learn' })
     ]));
     return;
   }
@@ -272,122 +355,138 @@ export function renderLesson(view, lessonId) {
   const state = store.load();
   const siblings = lessonsFor(lesson.bookId);
   const idx = siblings.findIndex((l) => l.id === lesson.id);
-  const prev = idx > 0 ? siblings[idx - 1] : null;
   const next = idx >= 0 && idx < siblings.length - 1 ? siblings[idx + 1] : null;
   const chap = lesson.chapterId ? chapterLabel(book, lesson.chapterId) : null;
   const era = gamify.ERAS.find((e) => e.id === lesson.era);
-  const prog = bookProgress(lesson.bookId);
+  const course = courseProgress(state);
+  const done = !!state.completedLessons[lesson.id];
 
-  const nextStep = el('div', { class: 'notice notice-done', hidden: !state.completedLessons[lesson.id], 'data-testid': 'next-step' });
-  function paintNextStep() {
-    clear(nextStep);
-    nextStep.append(el('p', {}, [
-      el('strong', { text: 'Lesson complete. ' }),
-      next ? 'Next up in this book, or test what you just read.' : 'That is the last lesson indexed from this book.'
-    ]));
-    nextStep.append(...[el('div', { class: 'row', style: 'margin-top:.75rem' }, [
-      next ? el('a', { class: 'btn btn-primary btn-sm', href: `#/lesson/${next.id}`, text: `Next: ${next.title}` }) : null,
-      el('a', { class: 'btn btn-secondary btn-sm', href: '#/quiz', text: 'Daily Quiz' }),
-      el('a', { class: 'btn btn-secondary btn-sm', href: '#/timeline', text: 'Timeline Challenge' })
-    ])].filter(Boolean));
-  }
-  paintNextStep();
-
+  /* --- mark complete: the one saffron control on this screen --- */
   const completeBtn = el('button', {
-    class: 'btn btn-primary', type: 'button', 'data-testid': 'complete-lesson',
-    'aria-pressed': String(!!state.completedLessons[lesson.id])
-  }, [icon('check', 18), state.completedLessons[lesson.id] ? 'Completed' : `Mark complete (+${gamify.XP_RULES.lesson} XP)`]);
+    class: `btn ${done ? 'btn-done' : 'btn-primary'} btn-block`, type: 'button',
+    'data-testid': 'complete-lesson', 'aria-pressed': String(done)
+  }, [icon('check', 18), done ? 'Lesson complete' : 'Mark this lesson complete']);
+
+  const afterBox = el('div', { class: 'after-lesson', hidden: !done, 'data-testid': 'next-step' });
+  function paintAfter() {
+    clear(afterBox);
+    afterBox.append(
+      el('span', { class: 'stamp stamp-xp stamp-press' }, [icon('xp', 15), `+${gamify.XP_RULES.lesson} XP`]),
+      next
+        ? el('a', { class: 'btn btn-primary', href: `#/lesson/${next.id}`, text: 'Next lesson' })
+        : el('a', { class: 'btn btn-primary', href: '#/quiz', text: 'Answer today\u2019s questions' })
+    );
+  }
+  paintAfter();
+
   completeBtn.addEventListener('click', () => {
     const s = store.load();
     if (s.completedLessons[lesson.id]) {
       store.unmarkLessonComplete(lesson.id);
       clear(completeBtn);
-      completeBtn.append(icon('check', 18), `Mark complete (+${gamify.XP_RULES.lesson} XP)`);
+      completeBtn.className = 'btn btn-primary btn-block';
+      completeBtn.append(icon('check', 18), 'Mark this lesson complete');
       completeBtn.setAttribute('aria-pressed', 'false');
-      nextStep.hidden = true;
-      toast('Marked as not complete. XP already earned is kept.');
+      afterBox.hidden = true;
+      toast('No longer marked complete. The XP you already earned is kept.');
     } else {
       store.markLessonComplete(lesson.id, todayKey());
       gamify.award('lesson', lesson.id, { lessons: DATA.lessons.lessons });
       clear(completeBtn);
-      completeBtn.append(icon('check', 18), 'Completed');
+      completeBtn.className = 'btn btn-done btn-block';
+      completeBtn.append(icon('check', 18), 'Lesson complete');
       completeBtn.setAttribute('aria-pressed', 'true');
-      nextStep.hidden = false;
-      paintNextStep();
+      afterBox.hidden = false;
+      paintAfter();
       document.dispatchEvent(new CustomEvent('trident:hud'));
     }
+    document.querySelectorAll('[data-testid="reader-rail"] i').forEach((seg, i) => {
+      const l = course.lessons[i];
+      if (l) seg.className = store.load().completedLessons[l.id] ? 'is-done' : (l.id === lesson.id ? 'is-now' : '');
+    });
   });
 
   const saveBtn = el('button', {
-    class: 'btn btn-secondary', type: 'button', 'data-testid': 'save-lesson',
+    class: 'btn btn-ghost btn-sm', type: 'button', 'data-testid': 'save-lesson',
     'aria-pressed': String(state.savedLessons.includes(lesson.id))
-  }, [icon('saved', 18), state.savedLessons.includes(lesson.id) ? 'Saved' : 'Save lesson']);
+  }, [icon('saved', 16), state.savedLessons.includes(lesson.id) ? 'Saved' : 'Save']);
   saveBtn.addEventListener('click', () => {
     const s = store.toggleSavedLesson(lesson.id);
     const on = s.savedLessons.includes(lesson.id);
     clear(saveBtn);
-    saveBtn.append(icon('saved', 18), on ? 'Saved' : 'Save lesson');
+    saveBtn.append(icon('saved', 16), on ? 'Saved' : 'Save');
     saveBtn.setAttribute('aria-pressed', String(on));
-    toast(on ? 'Lesson saved.' : 'Removed from saved lessons.');
+    toast(on ? 'Lesson saved to your collection.' : 'Removed from your collection.');
   });
 
-  view.append(...[
-    el('nav', { class: 'breadcrumb', 'aria-label': 'Breadcrumb' }, [
-      el('a', { href: '#/library', text: 'Library' }), ' / ', book.title
+  const outside = isOutsideClass(lesson);
+
+  view.append(el('article', { class: 'reader', 'data-testid': 'reader' }, [
+    /* --- where this sits: one line, no repeated board and class --- */
+    el('div', { class: 'reader-top' }, [
+      el('a', { class: 'back-link', href: '#/library' }, [icon('left', 16), 'Learn']),
+      el('span', { class: 'reader-time', text: `${lesson.readingMinutes} min read` }),
+      saveBtn
     ]),
-    el('header', { class: 'stack' }, [
-      el('div', { class: 'pill-row' }, [
-        el('span', { class: 'pill', text: book.board }),
-        el('span', { class: 'pill', text: `Class ${lesson.classLevel}` }),
-        era ? el('span', { class: 'pill' }, [eraIcon(era.id, 13), ` ${era.label}`]) : null,
-        el('span', { class: 'pill', text: `${lesson.readingMinutes} min read` })
+
+    outside ? el('p', { class: 'stamp stamp-warn', 'data-testid': 'outside-class' },
+      [icon('info', 15), `This lesson is from Class ${lesson.classLevel}, not your own class.`]) : null,
+
+    el('h1', { class: 'title-serif reader-title', text: lesson.title }),
+
+    el('div', { class: 'reader-rail' }, [
+      el('div', { class: 'rail-legend' }, [
+        el('b', { text: course.label }),
+        el('span', { 'data-testid': 'reader-progress', text: `${course.done} of ${course.total} lessons` })
       ]),
-      el('h1', { text: lesson.title })
+      el('div', {
+        class: 'rail', 'data-testid': 'reader-rail', role: 'img',
+        'aria-label': `${course.done} of ${course.total} lessons in this class complete`
+      }, course.lessons.map((l) => el('i', {
+        class: state.completedLessons[l.id] ? 'is-done' : (l.id === lesson.id ? 'is-now' : ''), title: l.title
+      })))
     ]),
 
-    /* sticky source control */
-    el('div', { class: 'source-bar', 'data-testid': 'source-bar' }, [
-      icon('evidence', 18),
-      el('span', { class: 'sb-book', text: book.title }),
-      el('span', { class: 'hint', text: chap ? `${chap} · ${pages(lesson.citation)}` : `${pages(lesson.citation)} · chapter title not recorded in the source` }),
-      el('span', { class: 'push hint', text: `Book progress ${prog.completed}/${prog.total}` })
-    ]),
+    el('p', { class: 'reader-intro', text: lesson.intro }),
 
-    el('div', { class: 'section reader-shell stack' }, [
-      el('p', { text: lesson.intro }),
-      el('div', { class: 'parchment' }, [
-        el('span', { class: 'excerpt-mark', text: 'Verbatim excerpt from the textbook' }),
-        ...lesson.excerpt.split('\n\n').map((p) => el('p', { text: p }))
-      ]),
-      citationBlock(lesson.citation, `${book.board}, class ${lesson.classLevel}`)
-    ]),
+    el('div', { class: 'passage', 'data-testid': 'passage' },
+      lesson.excerpt.split('\n\n').map((para) => el('p', { text: para }))),
 
-    lesson.keyPoints && lesson.keyPoints.length ? el('section', { class: 'section keyfact' }, [
-      el('span', { class: 'eyebrow', text: 'Key facts from this passage' }),
+    el('p', { class: 'passage-note', text: 'Quoted word for word from the textbook.' }),
+
+    lesson.keyPoints && lesson.keyPoints.length ? el('section', { class: 'key-ideas' }, [
+      el('h2', { text: 'Key ideas' }),
       el('ul', {}, lesson.keyPoints.map((k) => el('li', { text: k })))
     ]) : null,
 
-    lesson.timeline && lesson.timeline.length ? el('section', { class: 'section panel' }, [
-      el('h2', { text: 'Timeline' }),
-      el('ul', { class: 'timeline' }, lesson.timeline.map((t) => el('li', {}, [
-        el('span', { class: 't-year', text: t.year }),
-        el('span', { class: 't-event', text: t.event })
-      ]))),
-      el('a', { class: 'btn btn-ghost btn-sm', href: '#/timeline', text: 'Try the Timeline Challenge' })
-    ]) : null,
+    /* --- the source, compact on the surface and complete inside --- */
+    el('details', { class: 'source', 'data-testid': 'source' }, [
+      el('summary', {}, [
+        icon('evidence', 16),
+        el('span', { class: 'src-line', text: `${shortBookName(book)}, ${pages(lesson.citation)}` }),
+        el('span', { class: 'src-more', text: 'View source' })
+      ]),
+      el('dl', { class: 'src-detail' }, [
+        el('dt', { text: 'Book' }), el('dd', { text: book.title }),
+        el('dt', { text: 'Chapter' }), el('dd', { text: chap || 'Not recorded in the source' }),
+        el('dt', { text: 'Pages' }), el('dd', { text: pages(lesson.citation) }),
+        el('dt', { text: 'Board' }), el('dd', { text: `${book.board}, class ${lesson.classLevel}` }),
+        el('dt', { text: 'Passage' }), el('dd', { class: 'src-id', text: lesson.citation.passageId || 'n/a' })
+      ])
+    ]),
 
-    el('div', { class: 'reader-actions' }, [completeBtn, saveBtn]),
-    el('div', { class: 'section' }, [nextStep]),
-    exploreBooksSection(lesson, era),
+    /* --- one quick check, then the one action --- */
+    el('div', { class: 'check-host', 'data-testid': 'lesson-check' }),
 
-    el('nav', { class: 'reader-nav', 'aria-label': 'Lesson navigation' }, [
-      prev ? el('a', { class: 'btn btn-ghost', href: `#/lesson/${prev.id}`, text: `← ${prev.title}` }) : el('span', {}),
-      next ? el('a', { class: 'btn btn-ghost', href: `#/lesson/${next.id}`, text: `${next.title} →` }) : el('span', {})
-    ])
-  ].filter(Boolean));
+    el('div', { class: 'reader-finish' }, [completeBtn, afterBox]),
 
+    era ? exploreBooksSection(lesson, era) : null
+  ].filter(Boolean)));
+
+  /* --- a reading position is restored only when it is worth restoring:
+     the learner genuinely stopped part-way and has not finished the lesson --- */
   const saved = state.readingPositions[lesson.id];
-  if (saved && typeof saved.scroll === 'number') {
+  if (!done && saved && typeof saved.scroll === 'number' && saved.scroll > 240) {
     requestAnimationFrame(() => window.scrollTo({ top: saved.scroll, behavior: 'auto' }));
   }
   let scrollTimer = null;
@@ -414,9 +513,19 @@ export function continueLesson() {
   for (const [id] of positions) {
     if (!state.completedLessons[id] && lessonById(id)) return lessonById(id);
   }
+  // the learner's own class comes first and is exhausted before anything else
+  // is offered, so Home never quietly hands a Class 7 student another class's
+  // lesson without saying so
+  const mine = profile.scopedLessons().filter((l) => !state.completedLessons[l.id]);
+  if (mine.length) return profile.rank(mine)[0] || mine[0];
   const unfinished = DATA.lessons.lessons.filter((l) => !state.completedLessons[l.id]);
-  const ranked = profile.rank(unfinished);
-  return ranked[0] || DATA.lessons.lessons[0] || null;
+  return profile.rank(unfinished)[0] || null;
+}
+
+/** True when a lesson sits outside the learner's own board and class. */
+export function isOutsideClass(lesson) {
+  const strict = profile.strictFn();
+  return !!(strict && lesson && !strict(lesson));
 }
 
 /* ==========================================================================

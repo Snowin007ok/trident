@@ -247,6 +247,15 @@ export function checkUnlocks(ctx = {}) {
   return { badges: newBadges, artefacts: newArtefacts };
 }
 
+/**
+ * The nearest badge still to be earned, in the order they were designed to
+ * fall. Home shows this one so the first achievement always looks reachable
+ * rather than presenting a wall of locks.
+ */
+export function nextReward(state) {
+  return BADGES.find((b) => !state.badges[b.id]) || null;
+}
+
 export function earnedBadges(state) {
   return BADGES.map((b) => ({ ...b, earnedAt: state.badges[b.id] || null }));
 }
