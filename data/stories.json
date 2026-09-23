@@ -1,0 +1,126 @@
+{
+  "schemaVersion": "1.0",
+  "authoring": "Each story is a short editorial retelling written for TRIDENT. Every fact in it comes from the verified passages cited at the foot of the story, and nothing has been added beyond them. The stories are not quotations from the textbooks.",
+  "stories": [
+    {
+      "id": "s-plassey",
+      "title": "The Day a Trading Company Became a Government",
+      "readingMinutes": 5,
+      "path": "tn",
+      "topic": "Company rule",
+      "narrative": "It began as a commercial rivalry. In March 1757 the British captured Chandranagore, the French settlement, and three months later the quarrel had become a battle. On 23 June 1757, forces of the English East India Company under Robert Clive faced the Nawab of Bengal, Siraj-ud-daulah, and his French allies at Plassey.\n\nThe battle was, in the words of the class 10 textbook, orchestrated. Clive had secured the clandestine support of Mir Jafar, the chief of the Nawab's own army. He was helped too by the Jagat Seths, the moneylenders of Bengal, who had been aggrieved by Siraj-ud-daulah's policy. A ruler betrayed from inside his own camp does not usually win.\n\nWhat followed mattered more than the fighting. After the collapse of Bengal the Company drew a huge amount of wealth from the province's treasury and spent it on strengthening its own military force. Mir Jafar, now Nawab, paid the Company ₹ 22.5 million between 1757 and 1760. The Company won the undisputed right to trade freely in Bengal, Bihar and Orissa, and received the district of 24 Parganas.\n\nThe money did not stay in India. The class 10 textbook follows it to Britain, where it was invested to propel the industrial revolution and rapidly mechanise the British textile industry. India, meanwhile, was pushed down the path of de-industrialisation and made into a market for goods manufactured in Britain.\n\nSeven years later, in 1764, came the Battle of Buxar. But the class 8 textbook is clear about which battle marked the turn: the beginning of British political sway over India may be traced from Plassey — the most decisive battle, it says, marking the initiation of British rule for the next two centuries.\n\nIt is worth holding those two sentences side by side. One battle on one June afternoon; two hundred years of consequence.",
+      "takeaway": "Plassey was decided less by fighting than by defection and finance — and the wealth it released was invested in Britain's industrial revolution rather than in Bengal.",
+      "citations": [
+        { "book": "Social Science, Standard Eight", "board": "Tamil Nadu State Board", "classLevel": "8", "chapter": null, "pageStart": 18, "pageEnd": 20 },
+        { "book": "Social Science, Standard Ten", "board": "Tamil Nadu State Board", "classLevel": "10", "chapter": null, "pageStart": 81, "pageEnd": 82 }
+      ],
+      "miniQuiz": [
+        { "prompt": "On what date was the Battle of Plassey fought?", "options": ["23 June 1757", "23 June 1764", "March 1757"], "answerIndex": 0, "explanation": "The Battle of Plassey was fought on 23 June 1757. Chandranagore had been captured in March of the same year, and Buxar followed in 1764." },
+        { "prompt": "Who gave Clive clandestine support from inside the Nawab's camp?", "options": ["Mir Jafar", "The Jagat Seths alone", "Siraj-ud-daulah's French allies"], "answerIndex": 0, "explanation": "Mir Jafar, chief of the Nawab's army, gave Clive clandestine support and afterwards became Nawab of Bengal himself." },
+        { "prompt": "What does the class 10 textbook say happened to the money the Company took from Bengal?", "options": ["It was invested in Britain's industrial revolution", "It was spent on famine relief in Bengal", "It was returned after the Battle of Buxar"], "answerIndex": 0, "explanation": "The same money was later invested to propel the industrial revolution in Britain, which rapidly mechanised its textile industry." }
+      ]
+    },
+    {
+      "id": "s-harappa",
+      "title": "How a Lost City Was Found",
+      "readingMinutes": 5,
+      "path": "tn",
+      "topic": "Indus civilisation",
+      "narrative": "A city does not announce itself when it has been buried for four thousand years. It has to be recognised.\n\nThe first written description of the ruins of Harappa came from an unlikely author: Charles Masson, a soldier and explorer of the British East India Company, who set it down in his book after visiting the North-West Frontier Province. He was not looking for a civilisation. He simply described what he saw.\n\nSystematic work needed an institution, and in 1861 one was created. The Archaeological Survey of India was started that year with Alexander Cunningham as Surveyor; its headquarters stands in New Delhi to this day.\n\nSo how does an archaeologist actually find a lost city? The class 6 textbook sets out the method plainly. They study physical objects — bricks, stones, bits of broken pottery called sherds — to work out where a city stood and to which period it belonged. They search ancient literary sources for references to the place. They look at aerial photographs of excavation sites to understand the topography. They may use a magnetic scanner to see beneath the ground. And the presence or absence of remains can be detected by RADAR and remote sensing.\n\nNotice how little of that is digging. Most of it is reading: reading pottery, reading old texts, reading the shape of the land from the air. Excavation is the last step, not the first.\n\nThe river mattered too. Settlements clustered where fresh water was available for drinking, for watering livestock and for irrigation, and where people and goods could move easily. Harappa and Mohenjo-daro were not placed at random.\n\nIt is a useful reminder for anyone starting history at school. The past is not found by luck. It is found by method — and by someone bothering to write down what they saw.",
+      "takeaway": "Harappa was first described by a Company soldier, but it was recovered by method: pottery, texts, aerial photographs, magnetic scanners and remote sensing, long before a spade goes in.",
+      "citations": [
+        { "book": "Social Science, Standard Six, Term I (Volume 3)", "board": "Tamil Nadu State Board", "classLevel": "6", "chapter": "Unit 3 — Indus Civilisation", "pageStart": 31, "pageEnd": 35 }
+      ],
+      "miniQuiz": [
+        { "prompt": "Who first described the ruins of Harappa in his book?", "options": ["Charles Masson", "Alexander Cunningham", "Mortimer Wheeler"], "answerIndex": 0, "explanation": "Charles Masson, a British East India Company soldier and explorer, first described the ruins of Harappa." },
+        { "prompt": "In which year was the Archaeological Survey of India started?", "options": ["1861", "1878", "1958"], "answerIndex": 0, "explanation": "The ASI was started in 1861 with Alexander Cunningham as Surveyor, and is headquartered in New Delhi." },
+        { "prompt": "Which of these methods does the textbook list for detecting remains under the ground?", "options": ["RADAR and remote sensing", "Carbon dating of river water", "Satellite weather mapping"], "answerIndex": 0, "explanation": "The presence and absence of archaeological remains can be detected by RADAR and remote sensing methods; a magnetic scanner may also be used." }
+      ]
+    },
+    {
+      "id": "s-puhar",
+      "title": "The Port That Thought Overcharging Was Shameful",
+      "readingMinutes": 5,
+      "path": "tn",
+      "topic": "Ancient Tamilagam",
+      "narrative": "Some of the best evidence about ancient Tamil ports is not buried in the ground. It is in poetry.\n\nTwo Sangam-era works carry the story of Puhar, also called Poompuhar. Silappathikaram speaks about the greatness of the city; its lead female character is Kannagi, and its male character Kovalan is the son of Maasathuvan — a name that itself meant a big trader. The second work, Pattinappaalai, was composed by Kadiyalur Uruttirangannanar, whom the textbook places in the 2nd century BCE. That date is offered as evidence of just how old Puhar is.\n\nWhat did the port trade? Horses came in by sea. Pepper travelled by the land route. Gold arriving from Vadamalai was polished and then exported overseas. Sandal came from the Western Ghats, pearls from the southern sea, corals from the eastern sea, and food items from Eelam. Merchants from Greece and Rome landed at Poompuhar and settled alongside local sea traders.\n\nAnd there is one line in Pattinappaalai that is worth stopping on. Selling any commodity at a higher price, it says, was considered bad.\n\nThat is a remarkable thing to find in a description of a busy international port. It is not a law and it is not an enforcement record — it is a statement about what the community thought was decent. A poem is telling us the commercial ethics of a place that had every opportunity to overcharge foreign buyers and evidently disapproved of doing so.\n\nHistorians call this kind of evidence a literary source, and it has limits: a poem praises, and praise exaggerates. But used carefully, alongside excavated ports like Arikkamedu, it gives something archaeology rarely does — not just what people traded, but what they thought about trading.",
+      "takeaway": "Sangam poetry is a historical source: Pattinappaalai and Silappathikaram record Puhar's overseas trade, and one line records the ethic that overcharging was considered shameful.",
+      "citations": [
+        { "book": "Social Science, Standard Six, Term I (Volume 3)", "board": "Tamil Nadu State Board", "classLevel": "6", "chapter": "Unit 4 — Ancient Cities of Tamilagam", "pageStart": 48, "pageEnd": 51 }
+      ],
+      "miniQuiz": [
+        { "prompt": "To which period does the textbook assign Kadiyalur Uruttirangannanar, author of Pattinappaalai?", "options": ["2nd century BCE", "2nd century CE", "5th century BCE"], "answerIndex": 0, "explanation": "He belonged to the 2nd century BCE, which the textbook offers as an indication of Puhar's antiquity." },
+        { "prompt": "According to Pattinappaalai, what was considered bad at Puhar?", "options": ["Selling any commodity at a higher price", "Trading with foreign merchants", "Importing horses by sea"], "answerIndex": 0, "explanation": "Pattinappaalai states that selling any commodity at a higher price was considered bad." },
+        { "prompt": "Which goods came to Puhar from Eelam?", "options": ["Food items", "Pearls", "Sandal"], "answerIndex": 0, "explanation": "Food items came from Eelam; pearls came from the southern sea and sandal from the Western Ghats." }
+      ]
+    },
+    {
+      "id": "s-pietermaritzburg",
+      "title": "A Platform, a Cold Night, and a Method",
+      "readingMinutes": 5,
+      "path": "tn",
+      "topic": "Indian national movement",
+      "narrative": "Gandhi left for South Africa in April 1893. He was a young lawyer travelling on a professional engagement, not a political leader.\n\nOn the journey from Durban to Pretoria he was physically thrown out of the first class compartment at Pietermaritzburg Railway Station. It was, the class 10 textbook records, the first time he faced racial discrimination. The sentence that follows is the one that matters: Gandhi was determined to fight.\n\nWhat he built in South Africa was not a protest but a technique. He called a meeting of Indians in the Transvaal and urged them to form an association to seek redress of their grievances, and he kept holding such meetings. When the campaign came, registration offices of immigrants were picketed. The police responded with violence — and the satyagrahis offered no resistance. Gandhi and other leaders were arrested. The struggle was carried on by Indians who were mostly indentured labourers turned hawkers, and it continued despite police brutality.\n\nIt worked. By the Smuts-Gandhi Agreement, the poll tax on indentured labourers was abolished.\n\nThen came the return, and a second lesson — this one about patience. Gandhi regarded Gopal Krishna Gokhale, whom he had met on earlier visits to India, as his political guru. On Gokhale's advice he travelled the length and breadth of the country before plunging into politics, so that he would understand the conditions of the people first. It was on one of those journeys, through Tamil Nadu, that he decided to discard his flowing robes and wear a simple dhoti.\n\nA man who had been thrown off a train in 1893 spent his first year back in India doing nothing but listening. The method had been tested abroad; the country it would be used on had to be learned.",
+      "takeaway": "Satyagraha was worked out in South Africa — picketing, arrest, no retaliation — and won the abolition of the poll tax before Gandhi applied it in India.",
+      "citations": [
+        { "book": "Social Science, Standard Ten", "board": "Tamil Nadu State Board", "classLevel": "10", "chapter": null, "pageStart": 96, "pageEnd": 97 }
+      ],
+      "miniQuiz": [
+        { "prompt": "When did Gandhi leave for South Africa?", "options": ["April 1893", "April 1915", "June 1893"], "answerIndex": 0, "explanation": "Gandhi left for South Africa in April 1893 and faced racial discrimination there for the first time." },
+        { "prompt": "What did the Smuts-Gandhi Agreement achieve?", "options": ["The poll tax on indentured labourers was abolished", "Indians gained the vote in the Transvaal", "Registration of immigrants was made voluntary"], "answerIndex": 0, "explanation": "Finally, by the Smuts-Gandhi Agreement, the poll tax on indentured labourers was abolished." },
+        { "prompt": "On whose advice did Gandhi travel across India before entering politics?", "options": ["Gopal Krishna Gokhale", "Muhammad Ali", "Shaukat Ali"], "answerIndex": 0, "explanation": "Gandhi regarded Gokhale as his political guru and travelled the country on his advice, to understand the conditions of the people." }
+      ]
+    },
+    {
+      "id": "s-manchester",
+      "title": "Fifty Mills in One City",
+      "readingMinutes": 5,
+      "path": "tn",
+      "topic": "Industrial revolution",
+      "narrative": "Two numbers explain the Industrial Revolution better than any description of it.\n\nThe first: in 1802, Manchester had more than fifty mills. The second: coal production in England rose from 4.7 million tonnes in 1750 to 250 million tonnes in 1900 — a fifty-fold increase inside a century and a half.\n\nTextile manufacture sat at the heart of it. Over a span of fifty years, British textile manufacturing changed from handmade to machine-made goods, and the new machines let factories produce cloth in quantities that hand weavers could not approach. Derbyshire, Lancashire, Cheshire, Staffordshire, Nottinghamshire and Yorkshire became the major factory centres, with Manchester the most notable of them. Inside those factories, mass production was organised on the principle of division of labour — one worker, one repeated task.\n\nBut a factory is useless if nothing can reach it. The class 9 textbook is careful about this: the Industrial Revolution was dependent on good transportation. As production increased, raw materials had to be brought from far away, and finished goods had to be carried out to markets. So new networks of canals, roads and railroads were built. Macadamised roads improved road travel, and George Stephenson's steam locomotive improved the railways.\n\nThere is a habit of thinking about this period as a series of clever inventions — a spinning machine here, a safety lamp there, Sir Humphrey Davy's in 1815. The textbook's framing is more useful. Machines raised output; output demanded transport; transport demanded coal; coal demanded more machines. Each part pulled the others along.\n\nWhich is why the coal figure is the one to remember. It is not a fact about mining. It is the measure of how much everything else had grown.",
+      "takeaway": "The Industrial Revolution was a loop, not a list of inventions: machines raised output, output demanded canals and railways, and that demand shows up in England's coal rising from 4.7 to 250 million tonnes.",
+      "citations": [
+        { "book": "Social Science, Standard Nine", "board": "Tamil Nadu State Board", "classLevel": "9", "chapter": "Unit 10 — Industrial Revolution", "pageStart": 140, "pageEnd": 142 }
+      ],
+      "miniQuiz": [
+        { "prompt": "How much did English coal production rise between 1750 and 1900?", "options": ["From 4.7 million tonnes to 250 million tonnes", "From 47 million tonnes to 250 million tonnes", "From 4.7 million tonnes to 25 million tonnes"], "answerIndex": 0, "explanation": "Coal production in England increased from 4.7 million tonnes in 1750 to 250 million tonnes in 1900." },
+        { "prompt": "On what principle were the mass-production factories organised?", "options": ["Division of labour", "Rotation of tasks", "Family workshops"], "answerIndex": 0, "explanation": "The factories involved in mass production were organised on the principle of division of labour." },
+        { "prompt": "Whose steam locomotive is credited with improving railway transport?", "options": ["George Stephenson", "Humphrey Davy", "Holt Mackenzie"], "answerIndex": 0, "explanation": "Macadamised roads and George Stephenson's steam locomotive helped improve road and railway transport." }
+      ]
+    },
+    {
+      "id": "s-sabha",
+      "title": "The Rules for Sitting on the Sabha",
+      "readingMinutes": 5,
+      "path": "cbse",
+      "topic": "Medieval administration",
+      "narrative": "An inscription survives that lists who was allowed to become a member of the sabha, a local assembly. Read as a set of rules it is dry. Read as a portrait of a society it is extraordinary.\n\nA candidate had to own land from which land revenue was collected. He had to own his own home. He had to be between thirty-five and seventy years of age. He had to have knowledge of the Vedas. He had to be well-versed in administrative matters, and honest.\n\nThen come the disqualifications, and they are strikingly modern. Anyone who had been a member of any committee in the last three years could not become a member of another committee — a rotation rule, to stop the same few people holding everything. And anyone who had not submitted his accounts, or whose relatives had not submitted theirs, could not contest the elections at all.\n\nSo this was a system with term limits and financial disclosure, centuries ago. But notice what the qualifications quietly do. Requiring land ownership, home ownership and knowledge of the Vedas excludes most of the population before the election begins. Our Pasts – II puts the question to the reader directly: do you think women participated in these assemblies?\n\nThe textbook then does something careful. Having shown us an inscription about powerful men, it turns to a different kind of source — an excerpt from the Periyapuranam, a twelfth-century Tamil work, which describes the lives of ordinary men and women instead: a small hamlet on the outskirts of Adanur, huts under old thatches, agrarian labourers in menial occupations, children with bracelets of black iron.\n\nTwo sources, two versions of the same society. Inscriptions tell you who governed. Literature tells you who was governed. A historian needs both, and needs to notice which one is missing.",
+      "takeaway": "The sabha inscription shows term limits and audited accounts alongside qualifications that excluded most people — and the textbook pairs it with the Periyapuranam to show the lives those rules left out.",
+      "citations": [
+        { "book": "Our Pasts – II", "board": "CBSE", "classLevel": "7", "chapter": null, "pageStart": 29, "pageEnd": 32 }
+      ],
+      "miniQuiz": [
+        { "prompt": "What age range was required of sabha members?", "options": ["Between 35 and 70 years", "Between 25 and 60 years", "Over 40 years"], "answerIndex": 0, "explanation": "Members of the sabha had to be between 35 and 70 years of age." },
+        { "prompt": "Who could not contest the elections?", "options": ["Anyone who had not submitted his accounts, or whose relatives had not", "Anyone who owned no cattle", "Anyone who had never served on a committee"], "answerIndex": 0, "explanation": "Anyone who had not submitted his accounts, as well as those of his relatives, could not contest the elections." },
+        { "prompt": "Which source does the chapter use to describe the lives of ordinary men and women?", "options": ["The Periyapuranam, a twelfth-century Tamil work", "The sabha inscription itself", "Pattinappaalai"], "answerIndex": 0, "explanation": "The chapter turns to an excerpt from the Periyapuranam, a twelfth-century Tamil work, for the lives of ordinary people." }
+      ]
+    },
+    {
+      "id": "s-arikkamedu",
+      "title": "Ring Wells, Roman Coins and the Law",
+      "readingMinutes": 5,
+      "path": "tn",
+      "topic": "Sangam age archaeology",
+      "narrative": "Arikkamedu sits near Puducherry, and it is one of the most thoroughly investigated sites of the Sangam age. Its excavation history reads like a short course in how archaeology became an international discipline.\n\nThe Archaeological Survey of India excavated it. So did the British archaeologist Robert Eric Mortimer Wheeler, the French archaeologist J.M. Casal, and the Indian archaeologists A. Ghosh and Krishna Deva. Four excavators from three countries, working on one port.\n\nWhat they found was not a village. They found evidence of a planned town: a warehouse, streets, tanks and ring wells. Archaeologists have also found brick structures, evidence of industrial activity, and artefacts including beads. Roman coins have been recovered in the region, at Pudukkottai. This was a place plugged into a long-distance economy.\n\nCoins are worth a closer look. Punch-marked coins are the earliest coins used in India — mostly silver, carrying numerous symbols punched into the metal, which is exactly how they got their name.\n\nAnd then there is the part of the story that has nothing to do with the ancient world at all. A site like Arikkamedu survives only if somebody protects it, and in India three laws do that work: the Indian Treasure Trove Act of 1878, the Ancient Monuments and Archaeological Sites and Remains Act of 1958, and the Antiquities and Art Treasures Act of 1972. The ASI is the central government agency that manages archaeological sites and monuments; Tamil Nadu also has its own State Department of Archaeology.\n\nIt is easy to read those three dates as administrative trivia. They are not. Every ring well still visible at Arikkamedu is there because a law made removing it a crime.",
+      "takeaway": "Arikkamedu was excavated by British, French and Indian archaeologists and yielded a planned town with ring wells — and it survives because three Indian laws, from 1878, 1958 and 1972, protect it.",
+      "citations": [
+        { "book": "Social Science, Standard Nine", "board": "Tamil Nadu State Board", "classLevel": "9", "chapter": "Unit 3 — Early Tamil Society and Culture", "pageStart": 44, "pageEnd": 45 }
+      ],
+      "miniQuiz": [
+        { "prompt": "What did excavators find at Arikkamedu?", "options": ["A planned town with a warehouse, streets, tanks and ring wells", "A fortified hill capital", "A Buddhist monastery complex"], "answerIndex": 0, "explanation": "They found evidence of a planned town, warehouse, streets, tanks and ring wells." },
+        { "prompt": "Which is the earliest type of coin used in India?", "options": ["Punch-marked coins", "Roman denarii", "Cast copper coins"], "answerIndex": 0, "explanation": "Punch-marked coins are the earliest coins used in India, mostly made of silver with numerous punched symbols." },
+        { "prompt": "Which law dates from 1958?", "options": ["Ancient Monuments and Archaeological Sites and Remains Act", "Indian Treasure Trove Act", "Antiquities and Art Treasures Act"], "answerIndex": 0, "explanation": "The Ancient Monuments and Archaeological Sites and Remains Act dates from 1958; the Treasure Trove Act is 1878 and the Antiquities and Art Treasures Act 1972." }
+      ]
+    }
+  ]
+}

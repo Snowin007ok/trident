@@ -1,0 +1,18 @@
+{
+  "name": "trident-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "TRIDENT \u2014 a history-learning prototype built on verified Tamil Nadu State Board and CBSE textbook passages.",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server/server.js",
+    "test": "node docs/server-tests.mjs",
+    "diagnose": "node --env-file-if-exists=.env server/diagnose.js"
+  },
+  "dependencies": {
+    "@google/genai": "^2.24.0"
+  }
+}

@@ -1,0 +1,462 @@
+{
+  "schemaVersion": "1.0",
+  "generatedFrom": "TRIDENT verified history index v2.1 (1,026 passages, 12 books)",
+  "generatedOn": "2026-09-21",
+  "paths": [
+    {
+      "id": "tn",
+      "name": "Tamil Nadu State Board",
+      "short": "State Board",
+      "status": "active",
+      "blurb": "Social Science textbooks, classes 6 to 10, from the Tamil Nadu State Council of Educational Research and Training."
+    },
+    {
+      "id": "cbse",
+      "name": "CBSE",
+      "short": "CBSE",
+      "status": "active",
+      "blurb": "NCERT history textbooks for classes 6, 7, 10 and 12."
+    },
+    {
+      "id": "tnpsc",
+      "name": "TNPSC Preparation",
+      "short": "TNPSC",
+      "status": "beta",
+      "blurb": "A small practice area drawn only from manually reviewed State Board and CBSE passages. The Tamil TNPSC study materials are not indexed — their embedded text failed verification."
+    }
+  ],
+  "classAvailability": {
+    "6": {
+      "state": "available",
+      "label": "Available"
+    },
+    "7": {
+      "state": "available",
+      "label": "Available"
+    },
+    "8": {
+      "state": "available",
+      "label": "Available"
+    },
+    "9": {
+      "state": "available",
+      "label": "Available"
+    },
+    "10": {
+      "state": "available",
+      "label": "Available"
+    },
+    "11": {
+      "state": "coming_soon",
+      "label": "Content coming soon"
+    },
+    "12": {
+      "state": "limited",
+      "label": "Limited coverage"
+    }
+  },
+  "notices": {
+    "11": "No verified class 11 history material is indexed yet. The State Board class 11 volume in the collection is Political Science, which is outside this history index, and the CBSE class 11 book could not be verified.",
+    "12": "Class 12 currently covers CBSE Themes in Indian History, Parts I and II only.",
+    "tnpsc": "Beta. TNPSC practice reuses verified State Board and CBSE passages. No unverified Tamil material is used."
+  },
+  "books": [
+    {
+      "id": "tn-6-ss-t1",
+      "title": "Social Science, Standard Six, Term I (Volume 3)",
+      "path": "tn",
+      "board": "Tamil Nadu State Board",
+      "classLevel": "6",
+      "subject": "Social Science",
+      "language": "English",
+      "pages": 110,
+      "chaptersDetected": true,
+      "chapters": [
+        {
+          "id": "u1",
+          "label": "Unit 1 — What is History?",
+          "pageStart": 8,
+          "pageEnd": 21
+        },
+        {
+          "id": "u2",
+          "label": "Unit 2 — Human Evolution",
+          "pageStart": 20,
+          "pageEnd": 32
+        },
+        {
+          "id": "u3",
+          "label": "Unit 3 — Indus Civilisation",
+          "pageStart": 31,
+          "pageEnd": 49
+        },
+        {
+          "id": "u4",
+          "label": "Unit 4 — Ancient Cities of Tamilagam",
+          "pageStart": 48,
+          "pageEnd": 59
+        }
+      ],
+      "note": "This volume also contains Geography and Civics units. Only the History units are indexed here."
+    },
+    {
+      "id": "tn-7-ss-t1",
+      "title": "Social Science, Standard Seven, Term I (Volume 3)",
+      "path": "tn",
+      "board": "Tamil Nadu State Board",
+      "classLevel": "7",
+      "subject": "Social Science",
+      "language": "English",
+      "pages": 100,
+      "chaptersDetected": true,
+      "chapters": [
+        {
+          "id": "u1",
+          "title": "Unit 1 — Sources of Medieval Indian History",
+          "pageStart": 7,
+          "pageEnd": 16
+        },
+        {
+          "id": "u2",
+          "title": "Unit 2 — Emergence of New Kingdoms in North India",
+          "pageStart": 15,
+          "pageEnd": 26
+        },
+        {
+          "id": "u3",
+          "title": "Unit 3 — Emergence of New Kingdoms in South India",
+          "pageStart": 26,
+          "pageEnd": 40
+        },
+        {
+          "id": "u4",
+          "title": "Unit 4 — The Delhi Sultanate",
+          "pageStart": 40,
+          "pageEnd": 50
+        }
+      ],
+      "note": "History units confirmed against the verified passage index. These volumes also carry Geography, Civics and Economics units, which are outside this history library."
+    },
+    {
+      "id": "tn-7-ss-t2",
+      "title": "Social Science, Standard Seven, Term II (Volume 3)",
+      "path": "tn",
+      "board": "Tamil Nadu State Board",
+      "classLevel": "7",
+      "subject": "Social Science",
+      "language": "English",
+      "pages": 89,
+      "chaptersDetected": true,
+      "chapters": [
+        {
+          "id": "u1",
+          "title": "Unit 1 — The Vijayanagara and Bahmani Kingdoms",
+          "pageStart": 6,
+          "pageEnd": 19
+        },
+        {
+          "id": "u2",
+          "title": "Unit II — The Mughal Empire",
+          "pageStart": 19,
+          "pageEnd": 32
+        },
+        {
+          "id": "u3",
+          "title": "Unit III — The Marathas",
+          "pageStart": 32,
+          "pageEnd": 45
+        }
+      ],
+      "note": "History units confirmed against the verified passage index. These volumes also carry Geography, Civics and Economics units, which are outside this history library."
+    },
+    {
+      "id": "tn-7-ss-t3",
+      "title": "Social Science, Standard Seven, Term III (Volume 3)",
+      "path": "tn",
+      "board": "Tamil Nadu State Board",
+      "classLevel": "7",
+      "subject": "Social Science",
+      "language": "English",
+      "pages": 120,
+      "chaptersDetected": true,
+      "chapters": [
+        {
+          "id": "u1",
+          "title": "Unit 1 — Religious and Bhakti Movements",
+          "pageStart": 6,
+          "pageEnd": 15
+        },
+        {
+          "id": "u2",
+          "title": "Unit 2 — Art and Architecture of South India",
+          "pageStart": 15,
+          "pageEnd": 25
+        },
+        {
+          "id": "u3",
+          "title": "Unit 3 — Ancient Religions of Tamil Nadu",
+          "pageStart": 24,
+          "pageEnd": 38
+        }
+      ],
+      "note": "History units confirmed against the verified passage index. These volumes also carry Geography, Civics and Economics units, which are outside this history library."
+    },
+    {
+      "id": "tn-8-ss",
+      "title": "Social Science, Standard Eight",
+      "path": "tn",
+      "board": "Tamil Nadu State Board",
+      "classLevel": "8",
+      "subject": "Social Science",
+      "language": "English",
+      "pages": 256,
+      "chaptersDetected": false,
+      "chapters": [],
+      "note": "Unit markers repeat across the History, Geography and Civics sections of this volume, so lessons cite page numbers rather than unit titles."
+    },
+    {
+      "id": "tn-9-ss",
+      "title": "Social Science, Standard Nine",
+      "path": "tn",
+      "board": "Tamil Nadu State Board",
+      "classLevel": "9",
+      "subject": "Social Science",
+      "language": "English",
+      "pages": 328,
+      "chaptersDetected": true,
+      "chapters": [
+        {
+          "id": "u1",
+          "label": "Unit 1 — Evolution of Humans and Society: Prehistoric Period",
+          "pageStart": 9,
+          "pageEnd": 25
+        },
+        {
+          "id": "u2",
+          "label": "Unit 2 — Ancient Civilisations",
+          "pageStart": 25,
+          "pageEnd": 42
+        },
+        {
+          "id": "u3",
+          "label": "Unit 3 — Early Tamil Society and Culture",
+          "pageStart": 42,
+          "pageEnd": 62
+        },
+        {
+          "id": "u4",
+          "label": "Unit 4 — Intellectual Awakening and Socio-Political Changes",
+          "pageStart": 62,
+          "pageEnd": 74
+        },
+        {
+          "id": "u5",
+          "label": "Unit 5 — The Classical World",
+          "pageStart": 74,
+          "pageEnd": 85
+        },
+        {
+          "id": "u6",
+          "label": "Unit 6 — The Middle Ages",
+          "pageStart": 85,
+          "pageEnd": 98
+        },
+        {
+          "id": "u7",
+          "label": "Unit 7 — State and Society in Medieval India",
+          "pageStart": 97,
+          "pageEnd": 110
+        },
+        {
+          "id": "u8",
+          "label": "Unit 8 — The Beginning of the Modern Age",
+          "pageStart": 110,
+          "pageEnd": 123
+        },
+        {
+          "id": "u9",
+          "label": "Unit 9 — The Age of Revolutions",
+          "pageStart": 122,
+          "pageEnd": 138
+        },
+        {
+          "id": "u10",
+          "label": "Unit 10 — Industrial Revolution",
+          "pageStart": 138,
+          "pageEnd": 151
+        },
+        {
+          "id": "u11",
+          "label": "Unit 11 — Colonialism in Asia and Africa",
+          "pageStart": 150,
+          "pageEnd": 167
+        }
+      ],
+      "note": "This volume also contains Geography, Civics and Economics units. Only the History units are indexed here."
+    },
+    {
+      "id": "tn-10-ss",
+      "title": "Social Science, Standard Ten",
+      "path": "tn",
+      "board": "Tamil Nadu State Board",
+      "classLevel": "10",
+      "subject": "Social Science",
+      "language": "English",
+      "pages": 344,
+      "chaptersDetected": false,
+      "chapters": [],
+      "note": "Unit markers repeat across the History, Geography, Civics and Economics sections of this volume, so lessons cite page numbers rather than unit titles."
+    },
+    {
+      "id": "cbse-6-our-pasts-1",
+      "title": "Our Pasts – I",
+      "path": "cbse",
+      "board": "CBSE",
+      "classLevel": "6",
+      "subject": "History",
+      "language": "English",
+      "pages": 136,
+      "chaptersDetected": true,
+      "chapters": [
+        {
+          "id": "c1",
+          "label": "Chapter 1",
+          "pageStart": 5,
+          "pageEnd": 16
+        },
+        {
+          "id": "c2",
+          "label": "Chapter 2",
+          "pageStart": 16,
+          "pageEnd": 25
+        },
+        {
+          "id": "c3",
+          "label": "Chapter 3",
+          "pageStart": 25,
+          "pageEnd": 36
+        },
+        {
+          "id": "c4",
+          "label": "Chapter 4",
+          "pageStart": 35,
+          "pageEnd": 47
+        },
+        {
+          "id": "c5",
+          "label": "Chapter 5",
+          "pageStart": 47,
+          "pageEnd": 58
+        },
+        {
+          "id": "c6",
+          "label": "Chapter 6",
+          "pageStart": 58,
+          "pageEnd": 69
+        },
+        {
+          "id": "c8",
+          "label": "Chapter 8",
+          "pageStart": 80,
+          "pageEnd": 92
+        },
+        {
+          "id": "c10",
+          "label": "Chapter 10",
+          "pageStart": 103,
+          "pageEnd": 116
+        },
+        {
+          "id": "c11",
+          "label": "Chapter 11",
+          "pageStart": 115,
+          "pageEnd": 127
+        },
+        {
+          "id": "c12",
+          "label": "Chapter 12",
+          "pageStart": 127,
+          "pageEnd": 136
+        }
+      ],
+      "note": "Chapter numbers were detected in the source, but the chapter titles were not, so chapters are listed by number."
+    },
+    {
+      "id": "cbse-7-our-pasts-2",
+      "title": "Our Pasts – II",
+      "path": "cbse",
+      "board": "CBSE",
+      "classLevel": "7",
+      "subject": "History",
+      "language": "English",
+      "pages": 157,
+      "chaptersDetected": false,
+      "chapters": [],
+      "note": "Chapter divisions could not be detected reliably in this volume, so lessons cite page numbers rather than chapter titles."
+    },
+    {
+      "id": "cbse-10-icw",
+      "title": "India and the Contemporary World",
+      "path": "cbse",
+      "board": "CBSE",
+      "classLevel": "10",
+      "subject": "History",
+      "language": "English",
+      "pages": 196,
+      "chaptersDetected": true,
+      "chapters": [
+        {
+          "id": "c3",
+          "label": "Chapter III",
+          "pageStart": 55,
+          "pageEnd": 75
+        },
+        {
+          "id": "c4",
+          "label": "Chapter IV",
+          "pageStart": 75,
+          "pageEnd": 125
+        },
+        {
+          "id": "c6",
+          "label": "Chapter VI",
+          "pageStart": 125,
+          "pageEnd": 173
+        },
+        {
+          "id": "c8",
+          "label": "Chapter VIII",
+          "pageStart": 173,
+          "pageEnd": 196
+        }
+      ],
+      "note": "The volume number printed on the cover could not be read from the source text, so the title is recorded exactly as it appears in the running head."
+    },
+    {
+      "id": "cbse-12-themes-1",
+      "title": "Themes in Indian History – Part I",
+      "path": "cbse",
+      "board": "CBSE",
+      "classLevel": "12",
+      "subject": "History",
+      "language": "English",
+      "pages": 117,
+      "chaptersDetected": false,
+      "chapters": [],
+      "note": "Theme divisions could not be detected reliably in this volume, so lessons cite page numbers rather than theme titles."
+    },
+    {
+      "id": "cbse-12-themes-2",
+      "title": "Themes in Indian History – Part II",
+      "path": "cbse",
+      "board": "CBSE",
+      "classLevel": "12",
+      "subject": "History",
+      "language": "English",
+      "pages": 146,
+      "chaptersDetected": false,
+      "chapters": [],
+      "note": "Theme divisions could not be detected reliably in this volume, so lessons cite page numbers rather than theme titles."
+    }
+  ]
+}

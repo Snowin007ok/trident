@@ -1,0 +1,991 @@
+{
+  "schemaVersion": "1.0",
+  "excerptPolicy": "Every excerpt is a short verbatim passage from a verified book. Line wrapping from the PDF has been joined into paragraphs; no words were added, removed or changed. Key points restate facts that appear in the excerpt shown above them.",
+  "lessons": [
+    {
+      "id": "l-tn6-history-meaning",
+      "bookId": "tn-6-ss-t1",
+      "chapterId": "u1",
+      "title": "What the Word History Means",
+      "topic": "Sources and methods",
+      "path": "tn",
+      "classLevel": "6",
+      "readingMinutes": 3,
+      "intro": "Before any dates or dynasties, the class 6 course asks a simpler question: what is history, and how do we know anything about people who left no writing?",
+      "excerpt": "The term history has been derived from the Greek word “Istoria” which means ‘learning by enquiry’. In ancient period, the people lived in caves, used to draw paintings in rocks called Rock Painting. They might have wished to record their activities through these paintings. We came to know their hunting style through their paintings on the rocks and the walls of the caves.",
+      "keyPoints": [
+        "“History” comes from the Greek word Istoria, meaning ‘learning by enquiry’.",
+        "Rock paintings are treated as records that early people made of their own activities.",
+        "Hunting practices of Stone Age people are known partly from paintings on rocks and cave walls."
+      ],
+      "timeline": [],
+      "citation": {
+        "book": "Social Science, Standard Six, Term I (Volume 3)",
+        "board": "Tamil Nadu State Board",
+        "classLevel": "6",
+        "chapter": "Unit 1 — What is History?",
+        "pageStart": 8,
+        "pageEnd": 13
+      },
+      "era": "origins"
+    },
+    {
+      "id": "l-tn6-harappa-discovery",
+      "bookId": "tn-6-ss-t1",
+      "chapterId": "u3",
+      "title": "Finding a Lost City: Harappa",
+      "topic": "Indus civilisation",
+      "path": "tn",
+      "classLevel": "6",
+      "readingMinutes": 4,
+      "intro": "A city can be lost for thousands of years and still be found. This passage explains who first recorded the ruins of Harappa, and how archaeologists locate a buried settlement.",
+      "excerpt": "The Archaeological Survey of India (ASI) was started in 1861 with Alexander Cunningham as Surveyor. Its headquarters is located in New Delhi. Discovery of a lost city – Harappa. The ruins of Harappa were first described by the British East India Company soldier and explorer Charles Masson in his book. Archaeologists study the physical objects such as bricks, stones or bits of broken pottery (sherds) to ascertain the location of the city and time that it belong to. They search the ancient literary sources for references about the place. They look at aerial photographs of the excavation sites or cities to understand the topography. The presence and absence of archeological remains can be detected by RADAR and Remote Sensing Methods.",
+      "keyPoints": [
+        "The Archaeological Survey of India was started in 1861, with Alexander Cunningham as Surveyor.",
+        "The ASI headquarters is in New Delhi.",
+        "Charles Masson, a British East India Company soldier and explorer, first described the ruins of Harappa in his book.",
+        "Archaeologists combine potsherds and bricks, ancient literary sources, aerial photographs, RADAR and remote sensing to locate a buried city."
+      ],
+      "timeline": [
+        {
+          "year": "1861",
+          "event": "The Archaeological Survey of India is started, with Alexander Cunningham as Surveyor."
+        }
+      ],
+      "citation": {
+        "book": "Social Science, Standard Six, Term I (Volume 3)",
+        "board": "Tamil Nadu State Board",
+        "classLevel": "6",
+        "chapter": "Unit 3 — Indus Civilisation",
+        "pageStart": 31,
+        "pageEnd": 35
+      },
+      "era": "ancient"
+    },
+    {
+      "id": "l-tn6-puhar",
+      "bookId": "tn-6-ss-t1",
+      "chapterId": "u4",
+      "title": "Puhar, a Port City of Ancient Tamilagam",
+      "topic": "Ancient Tamilagam",
+      "path": "tn",
+      "classLevel": "6",
+      "readingMinutes": 4,
+      "intro": "Tamil literature is itself a historical source. Two Sangam-era works describe the port of Puhar (Poompuhar) and the trade that passed through it.",
+      "excerpt": "Silappathikaram, in particular, speaks about the greatness of Poompuhar. Pattinappaalai states that “selling any commodity at a higher price was considered bad”. The lead female character of Silappathikaram is Kannagi. The author of Pattinappaalai, Kadiyalur Uruttirangannanar, belonged to 2nd century BC(BCE). This is indicative of Puhar’s antiquity. Horses were imported by sea. Pepper was procured through the land route. Gold that came from Vadamalai was polished and exported to the overseas countries. Sandal from Western Ghats, pearls from southern sea, corals from eastern sea and food items from Eelam were imported. Numerous merchants from foreign countries such as Greece and Rome landed at Poompuhar.",
+      "keyPoints": [
+        "Silappathikaram describes the greatness of Poompuhar; its lead female character is Kannagi.",
+        "Pattinappaalai records that selling a commodity at a higher price was considered bad.",
+        "Kadiyalur Uruttirangannanar, author of Pattinappaalai, belonged to the 2nd century BCE.",
+        "Horses arrived by sea and pepper by land; sandal, pearls, corals and food items from Eelam were imported.",
+        "Merchants from Greece and Rome landed at Poompuhar."
+      ],
+      "timeline": [
+        {
+          "year": "2nd century BCE",
+          "event": "Kadiyalur Uruttirangannanar, author of Pattinappaalai, is placed in this period."
+        }
+      ],
+      "citation": {
+        "book": "Social Science, Standard Six, Term I (Volume 3)",
+        "board": "Tamil Nadu State Board",
+        "classLevel": "6",
+        "chapter": "Unit 4 — Ancient Cities of Tamilagam",
+        "pageStart": 48,
+        "pageEnd": 51
+      },
+      "era": "ancient"
+    },
+    {
+      "id": "l-tn9-prehistory",
+      "bookId": "tn-9-ss",
+      "chapterId": "u1",
+      "title": "Reading the Prehistoric Past",
+      "topic": "Prehistory",
+      "path": "tn",
+      "classLevel": "9",
+      "readingMinutes": 4,
+      "intro": "Prehistory begins long before writing. The class 9 course opens by separating two disciplines that recover it, and by placing human history inside the far longer history of the earth.",
+      "excerpt": "Archaeology is the study of human past through the analysis and interpretation of material remains. Prehistoric people were the pioneers of creative knowledge. From the artefacts and the languages they developed, we are able to understand how intelligent they were. Palaeoanthropology is the study of the human ancestors and their evolution by the study of the fossil remains. The earth was formed approximately 4.54 billion years ago. Gradually, conditions emerged for the growth of organisms. Then plants and animals came into being, and thereby foundation was laid for the evolution of humans. The long span of time in the history of earth is divided into eras, periods and epochs by the geologists.",
+      "keyPoints": [
+        "Archaeology studies the human past through material remains.",
+        "Palaeoanthropology studies human ancestors and their evolution through fossil remains.",
+        "The earth was formed approximately 4.54 billion years ago.",
+        "Geologists divide the history of the earth into eras, periods and epochs."
+      ],
+      "timeline": [
+        {
+          "year": "c. 4.54 billion years ago",
+          "event": "Formation of the earth."
+        }
+      ],
+      "citation": {
+        "book": "Social Science, Standard Nine",
+        "board": "Tamil Nadu State Board",
+        "classLevel": "9",
+        "chapter": "Unit 1 — Evolution of Humans and Society: Prehistoric Period",
+        "pageStart": 9,
+        "pageEnd": 11
+      },
+      "era": "origins"
+    },
+    {
+      "id": "l-tn9-egypt",
+      "bookId": "tn-9-ss",
+      "chapterId": "u2",
+      "title": "Egypt: Pharaohs and Mummies",
+      "topic": "Ancient civilisations",
+      "path": "tn",
+      "classLevel": "9",
+      "readingMinutes": 4,
+      "intro": "Ancient Egypt left behind a method of preserving the dead that also preserved a great deal of evidence for historians.",
+      "excerpt": "The art of preserving the dead body is known as mummification. Pyramids and tombs were built to preserve the body of Pharaohs. The famous Egyptian Pharaoh Tutankhamen’s (who ruled from 1332 to 1322 BC (BCE)) tomb with a rich variety of offerings is located near Luxor in Egypt. The mask of his mummy made of gold and decorated with precious stones is an important artefact of the Egyptian civilisation. The Egyptian king was known as the Pharaoh. The preserved dead body is called the mummy. The Egyptians had the tradition of preserving the dead bodies using Natron salt, a combination of sodium carbonate and sodium bicarbonate.",
+      "keyPoints": [
+        "The Egyptian king was known as the Pharaoh.",
+        "Tutankhamen ruled from 1332 to 1322 BCE; his tomb is near Luxor.",
+        "Mummification used Natron salt, a combination of sodium carbonate and sodium bicarbonate.",
+        "Pyramids and tombs were built to preserve the bodies of Pharaohs."
+      ],
+      "timeline": [
+        {
+          "year": "1332–1322 BCE",
+          "event": "Reign of the Egyptian Pharaoh Tutankhamen."
+        }
+      ],
+      "citation": {
+        "book": "Social Science, Standard Nine",
+        "board": "Tamil Nadu State Board",
+        "classLevel": "9",
+        "chapter": "Unit 2 — Ancient Civilisations",
+        "pageStart": 25,
+        "pageEnd": 28
+      },
+      "era": "ancient"
+    },
+    {
+      "id": "l-tn9-arikkamedu",
+      "bookId": "tn-9-ss",
+      "chapterId": "u3",
+      "title": "Arikkamedu and the Laws that Protect It",
+      "topic": "Sangam age archaeology",
+      "path": "tn",
+      "classLevel": "9",
+      "readingMinutes": 4,
+      "intro": "Arikkamedu is one of the most excavated sites of the Sangam age. This passage also lists the laws that govern archaeological remains in India.",
+      "excerpt": "Arikkamedu, near Puducherry, is a Sangam Age port, excavated by the Archaeological Survey of India (ASI). British archaeologist, Robert Eric Mortimer Wheeler, French Archaeologist, J.M. Casal, and Indian archaeologists, A. Ghosh and Krishna Deva, excavated this site. They found evidence of a planned town, warehouse, streets, tanks and ring wells. The Archaeological Survey of India (ASI) is a Central government agency that manages archaeological sites and monuments in India. The Indian Treasure Trove Act (1878), the Antiquities and Art Treasures Act (1972), the Ancient Monuments and Archaeological Sites and Remains Act (1958) are legislation related to the preservation of archaeological remains in India. Punch-marked coins are the earliest coins used in India. They are mostly made of silver and have numerous symbols punched on them.",
+      "keyPoints": [
+        "Arikkamedu, near Puducherry, is a Sangam Age port excavated by the ASI.",
+        "Mortimer Wheeler (British), J.M. Casal (French) and A. Ghosh and Krishna Deva (Indian) excavated the site.",
+        "Excavators found a planned town, a warehouse, streets, tanks and ring wells.",
+        "Three laws protect archaeological remains: the Indian Treasure Trove Act (1878), the Ancient Monuments and Archaeological Sites and Remains Act (1958) and the Antiquities and Art Treasures Act (1972).",
+        "Punch-marked coins are the earliest coins used in India and are mostly silver."
+      ],
+      "timeline": [
+        {
+          "year": "1878",
+          "event": "Indian Treasure Trove Act."
+        },
+        {
+          "year": "1958",
+          "event": "Ancient Monuments and Archaeological Sites and Remains Act."
+        },
+        {
+          "year": "1972",
+          "event": "Antiquities and Art Treasures Act."
+        }
+      ],
+      "citation": {
+        "book": "Social Science, Standard Nine",
+        "board": "Tamil Nadu State Board",
+        "classLevel": "9",
+        "chapter": "Unit 3 — Early Tamil Society and Culture",
+        "pageStart": 44,
+        "pageEnd": 45
+      },
+      "era": "ancient"
+    },
+    {
+      "id": "l-tn9-colonies",
+      "bookId": "tn-9-ss",
+      "chapterId": "u9",
+      "title": "The Thirteen Colonies",
+      "topic": "Age of revolutions",
+      "path": "tn",
+      "classLevel": "9",
+      "readingMinutes": 4,
+      "intro": "Before the American Revolution there were thirteen British colonies on the Atlantic coast, settled by very different groups for very different reasons.",
+      "excerpt": "The Portuguese and the Spanish were the pioneers in geographical explorations and the founding of colonies. The English lagged far behind in their colonisation efforts. By 1775, the population of the thirteen colonies had grown steadily reaching nearly 3 million, a third of Britain’s population. Quakers were members of a Christian group called the Society of Friends who, while laying emphasis on the Holy Spirit, rejected outward rites and an ordained ministry. George Fox was the founder of the society in England. As the Native Americans resisted attempts to make them work in the plantations, the European planters, chiefly of tobacco, in the southern states— Virginia, Carolinas and Georgia— in their search for labour resorted to acquiring slaves from Africa.",
+      "keyPoints": [
+        "The Portuguese and Spanish pioneered exploration and colony-founding; the English lagged far behind.",
+        "By 1775 the thirteen colonies held nearly 3 million people, a third of Britain’s population.",
+        "George Fox founded the Society of Friends (Quakers) in England.",
+        "When Native Americans resisted plantation labour, planters in Virginia, the Carolinas and Georgia turned to enslaved people from Africa."
+      ],
+      "timeline": [
+        {
+          "year": "1775",
+          "event": "Population of the thirteen colonies reaches nearly 3 million."
+        }
+      ],
+      "citation": {
+        "book": "Social Science, Standard Nine",
+        "board": "Tamil Nadu State Board",
+        "classLevel": "9",
+        "chapter": "Unit 9 — The Age of Revolutions",
+        "pageStart": 122,
+        "pageEnd": 124
+      },
+      "era": "colonial"
+    },
+    {
+      "id": "l-tn9-industrial",
+      "bookId": "tn-9-ss",
+      "chapterId": "u10",
+      "title": "Britain's Industrial Transformation",
+      "topic": "Industrial revolution",
+      "path": "tn",
+      "classLevel": "9",
+      "readingMinutes": 4,
+      "intro": "The Industrial Revolution is easiest to grasp through its numbers: mills in one city, and tonnes of coal across a century.",
+      "excerpt": "Textile manufacture was at the heart of the Industrial Revolution. Over a span of fifty years, the textile manufacturing industry in Britain witnessed a transformation in the method of production from handmade to machine-made goods. The newly invented machines enabled factories to produce textile goods in large quantities. Derbyshire, Lancashire, Cheshire, Staffordshire, Nottinghamshire, and Yorkshire became the major factory centres. The most notable was Manchester, which had more than 50 mills in 1802. These factories involved in mass production were organized on the principle of division of labour. The coal production in England increased from 4.7 million tonnes in 1750 to 250 million tonnes in 1900. Industrial Revolution was dependent on good transportation. As production increased raw materials had to be brought from afar to the factories. Macadamised roads and George Stephenson’s steam locomotive helped to improve road and railway transport.",
+      "keyPoints": [
+        "Textile manufacture was at the heart of the Industrial Revolution.",
+        "Manchester had more than 50 mills in 1802.",
+        "English coal production rose from 4.7 million tonnes in 1750 to 250 million tonnes in 1900.",
+        "Factories were organised on the principle of division of labour.",
+        "Macadamised roads and George Stephenson’s steam locomotive improved transport."
+      ],
+      "timeline": [
+        {
+          "year": "1750",
+          "event": "English coal production stands at 4.7 million tonnes."
+        },
+        {
+          "year": "1802",
+          "event": "Manchester has more than 50 mills."
+        },
+        {
+          "year": "1900",
+          "event": "English coal production reaches 250 million tonnes."
+        }
+      ],
+      "citation": {
+        "book": "Social Science, Standard Nine",
+        "board": "Tamil Nadu State Board",
+        "classLevel": "9",
+        "chapter": "Unit 10 — Industrial Revolution",
+        "pageStart": 140,
+        "pageEnd": 142
+      },
+      "era": "colonial"
+    },
+    {
+      "id": "l-tn8-plassey",
+      "bookId": "tn-8-ss",
+      "chapterId": null,
+      "title": "From Trade to Territory: Plassey and Buxar",
+      "topic": "Company rule",
+      "path": "tn",
+      "classLevel": "8",
+      "readingMinutes": 4,
+      "intro": "A trading company became a territorial power in the space of seven years. The class 8 course marks the beginning of that change at a single battle.",
+      "excerpt": "British then captured Chandranagore, the French settlement, on March 1757. The Battle of Plassey took place between the British East India Company and the Nawab of Bengal and his French allies. It was fought on 23 June 1757. The English East India Company’s forces under Robert Clive defeated the forces of Siraj-ud-daulah. After the collapse of Bengal, the company gained a huge amount of wealth from the treasury of Bengal and used it to strengthen its military force. The beginning of the British political sway over India may be traced from the Battle of Plassey. It was the most decisive battle that marked the initiation of British rule in India for the next two centuries. After the Battle of Plassey in 1757, the company was granted undisputed right to have free trade in Bengal, Bihar and Orissa. It received the place of 24 Parganas in Bengal.",
+      "keyPoints": [
+        "The Battle of Plassey was fought on 23 June 1757.",
+        "Robert Clive led the English East India Company forces against Siraj-ud-daulah.",
+        "The British captured the French settlement of Chandranagore in March 1757.",
+        "After Plassey the company won free trade rights in Bengal, Bihar and Orissa, and received 24 Parganas.",
+        "The book traces the beginning of British political power in India to this battle."
+      ],
+      "timeline": [
+        {
+          "year": "March 1757",
+          "event": "British capture Chandranagore, the French settlement."
+        },
+        {
+          "year": "23 June 1757",
+          "event": "Battle of Plassey."
+        },
+        {
+          "year": "1764",
+          "event": "Battle of Buxar."
+        }
+      ],
+      "citation": {
+        "book": "Social Science, Standard Eight",
+        "board": "Tamil Nadu State Board",
+        "classLevel": "8",
+        "chapter": null,
+        "pageStart": 18,
+        "pageEnd": 20
+      },
+      "era": "colonial"
+    },
+    {
+      "id": "l-tn8-revenue",
+      "bookId": "tn-8-ss",
+      "chapterId": null,
+      "title": "Ryotwari and Mahalwari",
+      "topic": "Land revenue systems",
+      "path": "tn",
+      "classLevel": "8",
+      "readingMinutes": 5,
+      "intro": "Three revenue systems shaped rural India under Company rule. Two of them are set out here, with the percentages that decided how much a cultivator kept.",
+      "excerpt": "By Ryotwari system, the rights of ownership was handed over. Revenue settlement was done directly with the ryots. Measurement of field and an estimate of produce was calculated. Government fixed the demand at 45% to 55% of the produce. In most areas the land revenue fixed was excessive; the ryots were hardly left with bare maintenance even in the best of seasons. Under this system the government exploited the farmers instead of Zamindars. Mahalwari system, a brain child of Holt Mackenzie was modified version of the Zamindari settlement introduced in the Ganga Valley, the North-West Province, parts of the Central India and Punjab in 1822. Assessment of revenue was to be made on the basis of the produce of a Mahal or village. All the proprietors of a Mahal were severally and jointly responsible for the payment of revenue. Initially the state share was fixed two-thirds of the gross produce. Bentinck, therefore, reduced to fifty percent.",
+      "keyPoints": [
+        "Under Ryotwari, revenue settlement was made directly with the ryots and the demand was fixed at 45% to 55% of the produce.",
+        "The Ryotwari demand was excessive in most areas, leaving cultivators with bare maintenance even in good seasons.",
+        "The Mahalwari system was Holt Mackenzie’s idea and was introduced in 1822.",
+        "Under Mahalwari, revenue was assessed on the produce of a mahal or village, and all proprietors were jointly responsible.",
+        "The state share was initially two-thirds of the gross produce; Bentinck reduced it to fifty percent."
+      ],
+      "timeline": [
+        {
+          "year": "1822",
+          "event": "Mahalwari system introduced in the Ganga Valley, North-West Province, parts of Central India and Punjab."
+        },
+        {
+          "year": "1833",
+          "event": "Changes to the Mahalwari system suggested under Bentinck, guided by Robert Martins Bird."
+        }
+      ],
+      "citation": {
+        "book": "Social Science, Standard Eight",
+        "board": "Tamil Nadu State Board",
+        "classLevel": "8",
+        "chapter": null,
+        "pageStart": 33,
+        "pageEnd": 35
+      },
+      "era": "colonial"
+    },
+    {
+      "id": "l-tn10-colonies-race",
+      "bookId": "tn-10-ss",
+      "chapterId": null,
+      "title": "Why the Powers Raced for Colonies",
+      "topic": "First World War",
+      "path": "tn",
+      "classLevel": "10",
+      "readingMinutes": 4,
+      "intro": "The class 10 course explains the First World War by first explaining the economics that made empires collide.",
+      "excerpt": "For the first time, countries tried to bring about world peace through the League of Nations. The aim of capitalistic industry was to produce more and more. The surplus wealth thus produced was used to build more factories, railways, steamships and other such undertakings. Revolution in the means of communication and transportation in the latter half of the nineteenth century facilitated the process of European expansion in Africa and other places. A striking feature of nineteenth century was that Europe emerged as the dominant power, while Asia and Africa were colonized and exploited. Within Europe, England held a pre-eminent position, as the world leader of capitalism. An ever-growing demand for markets and raw materials made the capitalist powers race around the world for expanding their empire for exploitation.",
+      "keyPoints": [
+        "The League of Nations was the first attempt by countries to bring about world peace.",
+        "Surplus wealth from industry was reinvested in factories, railways and steamships.",
+        "Better communication and transport in the later nineteenth century made European expansion into Africa easier.",
+        "England held a pre-eminent position within Europe as the world leader of capitalism.",
+        "Demand for markets and raw materials drove the race for empire."
+      ],
+      "timeline": [],
+      "citation": {
+        "book": "Social Science, Standard Ten",
+        "board": "Tamil Nadu State Board",
+        "classLevel": "10",
+        "chapter": null,
+        "pageStart": 7,
+        "pageEnd": 8
+      },
+      "era": "colonial"
+    },
+    {
+      "id": "l-tn10-road-to-wwii",
+      "bookId": "tn-10-ss",
+      "chapterId": null,
+      "title": "The Road to the Second World War",
+      "topic": "Second World War",
+      "path": "tn",
+      "classLevel": "10",
+      "readingMinutes": 5,
+      "intro": "Aggression came in steps, and the League of Nations answered none of them. This passage sets out the sequence.",
+      "excerpt": "In 1938, Hitler invaded Austria and Czechoslovakia. Sudetenland in Czechoslovakia was German speaking, and Hitler’s claim was that the German speaking people should be united in to one nation. As mentioned above the three main clauses of the Treaty of Versailles, especially the imposition of penal reparations caused great discontent in Germany. The problems which many countries faced in the post-World War I decades led to the rise of extreme right wing dictatorships in Italy (Mussolini), Germany (Hitler) and Spain (Franco). Germany experienced both high unemployment and severe inflation after the War, and its currency became practically worthless. There were also acts of aggression by Italy and Japan. Italy invaded Ethiopia in 1935 and Albania in 1939. Emperor Haile Selassie of Ethiopia appealed to the League of Nations, but got no help.",
+      "keyPoints": [
+        "Penal reparations under the Treaty of Versailles caused great discontent in Germany.",
+        "Post-war problems led to right-wing dictatorships in Italy (Mussolini), Germany (Hitler) and Spain (Franco).",
+        "Italy invaded Ethiopia in 1935 and Albania in 1939.",
+        "Haile Selassie of Ethiopia appealed to the League of Nations but received no help.",
+        "In 1938 Hitler invaded Austria and Czechoslovakia, claiming German-speaking people should be united in one nation."
+      ],
+      "timeline": [
+        {
+          "year": "1935",
+          "event": "Italy invades Ethiopia."
+        },
+        {
+          "year": "1938",
+          "event": "Hitler invades Austria and Czechoslovakia."
+        },
+        {
+          "year": "1939",
+          "event": "Italy invades Albania."
+        }
+      ],
+      "citation": {
+        "book": "Social Science, Standard Ten",
+        "board": "Tamil Nadu State Board",
+        "classLevel": "10",
+        "chapter": null,
+        "pageStart": 34,
+        "pageEnd": 36
+      },
+      "era": "colonial"
+    },
+    {
+      "id": "l-tn10-plassey-wealth",
+      "bookId": "tn-10-ss",
+      "chapterId": null,
+      "title": "Plassey and the Wealth of Bengal",
+      "topic": "Company rule",
+      "path": "tn",
+      "classLevel": "10",
+      "readingMinutes": 4,
+      "intro": "The class 10 course returns to Plassey from a different angle: what happened to the money afterwards.",
+      "excerpt": "Siraj-ud-daulah was defeated by the East India Company at the Battle of Plassey. The battle was orchestrated by Robert Clive, commander-in-chief of the East India Company, who managed to get the clandestine support from Mir Jafar, the chief of the Nawab’s army. Clive was helped by the Jagat Seths (moneylenders from Bengal) who were aggrieved by Siraj-ud-daulah’s policy. Between 1757 and 1760, the company received ₹ 22.5 million from Mir Jafar, who became the new Nawab of Bengal. The same money was later invested to propel the industrial revolution in Britain, which rapidly mechanised the British textile industry. On the other hand, India was led to the path of de-industrialisation and forced to create a market for the products manufactured in Britain.",
+      "keyPoints": [
+        "Robert Clive orchestrated Plassey with the clandestine support of Mir Jafar, chief of the Nawab’s army.",
+        "The Jagat Seths, moneylenders of Bengal aggrieved by Siraj-ud-daulah’s policy, helped Clive.",
+        "Between 1757 and 1760 the company received ₹ 22.5 million from Mir Jafar, who became Nawab.",
+        "That money was later invested in Britain’s industrial revolution and the mechanisation of its textile industry.",
+        "India was pushed towards de-industrialisation and made a market for British manufactures."
+      ],
+      "timeline": [
+        {
+          "year": "1757–1760",
+          "event": "The Company receives ₹ 22.5 million from Mir Jafar."
+        }
+      ],
+      "citation": {
+        "book": "Social Science, Standard Ten",
+        "board": "Tamil Nadu State Board",
+        "classLevel": "10",
+        "chapter": null,
+        "pageStart": 81,
+        "pageEnd": 82
+      },
+      "era": "colonial"
+    },
+    {
+      "id": "l-tn10-gandhi-sa",
+      "bookId": "tn-10-ss",
+      "chapterId": null,
+      "title": "Gandhi in South Africa",
+      "topic": "Indian national movement",
+      "path": "tn",
+      "classLevel": "10",
+      "readingMinutes": 4,
+      "intro": "Gandhi's political method was worked out in South Africa before it reached India. The passage records where it began and what it achieved there.",
+      "excerpt": "Gandhi left for South Africa in April 1893. Gandhi faced racial discrimination for the first time in South Africa. On his journey from Durban to Pretoria, at the Pietermaritzburg Railway Station, he was physically thrown out of the first class compartment. Gandhi was determined to fight. Even when the police let loose violence no resistance was offered by the satyagrahis. Gandhi and other leaders were arrested. Indians, mostly indentured labourers turned hawkers continued the struggle despite police brutality. Finally, by the Smuts-Gandhi Agreement the poll tax on indentured labourers was abolished. Gandhi regarded Gopal Krishna Gokhale, whom he had met on previous visits to India, as his political guru. On his advice, Gandhi travelled the length and breadth of the country before plunging into politics.",
+      "keyPoints": [
+        "Gandhi left for South Africa in April 1893.",
+        "He was thrown out of a first class compartment at Pietermaritzburg Railway Station on the journey from Durban to Pretoria.",
+        "Satyagrahis offered no resistance even when police used violence.",
+        "The Smuts-Gandhi Agreement abolished the poll tax on indentured labourers.",
+        "Gandhi regarded Gopal Krishna Gokhale as his political guru and, on his advice, travelled across India before entering politics."
+      ],
+      "timeline": [
+        {
+          "year": "April 1893",
+          "event": "Gandhi leaves for South Africa."
+        }
+      ],
+      "citation": {
+        "book": "Social Science, Standard Ten",
+        "board": "Tamil Nadu State Board",
+        "classLevel": "10",
+        "chapter": null,
+        "pageStart": 96,
+        "pageEnd": 97
+      },
+      "era": "independence"
+    },
+    {
+      "id": "l-cbse6-settlement",
+      "bookId": "cbse-6-our-pasts-1",
+      "chapterId": "c1",
+      "title": "Where People First Settled",
+      "topic": "Early settlement",
+      "path": "cbse",
+      "classLevel": "6",
+      "readingMinutes": 3,
+      "intro": "The opening chapter of Our Pasts – I maps the subcontinent by asking where farming began and where the earliest cities grew.",
+      "excerpt": "Men first began to grow crops such as wheat and barley about 8000 years ago are located here. People also began rearing animals like sheep, goat, and cattle, and lived in villages. Locate the Garo hills to the north-east and the Vindhyas in central India. These were some of the other areas where agriculture developed. The places where rice was first grown are to the north of the Vindhyas. About 4700 years ago, some of the earliest cities flourished on the banks of these rivers. Later, about 2500 years ago, cities developed on the banks of the Ganga and its tributaries, and along the seacoasts. In ancient times the area along these rivers to the south of the Ganga was known as Magadha. Its rulers were very powerful, and set up a large kingdom.",
+      "keyPoints": [
+        "Wheat and barley were first grown about 8000 years ago.",
+        "People began rearing sheep, goat and cattle and living in villages.",
+        "Rice was first grown to the north of the Vindhyas.",
+        "The earliest cities flourished on the banks of the Indus about 4700 years ago.",
+        "Cities on the Ganga and the seacoasts developed about 2500 years ago; the region south of the Ganga was Magadha."
+      ],
+      "timeline": [
+        {
+          "year": "c. 8000 years ago",
+          "event": "Wheat and barley first grown."
+        },
+        {
+          "year": "c. 4700 years ago",
+          "event": "Earliest cities flourish on the banks of the Indus and its tributaries."
+        },
+        {
+          "year": "c. 2500 years ago",
+          "event": "Cities develop on the Ganga and along the seacoasts."
+        }
+      ],
+      "citation": {
+        "book": "Our Pasts – I",
+        "board": "CBSE",
+        "classLevel": "6",
+        "chapter": "Chapter 1",
+        "pageStart": 5,
+        "pageEnd": 8
+      },
+      "era": "origins"
+    },
+    {
+      "id": "l-cbse6-stone-tools",
+      "bookId": "cbse-6-our-pasts-1",
+      "chapterId": "c2",
+      "title": "On the Trail of the Earliest People",
+      "topic": "Hunter-gatherers",
+      "path": "cbse",
+      "classLevel": "6",
+      "readingMinutes": 3,
+      "intro": "What can a stone tell you about a person who lived thousands of years ago? Quite a lot, if you know what the stone was for.",
+      "excerpt": "Some of these stone tools were used to cut meat and bone, scrape bark (from trees) and hides (animal skins), chop fruit and roots. Some may have been attached to handles of bone or wood, to make spears and arrows for hunting. Other tools were used to chop wood, which was used as firewood. Wood was also used to make huts and tools. All the places marked with red triangles are sites from which archaeologists have found evidence of hunter-gatherers. Many sites were located near sources of water, such as rivers and lakes.",
+      "keyPoints": [
+        "Stone tools were used to cut meat and bone, scrape bark and hides, and chop fruit and roots.",
+        "Some tools were attached to bone or wooden handles to make spears and arrows.",
+        "Wood chopped with stone tools served as firewood and as material for huts and tools.",
+        "Hunter-gatherer sites are often located near sources of water such as rivers and lakes."
+      ],
+      "timeline": [],
+      "citation": {
+        "book": "Our Pasts – I",
+        "board": "CBSE",
+        "classLevel": "6",
+        "chapter": "Chapter 2",
+        "pageStart": 16,
+        "pageEnd": 19
+      },
+      "era": "origins"
+    },
+    {
+      "id": "l-cbse7-sabha",
+      "bookId": "cbse-7-our-pasts-2",
+      "chapterId": null,
+      "title": "Who Could Join the Sabha",
+      "topic": "Medieval administration",
+      "path": "cbse",
+      "classLevel": "7",
+      "readingMinutes": 4,
+      "intro": "An inscription records the qualifications required to sit on a local assembly — and in doing so records who was left out.",
+      "excerpt": "All those who wish to become members of the sabha should be owners of land from which land revenue is collected. They should have their own homes. They should be between 35 and 70 years of age. They should have knowledge of the Vedas. They should be well-versed in administrative matters and honest. If anyone has been a member of any committee in the last three years, he cannot become a member of another committee. Anyone who has not submitted his accounts, as well as those of his relatives, cannot contest the elections. While inscriptions tell us about kings and powerful men, here is an excerpt from the Periyapuranam, a twelfth-century Tamil work, which informs us about the lives of ordinary men and women.",
+      "keyPoints": [
+        "Sabha members had to own land on which revenue was collected, and to own their homes.",
+        "Members had to be between 35 and 70 years of age.",
+        "Knowledge of the Vedas, administrative skill and honesty were required.",
+        "Anyone who had served on a committee in the last three years was barred, as was anyone who had not submitted accounts.",
+        "The Periyapuranam, a twelfth-century Tamil work, is used as a source on the lives of ordinary people."
+      ],
+      "timeline": [
+        {
+          "year": "Twelfth century",
+          "event": "Periyapuranam, the Tamil work quoted as a source on ordinary lives."
+        }
+      ],
+      "citation": {
+        "book": "Our Pasts – II",
+        "board": "CBSE",
+        "classLevel": "7",
+        "chapter": null,
+        "pageStart": 29,
+        "pageEnd": 32
+      },
+      "era": "medieval"
+    },
+    {
+      "id": "l-cbse10-khilafat",
+      "bookId": "cbse-10-icw",
+      "chapterId": "c3",
+      "title": "From Rowlatt Satyagraha to Khilafat",
+      "topic": "Indian national movement",
+      "path": "cbse",
+      "classLevel": "10",
+      "readingMinutes": 5,
+      "intro": "A movement limited to towns became a national one when Gandhi looked for an issue that could bring Hindus and Muslims into the same struggle.",
+      "excerpt": "The government responded with brutal repression, seeking to humiliate and terrorise people: satyagrahis were forced to rub their noses on the ground, crawl on the streets, and do salaam (salute) to all sahibs; people were flogged and villages (around Gujranwala in Punjab, now in Pakistan) were bombed. Seeing violence spread, Mahatma Gandhi called off the movement. While the Rowlatt satyagraha had been a widespread movement, it was still limited mostly to cities and towns. Mahatma Gandhi now felt the need to launch a more broad-based movement in India. But he was certain that no such movement could be organised without bringing the Hindus and Muslims closer together. One way of doing this, he felt, was to take up the Khilafat issue. The First World War had ended with the defeat of Ottoman Turkey. To defend the Khalifa’s temporal powers, a Khilafat Committee was formed in Bombay in March 1919. A young generation of Muslim leaders like the brothers Muhammad Ali and Shaukat Ali, began discussing with Mahatma Gandhi about the possibility of a united mass action.",
+      "keyPoints": [
+        "The government met the Rowlatt satyagraha with repression, including flogging and the bombing of villages around Gujranwala.",
+        "Gandhi called off the movement when he saw violence spreading.",
+        "The Rowlatt satyagraha was largely limited to cities and towns.",
+        "Gandhi took up the Khilafat issue as a way of bringing Hindus and Muslims closer together.",
+        "The Khilafat Committee was formed in Bombay in March 1919; Muhammad Ali and Shaukat Ali discussed united mass action with Gandhi."
+      ],
+      "timeline": [
+        {
+          "year": "March 1919",
+          "event": "Khilafat Committee formed in Bombay."
+        }
+      ],
+      "citation": {
+        "book": "India and the Contemporary World",
+        "board": "CBSE",
+        "classLevel": "10",
+        "chapter": "Chapter III",
+        "pageStart": 56,
+        "pageEnd": 58
+      },
+      "era": "independence"
+    },
+    {
+      "id": "l-cbse12-themes",
+      "bookId": "cbse-12-themes-1",
+      "chapterId": null,
+      "title": "How Indian History Is Divided into Themes",
+      "topic": "Historiography",
+      "path": "cbse",
+      "classLevel": "12",
+      "readingMinutes": 3,
+      "intro": "The class 12 course is organised by theme rather than by dynasty. The contents page is itself worth reading as a map of the syllabus.",
+      "excerpt": "THEME ONE — BRICKS, BEADS AND BONES: The Harappan Civilisation. THEME TWO — KINGS, FARMERS AND TOWNS: Early States and Economies (c.600 BCE-600 CE). THEME THREE — KINSHIP, CASTE AND CLASS: Early Societies (c. 600 BCE-600 CE). THEME FOUR — THINKERS, BELIEFS AND BUILDINGS: Cultural Developments (c. 600 BCE-600 CE). THEME FIVE — THROUGH THE EYES OF TRAVELLERS: Perceptions of Society (c. tenth to seventeenth centuries). THEME SIX — BHAKTI–SUFI TRADITIONS: Changes in Religious Beliefs and Devotional Texts (c. eighth to eighteenth centuries). THEME SEVEN — AN IMPERIAL CAPITAL: VIJAYANAGARA (c. fourteenth to sixteenth centuries). THEME EIGHT — PEASANTS, ZAMINDARS AND THE STATE: Agrarian Society and the Mughal Empire (c. sixteenth-seventeenth centuries).",
+      "keyPoints": [
+        "Theme One covers the Harappan Civilisation.",
+        "Themes Two, Three and Four all cover roughly c. 600 BCE to 600 CE: early states and economies, early societies, and cultural developments.",
+        "Theme Five looks at India through travellers’ accounts, c. tenth to seventeenth centuries.",
+        "Theme Six covers Bhakti–Sufi traditions, c. eighth to eighteenth centuries.",
+        "Theme Seven covers Vijayanagara, c. fourteenth to sixteenth centuries."
+      ],
+      "timeline": [
+        {
+          "year": "c. 600 BCE – 600 CE",
+          "event": "Themes Two, Three and Four: early states, societies and cultural developments."
+        },
+        {
+          "year": "c. 8th – 18th centuries",
+          "event": "Theme Six: Bhakti–Sufi traditions."
+        },
+        {
+          "year": "c. 14th – 16th centuries",
+          "event": "Theme Seven: Vijayanagara."
+        }
+      ],
+      "citation": {
+        "book": "Themes in Indian History – Part I",
+        "board": "CBSE",
+        "classLevel": "12",
+        "chapter": null,
+        "pageStart": 2,
+        "pageEnd": 5
+      },
+      "era": "ancient"
+    },
+    {
+      "id": "l-cbse12-miniatures",
+      "bookId": "cbse-12-themes-2",
+      "chapterId": null,
+      "title": "Miniatures in Mughal Manuscripts",
+      "topic": "Mughal court culture",
+      "path": "cbse",
+      "classLevel": "12",
+      "readingMinutes": 3,
+      "intro": "A Mughal chronicle was made by more than one pair of hands. The physical process of making the book tells you how text and image were planned together.",
+      "excerpt": "Painters too were involved in the production of Mughal manuscripts. Chronicles narrating the events of a Mughal emperor’s reign contained, alongside the written text, images that described an event in visual form. When scenes or themes in a book were to be given visual expression, the scribe left blank spaces on nearby pages; paintings, executed separately by artists, were inserted to accompany what was described in words. These paintings were miniatures, and could therefore be passed around for viewing and mounting on the album.",
+      "keyPoints": [
+        "Mughal chronicles combined written text with images describing events visually.",
+        "Scribes left blank spaces on nearby pages for paintings.",
+        "Paintings were executed separately by artists and then inserted.",
+        "These paintings were miniatures, small enough to be passed around and mounted in albums."
+      ],
+      "timeline": [],
+      "citation": {
+        "book": "Themes in Indian History – Part II",
+        "board": "CBSE",
+        "classLevel": "12",
+        "chapter": null,
+        "pageStart": 118,
+        "pageEnd": 120
+      },
+      "era": "medieval"
+    },
+    {
+      "id": "l-tn7-sources-monuments",
+      "bookId": "tn-7-ss-t1",
+      "chapterId": "u1",
+      "title": "What the Buildings Tell Us",
+      "topic": "Sources and methods",
+      "path": "tn",
+      "classLevel": "7",
+      "readingMinutes": 4,
+      "intro": "Class 7 opens by asking where the history of medieval India actually comes from. One answer is standing in the open: the buildings themselves.",
+      "excerpt": "The Sultans of Delhi introduced a new type of architecture. The monuments they built had arches, domes and minarets as the main features. The inscriptions in these monuments contain rich information, which can be used to construct history. The medieval Khajuraho monuments (Madhya Pradesh) and temples in Konark (Odisha) and Dilwara (Mt.Abu, Rajastan) constitute valuable sources to understand the religion-centered cultural evolution in northern India. Temples in Thanjavur (Brihadeshwara), Gangaikonda Cholapuram and Darasuram symbolise the magnificent structures the Later Cholas built in Tamil Nadu.",
+      "keyPoints": [
+        "Temples, palaces, mosques, tombs, forts, minars and minarets are collectively called monuments.",
+        "The monuments the Delhi Sultans built had arches, domes and minarets as their main features.",
+        "Inscriptions carried on those monuments are treated as material for constructing history."
+      ],
+      "timeline": [],
+      "citation": {
+        "book": "Social Science, Standard Seven, Term I (Volume 3)",
+        "board": "Tamil Nadu State Board",
+        "classLevel": "7",
+        "chapter": "Unit 1 — Sources of Medieval Indian History",
+        "pageStart": 7,
+        "pageEnd": 9,
+        "passageId": "trd_68f3dc776769_c00002"
+      },
+      "era": "medieval"
+    },
+    {
+      "id": "l-tn7-north-kingdoms",
+      "bookId": "tn-7-ss-t1",
+      "chapterId": "u2",
+      "title": "The Rajputs and Prithviraj Chauhan",
+      "topic": "New kingdoms of the north",
+      "path": "tn",
+      "classLevel": "7",
+      "readingMinutes": 4,
+      "intro": "As the older empires broke up, new ruling houses rose in the north. The Rajputs are remembered both for a famous battle and for what they built.",
+      "excerpt": "The examples of domestic architecture of the Rajputs are the palaces of Mansingh at Gwalior, the buildings at Amber (Jaipur) and lake palaces at Udaipur. Many of the Rajput cities and palaces stand among the hills in forts or by the side of beautiful artificial lakes. The castle of Jodhpur in Rajasthan is perched upon a lofty rock overlooking the town.",
+      "keyPoints": [
+        "Prithviraj Chauhan, counted the greatest of the Chauhan rulers, defeated Muhammad Ghori in the first battle of Tarain.",
+        "Chittorgarh, Ranathambhor and Kumbahlgarh in Rajasthan are named as important Rajput fortresses.",
+        "The lake palaces at Udaipur and the buildings at Amber are given as examples of Rajput domestic architecture."
+      ],
+      "timeline": [],
+      "citation": {
+        "book": "Social Science, Standard Seven, Term I (Volume 3)",
+        "board": "Tamil Nadu State Board",
+        "classLevel": "7",
+        "chapter": "Unit 2 — Emergence of New Kingdoms in North India",
+        "pageStart": 17,
+        "pageEnd": 19,
+        "passageId": "trd_68f3dc776769_c00007"
+      },
+      "era": "medieval"
+    },
+    {
+      "id": "l-tn7-chola-local-government",
+      "bookId": "tn-7-ss-t1",
+      "chapterId": "u3",
+      "title": "How a Chola Village Governed Itself",
+      "topic": "The Cholas and the Pandyas",
+      "path": "tn",
+      "classLevel": "7",
+      "readingMinutes": 5,
+      "intro": "The Cholas are remembered for temples and conquests, but the textbook spends its space on something quieter: how an ordinary village ran its own affairs.",
+      "excerpt": "The Chola rulers gifted tax-free lands to royal officials, Brahmins, temples (devadana villages) and religious institutions. Land granted to Jain institutions was called pallichchandam. There were also of vellanvagai land and the holders of this land were called Vellalars.",
+      "keyPoints": [
+        "The Chola land tax was known as Kanikadan, and one-third of the produce was collected as land tax, mostly in kind.",
+        "Village assemblies worked through committees for irrigation, roads, temples, gardens, revenue and festivals.",
+        "The Uttiramerur inscriptions describe election to those committees: one member from each of 30 wards, contested by men aged 35 to 70."
+      ],
+      "timeline": [],
+      "citation": {
+        "book": "Social Science, Standard Seven, Term I (Volume 3)",
+        "board": "Tamil Nadu State Board",
+        "classLevel": "7",
+        "chapter": "Unit 3 — Emergence of New Kingdoms in South India",
+        "pageStart": 28,
+        "pageEnd": 29,
+        "passageId": "trd_68f3dc776769_c00012"
+      },
+      "era": "medieval"
+    },
+    {
+      "id": "l-tn7-delhi-sultanate",
+      "bookId": "tn-7-ss-t1",
+      "chapterId": "u4",
+      "title": "Muhammad-bin-Tughluq Moves a Capital",
+      "topic": "The Delhi Sultanate",
+      "path": "tn",
+      "classLevel": "7",
+      "readingMinutes": 5,
+      "intro": "One Sultan tried to rule the whole subcontinent from its centre rather than its north. The attempt emptied a city.",
+      "excerpt": "With the view to facilitating extended sovereignty, he shifted his capital from Delhi to the centre of the kingdom, namely Devagiri. He also changed its name to Daulatabad. When Muhammad himself decided that the move was a mistake, he ordered a return to Delhi as the capital again. When Ibn Battuta, the Morocco traveller who was with the Sultan, returned to Delhi, he found Delhi ‘empty, abandoned and had but a small population’.",
+      "keyPoints": [
+        "Muhammad-bin-Tughluq shifted his capital from Delhi to Devagiri and renamed it Daulatabad.",
+        "He later decided the move was a mistake and ordered a return to Delhi.",
+        "Ibn Battuta, the Morocco traveller who was with the Sultan, found Delhi empty and abandoned on his return."
+      ],
+      "timeline": [],
+      "citation": {
+        "book": "Social Science, Standard Seven, Term I (Volume 3)",
+        "board": "Tamil Nadu State Board",
+        "classLevel": "7",
+        "chapter": "Unit 4 — The Delhi Sultanate",
+        "pageStart": 41,
+        "pageEnd": 44,
+        "passageId": "trd_68f3dc776769_c00019"
+      },
+      "era": "medieval"
+    },
+    {
+      "id": "l-tn7-vijayanagara",
+      "bookId": "tn-7-ss-t2",
+      "chapterId": "u1",
+      "title": "Water, Coins and the Vijayanagara Economy",
+      "topic": "Vijayanagara and Bahmani",
+      "path": "tn",
+      "classLevel": "7",
+      "readingMinutes": 4,
+      "intro": "Vijayanagara is often described through its rulers. Term II looks instead at what paid for them: irrigation, cottage industry and a gold coinage.",
+      "excerpt": "It was the policy of its rulers to encourage agriculture in different parts of the empire by following a wise irrigation policy. Apart from the state, there were wealthy landholders and temples that invested in irrigation to promote agriculture. Abdur Razzaq, the visiting Persian emissary to Krishnadevaraya’s Court, records the huge tank built with the help of Portuguese masons. Channels were constructed to supply water from the tank to different parts of the city. The city was well stocked with a variety of agricultural goods.",
+      "keyPoints": [
+        "The Vijayanagara emperors issued a large number of gold coins called Varahas.",
+        "Rulers, wealthy landholders and temples all invested in irrigation to promote agriculture.",
+        "Abdur Razzaq, the Persian emissary to Krishnadevaraya’s court, recorded a huge tank built with the help of Portuguese masons."
+      ],
+      "timeline": [],
+      "citation": {
+        "book": "Social Science, Standard Seven, Term II (Volume 3)",
+        "board": "Tamil Nadu State Board",
+        "classLevel": "7",
+        "chapter": "Unit 1 — The Vijayanagara and Bahmani Kingdoms",
+        "pageStart": 8,
+        "pageEnd": 11,
+        "passageId": "trd_2bb2534c5d41_c00003"
+      },
+      "era": "medieval"
+    },
+    {
+      "id": "l-tn7-mughal-akbar",
+      "bookId": "tn-7-ss-t2",
+      "chapterId": "u2",
+      "title": "Akbar and the Scholars of Every Belief",
+      "topic": "The Mughal Empire",
+      "path": "tn",
+      "classLevel": "7",
+      "readingMinutes": 4,
+      "intro": "Akbar’s reign is presented here through the people he kept around him — and the hall he built so that they could argue.",
+      "excerpt": "Akbar treated all the religious groups fairly with generosity of spirit. The Sufi saint Salim Chishti and the Sikh Guru Ramdas received Akbar’s utmost respect and regard. Guru Ramdas was gifted a plot of land in Amritsar, where the Sikh shrine Harmandir Sahib was later built. In Ibadat Khana, a hall in the new Fatehpur Sikri city, constructed by Akbar, scholars of all religions met for a discourse.",
+      "keyPoints": [
+        "Guru Ramdas was gifted a plot of land in Amritsar, where the Sikh shrine Harmandir Sahib was later built.",
+        "In the Ibadat Khana at Fatehpur Sikri, scholars of all religions met for discourse.",
+        "Akbar’s personal library held more than four thousand manuscripts, and he patronised Abul Fazl, Birbal, Raja Todar Mal and Tansen among others."
+      ],
+      "timeline": [],
+      "citation": {
+        "book": "Social Science, Standard Seven, Term II (Volume 3)",
+        "board": "Tamil Nadu State Board",
+        "classLevel": "7",
+        "chapter": "Unit II — The Mughal Empire",
+        "pageStart": 22,
+        "pageEnd": 25,
+        "passageId": "trd_2bb2534c5d41_c00009"
+      },
+      "era": "medieval"
+    },
+    {
+      "id": "l-tn7-marathas-shivaji",
+      "bookId": "tn-7-ss-t2",
+      "chapterId": "u3",
+      "title": "Shivaji and the Hill Forts",
+      "topic": "The Marathas",
+      "path": "tn",
+      "classLevel": "7",
+      "readingMinutes": 4,
+      "intro": "The Maratha state began not with a throne but with a string of hill forts near Poona, and with foot soldiers drawn from the hills themselves.",
+      "excerpt": "Shivaji became totally independent after the death of his guardian Kondadev (1649). He also got his father’s jagir transferred to him, which was earlier looked after by Kondadev. The strength of his army was Mavali foot soldiers.",
+      "keyPoints": [
+        "Shivaji, born in 1627, grew up under the care of his mother, Jijabai.",
+        "The strength of his early army was the Mavali foot soldiers, with whose help he took many hill forts near Poona.",
+        "Hymns composed in Marathi by Bhakti saints were sung by people of all castes and classes, which helped develop unity."
+      ],
+      "timeline": [],
+      "citation": {
+        "book": "Social Science, Standard Seven, Term II (Volume 3)",
+        "board": "Tamil Nadu State Board",
+        "classLevel": "7",
+        "chapter": "Unit III — The Marathas",
+        "pageStart": 32,
+        "pageEnd": 34,
+        "passageId": "trd_2bb2534c5d41_c00014"
+      },
+      "era": "medieval"
+    },
+    {
+      "id": "l-tn7-bhakti-khalsa",
+      "bookId": "tn-7-ss-t3",
+      "chapterId": "u1",
+      "title": "The Founding of the Khalsa",
+      "topic": "Bhakti and religious movements",
+      "path": "tn",
+      "classLevel": "7",
+      "readingMinutes": 4,
+      "intro": "Term III follows the devotional movements across India, and ends one strand of that story with the founding of a disciplined brotherhood.",
+      "excerpt": "Those who got baptised became members of a disciplined brotherhood known as the Khalsa (meaning the pure). The men were given the title Singh (lion). Every member of the Khalsa had to have five distinctive things on his person. These were kesh (uncut hair), kangha (comb), kirpan (dagger), kada (steel bangle) and kachera (underpants). After Guru Gobind Singh, the holy book Guru Granth Sahib is considered the guru and its message is spread by the Khalsa.",
+      "keyPoints": [
+        "Those baptised became members of a disciplined brotherhood known as the Khalsa, meaning ‘the pure’; the men were given the title Singh.",
+        "Every member had to carry five things: kesh, kangha, kirpan, kada and kachera.",
+        "After Guru Gobind Singh the holy book Guru Granth Sahib is itself considered the guru."
+      ],
+      "timeline": [],
+      "citation": {
+        "book": "Social Science, Standard Seven, Term III (Volume 3)",
+        "board": "Tamil Nadu State Board",
+        "classLevel": "7",
+        "chapter": "Unit 1 — Religious and Bhakti Movements",
+        "pageStart": 10,
+        "pageEnd": 13,
+        "passageId": "trd_a4cab79c89dd_c00004"
+      },
+      "era": "medieval"
+    },
+    {
+      "id": "l-tn7-mamallapuram",
+      "bookId": "tn-7-ss-t3",
+      "chapterId": "u2",
+      "title": "Cut From the Rock at Mamallapuram",
+      "topic": "Art and architecture",
+      "path": "tn",
+      "classLevel": "7",
+      "readingMinutes": 4,
+      "intro": "At Mamallapuram the Pallavas moved from carving temples out of living rock to building them from cut stone. Both stages still stand.",
+      "excerpt": "The Shore Temple at Mahabalipuram, also called the Seven Pagodas, was built by the Pallava king Narasimhavarman II. It is the oldest structural temple in South India. The structural temples were built using blocks of rock instead of a whole block as earlier. Narasimhavarman II, also known as Rajasimha, built the Kanchi Kailasanatha temple. The Vaikuntha Perumal temple at Kanchipuram was built by Nandivarman II.",
+      "keyPoints": [
+        "The Shore Temple, also called the Seven Pagodas, was built by the Pallava king Narasimhavarman II and is the oldest structural temple in South India.",
+        "Arjuna’s Penance, carved on a granite boulder, measures approximately 100 ft long by 45 ft high.",
+        "The Mamallapuram monuments were notified as a UNESCO World Heritage Site in 1984."
+      ],
+      "timeline": [],
+      "citation": {
+        "book": "Social Science, Standard Seven, Term III (Volume 3)",
+        "board": "Tamil Nadu State Board",
+        "classLevel": "7",
+        "chapter": "Unit 2 — Art and Architecture of South India",
+        "pageStart": 15,
+        "pageEnd": 18,
+        "passageId": "trd_a4cab79c89dd_c00006"
+      },
+      "era": "medieval"
+    },
+    {
+      "id": "l-tn7-jainism-tamil-nadu",
+      "bookId": "tn-7-ss-t3",
+      "chapterId": "u3",
+      "title": "The Rock Beds of Sittanavasal",
+      "topic": "Religions of ancient Tamil Nadu",
+      "path": "tn",
+      "classLevel": "7",
+      "readingMinutes": 4,
+      "intro": "Seventeen beds cut into a stone floor, and a line of Tamil-Brahmi above the largest of them, are among the oldest evidence of Jain life in Tamil Nadu.",
+      "excerpt": "Behind the fenced cavern, there are 17 rock beds marked on the floor. The stone berths aligned in rows are believed to have served as a Jain shelter. The largest of these ascetic beds contains a Tamil-Brahmi inscription that dates to the 2nd century B.C. There are more inscriptions in Tamil from the 8th century A.D., bearing the names of monks. It is believed that they should have spent their lives in isolation here.",
+      "keyPoints": [
+        "Seventeen rock beds are marked on the floor behind the cavern, and are believed to have served as a Jain shelter.",
+        "The largest ascetic bed carries a Tamil-Brahmi inscription dating to the 2nd century B.C.",
+        "Further inscriptions in Tamil from the 8th century A.D. bear the names of monks."
+      ],
+      "timeline": [],
+      "citation": {
+        "book": "Social Science, Standard Seven, Term III (Volume 3)",
+        "board": "Tamil Nadu State Board",
+        "classLevel": "7",
+        "chapter": "Unit 3 — Ancient Religions of Tamil Nadu",
+        "pageStart": 26,
+        "pageEnd": 28,
+        "passageId": "trd_a4cab79c89dd_c00011"
+      },
+      "era": "ancient"
+    }
+  ],
+  "eraNote": "Era tags place each lesson in a period band of the history journey. World-history lessons are placed by their period, not by geography."
+}

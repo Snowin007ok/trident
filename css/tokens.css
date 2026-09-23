@@ -1,0 +1,197 @@
+/* ==========================================================================
+   TRIDENT design tokens — bright Indian heritage interface
+   --------------------------------------------------------------------------
+   The DEFAULT theme is light: warm parchment and ivory surfaces, white panels,
+   saffron and green as the working accents, navy reserved for typography,
+   outlines, the footer and the mobile bar. A dark reading theme is kept as an
+   option under [data-theme="dark"]; nothing but presentation differs.
+   ========================================================================== */
+:root {
+  /* ---- the surfaces the interface is built from ---- */
+  --page-background: #F7F1E4;
+  --surface-primary: #FFFFFF;
+  --surface-secondary: #F2E5CB;
+  --surface-saffron: #FFF0DC;
+  --surface-green: #E5F2E7;
+
+  /* ---- heritage palette ---- */
+  --india-saffron: #FF9933;
+  --india-white: #FFFFFF;
+  --india-green: #138808;
+  --chakra-navy: #172B4D;
+  --heritage-gold: #C9952E;
+  --terracotta: #B95F42;
+  --peacock: #167D7F;
+  --indigo: #3B4E9B;
+
+  --text-primary: #172632;
+  --text-secondary: #52616B;
+  --border-neutral: #D8CDBA;
+
+  /* ---- warm neutrals ---- */
+  --parchment: var(--surface-secondary);
+  --parchment-deep: #E8D3AC;
+  --ivory: #FFF9ED;
+  --ink: #0C1B26;
+  --navy: var(--chakra-navy);
+  --navy-raised: #23406B;
+  --navy-deep: #0F1E36;
+  --ink-text: var(--text-primary);
+  --muted-light: #A79C89;
+  --gold: var(--heritage-gold);
+  --success: #2F7F52;
+  --danger: #B23B3B;
+
+  /* ---- text-safe variants ------------------------------------------------
+     Flag saffron and green, heritage gold, terracotta and peacock are vivid
+     mid-tones: correct for fills, buttons, borders, markers and progress, but
+     too light to carry small text on a light surface. Each therefore has a
+     darkened partner used wherever the colour becomes words. Every pair below
+     clears 4.5:1 on white, parchment and its own pale tint.                */
+  --saffron-text: #9A4E00;
+  --green-text: #0C6606;
+  --gold-text: #7A5810;
+  --terracotta-text: #9A4326;
+  --peacock-text: #0D6C6C;
+  --danger-text: #A32C2C;
+  --navy-text: var(--chakra-navy);
+
+  /* ---- semantic surfaces ---- */
+  --bg: var(--page-background);
+  --surface: var(--surface-primary);
+  --surface-raised: #FFFDF7;
+  --surface-sunken: #FBF5E9;
+  --text: var(--text-primary);
+  --text-muted: var(--text-secondary);
+  --text-on-saffron: #2A1400;
+  --text-on-parchment: var(--text-primary);
+  --text-on-green: #FFFFFF;
+  --text-on-navy: #FFF9ED;
+
+  /* ---- lines ---- */
+  --line: var(--border-neutral);
+  --line-strong: #C3B59C;
+  --line-gold: rgba(201, 149, 46, 0.5);
+  --line-gold-strong: rgba(201, 149, 46, 0.95);
+  --line-saffron: rgba(255, 153, 51, 0.75);
+  --line-green: rgba(19, 136, 8, 0.55);
+  --line-navy: rgba(23, 43, 77, 0.35);
+
+  /* ---- spacing ---- */
+  --sp-1: 0.25rem; --sp-2: 0.5rem;  --sp-3: 0.75rem; --sp-4: 1rem;
+  --sp-5: 1.5rem;  --sp-6: 2rem;    --sp-7: 3rem;    --sp-8: 4rem;
+
+  /* ---- shape language: angular folios, not endless pills ---- */
+  --radius-xs: 3px;
+  --radius-sm: 5px;
+  --radius: 8px;
+  --cut: 18px;                   /* corner cut size for folio panels */
+  --clip-folio: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, var(--cut) 100%, 0 calc(100% - var(--cut)));
+  --clip-notch-tl: polygon(var(--cut) 0, 100% 0, 100% 100%, 0 100%, 0 var(--cut));
+  --clip-notch-br: polygon(0 0, 100% 0, 100% calc(100% - var(--cut)), calc(100% - var(--cut)) 100%, 0 100%);
+  --clip-tab: polygon(0 0, calc(100% - 26px) 0, 100% 50%, calc(100% - 26px) 100%, 0 100%);
+
+  --shadow-1: 0 1px 2px rgba(23, 43, 77, 0.08);
+  --shadow-2: 0 16px 38px rgba(23, 43, 77, 0.14);
+  --shadow-card: 0 1px 2px rgba(23, 43, 77, 0.05), 0 6px 18px rgba(23, 43, 77, 0.06);
+  --shadow-inset-parchment: inset 0 0 60px rgba(140, 105, 45, 0.1);
+
+  /* ---- type ---- */
+  --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+  --font-ui: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --step--2: clamp(0.7rem, 0.68rem + 0.1vw, 0.76rem);
+  --step--1: clamp(0.82rem, 0.79rem + 0.15vw, 0.9rem);
+  --step-0:  clamp(0.96rem, 0.92rem + 0.2vw, 1.05rem);
+  --step-1:  clamp(1.14rem, 1.05rem + 0.4vw, 1.35rem);
+  --step-2:  clamp(1.38rem, 1.2rem + 0.8vw, 1.85rem);
+  --step-3:  clamp(1.7rem, 1.35rem + 1.5vw, 2.6rem);
+  --step-4:  clamp(2.1rem, 1.5rem + 2.6vw, 3.4rem);
+
+  --measure: 66ch;
+  --shell: 1180px;
+  --transition: 180ms cubic-bezier(0.2, 0.7, 0.3, 1);
+
+  /* ---- learning-path identities (not literal flag bands) ---- */
+  --path-tn-surface: var(--surface-saffron);
+  --path-tn-a: var(--india-saffron);
+  --path-tn-b: var(--terracotta);
+  --path-tn-title: var(--terracotta-text);
+  --path-cbse-surface: var(--surface-primary);
+  --path-cbse-a: var(--indigo);
+  --path-cbse-b: var(--heritage-gold);
+  --path-cbse-title: var(--chakra-navy);
+  --path-tnpsc-surface: var(--surface-green);
+  --path-tnpsc-a: var(--india-green);
+  --path-tnpsc-b: var(--peacock);
+  --path-tnpsc-title: var(--peacock-text);
+
+  /* ---- atlas textures (inline SVG, no external requests) ----------------
+     A faint surveyor's grid with muted-gold contour lines over it. Drawn at
+     low opacity so it reads as aged paper rather than graph paper.        */
+  --texture-map: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%23C9952E' stroke-width='0.5' opacity='0.16'%3E%3Cpath d='M0 30h120M0 60h120M0 90h120M30 0v120M60 0v120M90 0v120'/%3E%3C/g%3E%3Cg fill='none' stroke='%23B95F42' stroke-width='0.7' opacity='0.16'%3E%3Cpath d='M-10 78c25-18 42 6 64-6s40 10 76-4'/%3E%3Cpath d='M-10 96c30-14 46 8 70-2s38 8 70-8'/%3E%3C/g%3E%3C/svg%3E");
+  --texture-fiber: repeating-linear-gradient(94deg, rgba(140, 105, 45, 0.04) 0 2px, transparent 2px 5px);
+  --texture-contour: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='120' viewBox='0 0 200 120'%3E%3Cg fill='none' stroke='%23C9952E' stroke-width='0.8' opacity='0.4'%3E%3Cpath d='M-5 40c40-26 70 12 105-4s55 8 105-12'/%3E%3Cpath d='M-5 62c44-24 72 14 108-4s52 10 102-14'/%3E%3Cpath d='M-5 84c46-22 74 16 110-4s50 12 100-16'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+/* ==========================================================================
+   Dark reading theme — the same interface, inverted. Optional, never default.
+   ========================================================================== */
+:root[data-theme="dark"] {
+  --page-background: #071923;
+  --surface-primary: #0E2A3B;
+  --surface-secondary: #16384B;
+  --surface-saffron: #2A1D10;
+  --surface-green: #10261A;
+
+  --chakra-navy: #8FA6D8;
+  --heritage-gold: #F2B84B;
+  --terracotta: #C65F43;
+  --peacock: #168C8C;
+  --indigo: #566BC6;
+
+  --text-primary: #FFF9ED;
+  --text-secondary: #B8C8D0;
+  --border-neutral: rgba(184, 200, 208, 0.18);
+
+  --ink: #071923;
+  --navy: #0E2A3B;
+  --navy-raised: #16384B;
+  --navy-deep: #0A2130;
+  --ink-text: #172632;
+  --muted-light: #8A99A3;
+  --success: #3D9B69;
+  --danger: #C94F4F;
+
+  --saffron-text: #FFB05C;
+  --green-text: #5FC98C;
+  --gold-text: #F2B84B;
+  --terracotta-text: #E58A6E;
+  --peacock-text: #3FC0C0;
+  --danger-text: #F09090;
+  --navy-text: #A9BEE8;
+
+  --bg: var(--page-background);
+  --surface: var(--surface-primary);
+  --surface-raised: var(--surface-secondary);
+  --surface-sunken: var(--navy-deep);
+  --text-on-parchment: #172632;
+  --text-on-navy: #FFF9ED;
+
+  --line: rgba(184, 200, 208, 0.18);
+  --line-strong: rgba(184, 200, 208, 0.32);
+  --line-navy: rgba(184, 200, 208, 0.3);
+
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-2: 0 14px 34px rgba(0, 0, 0, 0.45);
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3);
+
+  --path-tn-surface: var(--surface-saffron);
+  --path-cbse-surface: var(--surface-primary);
+  --path-cbse-b: var(--heritage-gold);
+  --path-tnpsc-surface: var(--surface-green);
+
+  --texture-map: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%23B8C8D0' stroke-width='0.5' opacity='0.5'%3E%3Cpath d='M0 30h120M0 60h120M0 90h120M30 0v120M60 0v120M90 0v120'/%3E%3C/g%3E%3Cg fill='none' stroke='%23F2B84B' stroke-width='0.6' opacity='0.4'%3E%3Cpath d='M-10 78c25-18 42 6 64-6s40 10 76-4'/%3E%3Cpath d='M-10 96c30-14 46 8 70-2s38 8 70-8'/%3E%3C/g%3E%3C/svg%3E");
+  --texture-contour: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='120' viewBox='0 0 200 120'%3E%3Cg fill='none' stroke='%23FFF9ED' stroke-width='0.7' opacity='0.35'%3E%3Cpath d='M-5 40c40-26 70 12 105-4s55 8 105-12'/%3E%3Cpath d='M-5 62c44-24 72 14 108-4s52 10 102-14'/%3E%3Cpath d='M-5 84c46-22 74 16 110-4s50 12 100-16'/%3E%3C/g%3E%3C/svg%3E");
+}
