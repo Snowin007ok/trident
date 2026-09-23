@@ -16,6 +16,7 @@ import * as profile from './profile.js';
 import * as onboarding from './onboarding.js';
 import * as brief from './brief.js';
 import * as companion from './companion.js';
+import * as images from './images.js';
 
 const view = document.getElementById('view');
 const header = document.getElementById('appHeader');
@@ -32,12 +33,15 @@ async function loadJSON(path) {
 }
 
 async function loadData() {
-  const [libraryData, lessons, questions, stories, timelineData] = await Promise.all([
+  const [libraryData, lessons, questions, stories, timelineData, historyImages] = await Promise.all([
     loadJSON('data/library.json'), loadJSON('data/lessons.json'),
     loadJSON('data/questions.json'), loadJSON('data/stories.json'),
-    loadJSON('data/timeline.json')
+    loadJSON('data/timeline.json'),
+    // the image catalogue is optional: a missing or broken file leaves the app
+    // running with no pictures rather than not running at all
+    loadJSON('data/history-images.json').catch(() => ({ images: [] }))
   ]);
-  return { library: libraryData, lessons, questions, stories, timeline: timelineData };
+  return { library: libraryData, lessons, questions, stories, timeline: timelineData, historyImages };
 }
 
 /* ------------------------------------------------------------ view helper */
@@ -124,10 +128,36 @@ function renderHud() {
       class: 'hud-streak', 'data-testid': 'hud-streak',
       'aria-label': `Current streak: ${streak} ${streak === 1 ? 'day' : 'days'}`
     }, [icon('flame', 15), String(streak)]),
-    el('span', { class: 'hud-xp', 'data-testid': 'hud-xp', 'aria-label': `${state.xp || 0} experience points` },
-      [icon('xp', 15), String(state.xp || 0)]),
+    xpCounter(state.xp || 0),
     profileControl(state)
   );
+}
+
+/**
+ * The XP figure in the header. When XP has just risen it counts up to the new
+ * total once — a single, short movement tied to something the learner did.
+ * Under reduced motion it simply shows the new number.
+ */
+let lastXpShown = null;
+function xpCounter(xp) {
+  const num = el('span', { 'data-testid': 'hud-xp-num', text: String(lastXpShown ?? xp) });
+  const node = el('span', { class: 'hud-xp', 'data-testid': 'hud-xp', 'aria-label': `${xp} experience points` },
+    [icon('xp', 15), num]);
+  const from = lastXpShown;
+  lastXpShown = xp;
+  const still = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (from === null || xp <= from || still) { num.textContent = String(xp); return node; }
+  node.classList.add('is-rising');
+  const start = performance.now();
+  const span = 650;
+  const step = (now) => {
+    const k = Math.min(1, (now - start) / span);
+    num.textContent = String(Math.round(from + (xp - from) * (1 - Math.pow(1 - k, 3))));
+    if (k < 1) requestAnimationFrame(step);
+    else setTimeout(() => node.classList.remove('is-rising'), 400);
+  };
+  requestAnimationFrame(step);
+  return node;
 }
 
 /** The profile button and its menu: settings, learning path, theme. */
@@ -298,12 +328,15 @@ function showAccountModal() {
  * repeated here.
  */
 /**
- * Home answers three questions the moment it opens, in this order:
- * what should I do now, how far have I come, and what do I get next.
+ * Home — Today's Expedition.
  *
- * Nothing else is on it. The board and class are named in the header and
- * never repeated here; the library, statistics, story and event all live
- * behind the four destinations.
+ * Within ten seconds a student should know what today asks of them, how long
+ * it takes, what it pays, where they stopped, and what there is to look at.
+ * So the screen is built in that order and stops: the expedition hero, the
+ * lesson they left and today's live event side by side, the mission route,
+ * then the next reward and the guide.
+ *
+ * Every figure comes from stored activity. Nothing here is illustrative.
  */
 function renderDashboard() {
   if (!requireGuest()) return;
@@ -316,111 +349,299 @@ function renderDashboard() {
   const cont = library.continueLesson();
   const resuming = cont ? !!state.readingPositions[cont.id] : false;
   const outside = cont ? library.isOutsideClass(cont) : false;
+  const prof = profile.current(state);
 
-  /* ---- 1. the one thing to do now ---- */
-  v.append(el('section', { class: 'mission', 'data-testid': 'mission' }, [
-    expeditionRoute(),
-    el('div', { class: 'mission-body' }, [
-      el('span', { class: 'mission-kicker', 'data-testid': 'greeting',
-        text: resuming ? 'Carry on where you stopped' : 'Your next lesson' }),
-      cont
-        ? el('h1', { class: 'title-serif mission-title', 'data-testid': 'continue-title', text: cont.title })
-        : el('h1', { class: 'title-serif mission-title', text: 'You have read every lesson in your class' }),
-      outside ? el('span', { class: 'stamp stamp-warn', 'data-testid': 'mission-outside' },
-        [icon('info', 15), `From Class ${cont.classLevel}`]) : null,
-      cont
-        ? el('a', {
-          class: 'btn btn-primary btn-lg', href: `#/lesson/${cont.id}`, 'data-testid': 'continue-learning',
-          text: resuming ? 'Continue reading' : 'Start lesson'
-        })
-        : el('a', { class: 'btn btn-primary btn-lg', href: '#/quiz', 'data-testid': 'continue-learning', text: 'Answer today\u2019s questions' })
-    ].filter(Boolean)),
-    el('div', { class: 'mission-progress' }, [
-      el('div', { class: 'rail-legend' }, [
-        el('b', { text: course.label }),
-        el('span', { 'data-testid': 'course-figure', text: `${course.done} of ${course.total} lessons — ${course.percent}%` })
+  const openXp = quest.tasks.filter((x) => !x.done).reduce((sum, x) => sum + x.xp, 0);
+  // the time still needed, summed from each activity's own estimate
+  const minutes = quest.tasks.filter((x) => !x.done).reduce((m, x) => m + (x.minutes || 2), 0);
+  const totalMinutes = quest.tasks.reduce((m, x) => m + (x.minutes || 2), 0);
+  // the hero and the journey card never show the same picture: the card shows
+  // the lesson in hand, the hero a different image from the same class, chosen
+  // by date so it changes day to day without being random
+  const journeyImg = cont ? images.primaryFor(cont.id) : null;
+  const heroImage = heroImageFor(course, journeyImg, today);
+  const era = cont ? gamify.ERAS.find((e) => e.id === cont.era) : null;
+
+  /* ---- 1. Today's Expedition ---- */
+  v.append(el('section', { class: 'expedition', 'data-testid': 'expedition' }, [
+    el('div', { class: 'exp-art' }, [
+      heroImage
+        ? images.figure(heroImage, { size: 'hero' })
+        : images.motif('16 / 10', 'An illustrated stand-in while this expedition has no picture')
+    ]),
+    el('div', { class: 'exp-body' }, [
+      el('p', { class: 'exp-where', 'data-testid': 'exp-where' }, [
+        icon('compassRose', 15),
+        prof ? profile.label(prof) : 'Your expedition'
       ]),
-      el('div', {
-        class: 'rail rail-lg', 'data-testid': 'home-rail', role: 'img',
-        'aria-label': `${course.done} of ${course.total} lessons complete`
-      }, course.lessons.map((l) => el('i', {
-        class: state.completedLessons[l.id] ? 'is-done' : (cont && l.id === cont.id ? 'is-now' : ''),
-        title: l.title
-      }))),
-      el('div', { class: 'mission-meta' }, [
-        el('span', { class: 'hud-streak', 'data-testid': 'home-streak' },
-          [icon('flame', 15), `${streak} day${streak === 1 ? '' : 's'} in a row`])
-      ])
+      el('h1', { class: 'title-serif exp-title', 'data-testid': 'exp-title',
+        text: era ? `The ${era.label} expedition` : 'Today’s expedition' }),
+      el('p', { class: 'exp-facts', 'data-testid': 'exp-facts' }, [
+        el('b', { text: `${quest.total} short ${quest.total === 1 ? 'activity' : 'activities'}` }),
+        el('span', { text: minutes ? ` · about ${minutes} minute${minutes === 1 ? '' : 's'} · ` : ' · ' }),
+        el('b', { class: 'exp-xp', text: openXp ? `earn up to ${openXp} XP` : 'all XP earned today' })
+      ]),
+      // once today's three are done, the next thing worth doing is the lesson
+      // in hand — so the one big button moves on to it rather than announcing
+      // that there is nothing left
+      el('a', {
+        class: 'btn btn-primary btn-lg', 'data-testid': 'expedition-cta',
+        href: quest.done < quest.total ? firstOpenTask(quest) : (cont ? `#/lesson/${cont.id}` : '#/library'),
+        text: quest.done === 0 ? `Start today’s ${totalMinutes}-minute mission` : 'Continue your expedition'
+      }),
+      quest.done === quest.total
+        ? el('p', { class: 'exp-done', 'data-testid': 'exp-done' }, [icon('check', 15), 'Today’s mission is complete.'])
+        : null,
+      el('ol', { class: 'exp-route', 'aria-label': 'Today’s route' }, quest.tasks.map((task, i) => el('li', {
+        class: `exp-stop${task.done ? ' is-done' : ''}${!task.done && isFirstOpen(quest, i) ? ' is-now' : ''}`
+      }, [
+        el('span', { class: 'exp-dot', 'aria-hidden': 'true' }, [icon(task.done ? 'check' : task.icon, 14)]),
+        el('span', { text: task.title })
+      ])))
     ])
   ]));
 
-  /* ---- 2. today, as a three-station traverse ----
-     Each row is one link with a visible action on the right, so it reads as
-     something to do rather than something to know. The row that is next up
-     wears saffron; a finished row wears green; nothing else does. ---- */
-  const nextTask = quest.tasks.find((task) => !task.done) || null;
-  v.append(el('section', { class: 'today section', 'data-testid': 'quest-panel' }, [
-    el('div', { class: 'section-head' }, [
-      el('h2', { text: 'Today' }),
-      el('span', { class: 'meta', 'data-testid': 'quest-count', text: `${quest.done} of ${quest.total} done` })
-    ]),
-    el('ol', { class: 'traverse' }, quest.tasks.map((task) => {
-      const isNext = nextTask && task.id === nextTask.id;
-      return el('li', {
-        class: `station${task.done ? ' is-done' : ''}${isNext ? ' is-next' : ''}`,
-        'data-testid': `quest-${task.id}`
-      }, [
-        el('a', {
-          class: 'station-link', href: task.href,
-          'data-testid': `quest-link-${task.id}`,
-          'aria-label': `${task.action}. ${task.title}: ${task.done ? 'done today' : `worth ${task.xp} XP`}.`
-        }, [
-          el('span', { class: 'station-mark', 'aria-hidden': 'true' }, [icon(task.done ? 'check' : task.icon, 22)]),
-          el('span', { class: 'station-main' }, [
-            el('span', { class: 'station-title' }, [
-              task.title,
-              task.source === 'api'
-                ? el('span', { class: 'api-tag', 'data-testid': 'home-api-tag' },
-                  [icon('api', 13), task.sourceLabel])
-                : null
-            ].filter(Boolean)),
-            el('span', { class: 'station-sub', text: task.done ? 'Done today' : task.sub })
-          ]),
-          task.done
-            ? el('span', { class: 'stamp stamp-done', text: 'Done' })
-            : el('span', { class: 'station-go', 'data-testid': `quest-action-${task.id}` },
-              [task.action, icon('right', 16)])
-        ]),
-        el('span', { class: 'sr-only', text: task.done ? `${task.title}: done today.` : `${task.title}: worth ${task.xp} XP.` })
-      ]);
-    }))
-  ]));
-
-  /* ---- 3. the next thing that unlocks ---- */
-  const reward = gamify.nextReward ? gamify.nextReward(state) : null;
-  if (reward) {
-    v.append(el('section', { class: 'next-reward section', 'data-testid': 'next-reward' }, [
-      el('div', { class: 'nr-art' }, [badgeArt(reward.id, 52)]),
-      el('div', { class: 'nr-body' }, [
-        el('span', { class: 'nr-kicker', text: 'Next to unlock' }),
-        el('b', { text: reward.name }),
-        el('span', { class: 'hint', text: reward.requirement })
+  /* ---- 2. where you stopped, and what the world offers today ---- */
+  v.append(el('div', { class: 'home-pair' }, [
+    journeyCard(cont, course, state, resuming, outside),
+    el('section', { class: 'today-history', 'data-testid': 'today-history' }, [
+      el('div', { class: 'th-head' }, [
+        el('h2', { text: 'Today in History' }),
+        el('span', { class: 'api-tag', 'data-testid': 'home-api-tag' },
+          [icon('api', 14), 'Live API · Wikimedia'])
       ]),
-      el('a', { class: 'btn btn-ghost btn-sm', href: '#/collection', text: 'Your collection' })
-    ]));
-  }
+      el('div', { class: 'th-body', 'data-testid': 'th-body' }, [
+        el('div', { class: 'state-box' }, [el('span', { class: 'spinner' }), ' Contacting the Wikimedia API…'])
+      ])
+    ])
+  ]));
+  renderHomeEvent(v.querySelector('[data-testid="th-body"]'), today);
+
+  /* ---- 3. the mission route ---- */
+  v.append(missionRoute(quest, state, today));
+
+  /* ---- 4. the next reward, and the guide ---- */
+  const reward = gamify.nextReward ? gamify.nextReward(state) : null;
+  v.append(el('div', { class: 'home-pair home-pair-low' }, [
+    reward
+      ? el('section', { class: 'next-reward', 'data-testid': 'next-reward' }, [
+        el('div', { class: 'nr-art' }, [badgeArt(reward.id, 52)]),
+        el('div', { class: 'nr-body' }, [
+          el('span', { class: 'nr-kicker', text: 'Next to unlock' }),
+          el('b', { text: reward.name }),
+          el('span', { class: 'hint', text: reward.requirement })
+        ]),
+        el('a', { class: 'btn btn-ghost btn-sm', href: '#/collection', text: 'Your collection' })
+      ])
+      : el('section', { class: 'next-reward' }, [
+        el('div', { class: 'nr-body' }, [
+          el('b', { text: 'Every badge earned' }),
+          el('span', { class: 'hint', text: 'All six badges and their artefacts are yours.' })
+        ])
+      ]),
+    el('section', { class: 'guide-invite', 'data-testid': 'guide-invite' }, [
+      el('div', { class: 'gi-fish', 'aria-hidden': 'true' }, [
+        el('img', { src: 'assets/trident-fish.png', alt: '', width: '46', height: '46' })
+      ]),
+      el('div', {}, [
+        el('b', { text: 'Ask TRIDENT' }),
+        el('span', { class: 'hint', text: 'Your guide can explain today’s activities and suggest what to study next.' })
+      ]),
+      el('button', {
+        class: 'btn btn-ghost btn-sm', type: 'button', 'data-testid': 'open-guide',
+        text: 'Ask a question', onclick: () => companion.openPanel()
+      })
+    ])
+  ]));
 
   renderHud();
 }
 
-/* ------------------------------------------------- the day's event page -- */
+/** A class image for the hero, other than the one the journey card uses. */
+function heroImageFor(course, avoid, dateKey) {
+  const pool = course.lessons
+    .map((l) => images.primaryFor(l.id))
+    .filter((img) => img && (!avoid || img.id !== avoid.id));
+  if (!pool.length) return avoid || null;
+  let h = 0;
+  for (const ch of dateKey) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  return pool[h % pool.length];
+}
+
+/** The first activity still to do — what the one big button points at. */
+function firstOpenTask(quest) {
+  const open = quest.tasks.find((t) => !t.done);
+  return open ? open.href : '#/progress';
+}
+function isFirstOpen(quest, i) {
+  return quest.tasks.findIndex((t) => !t.done) === i;
+}
 
 /**
- * The Historical Event of the Day, on a page of its own.
- *
- * It used to sit on the dashboard with its full Wikimedia description; the
- * dashboard now links here from the quest, and the reading happens on arrival.
+ * Continue your journey — the lesson left part-read, as an illustrated
+ * chapter card with its real completion and its book and page.
  */
+function journeyCard(cont, course, state, resuming, outside) {
+  if (!cont) {
+    return el('section', { class: 'journey-card', 'data-testid': 'journey-card' }, [
+      el('div', { class: 'jc-body' }, [
+        el('h2', { text: 'Continue your journey' }),
+        el('p', { text: 'You have read every lesson in your class.' }),
+        el('a', { class: 'btn btn-ghost', href: '#/library', text: 'Open the library' })
+      ])
+    ]);
+  }
+  const book = library.bookById(cont.bookId);
+  const img = images.primaryFor(cont.id);
+  const era = gamify.ERAS.find((e) => e.id === cont.era);
+
+  return el('section', { class: 'journey-card', 'data-testid': 'journey-card' }, [
+    el('div', { class: 'jc-art' }, [
+      img ? el('img', {
+        src: img.url, alt: img.alt, loading: 'lazy', decoding: 'async',
+        width: img.width || null, height: img.height || null
+      }) : images.motif('4 / 3', 'An illustrated stand-in for this chapter')
+    ]),
+    el('div', { class: 'jc-body' }, [
+      el('h2', { class: 'jc-heading', text: 'Continue your journey' }),
+      era ? el('span', { class: 'era-chip', style: `--era: var(--era-${era.id})`, text: era.label }) : null,
+      el('p', { class: 'jc-title title-serif', 'data-testid': 'continue-title', text: cont.title }),
+      outside ? el('span', { class: 'stamp stamp-warn', 'data-testid': 'mission-outside' },
+        [icon('info', 14), `From Class ${cont.classLevel}`]) : null,
+      el('div', { class: 'jc-progress' }, [
+        el('div', { class: 'rail-legend' }, [
+          el('b', { 'data-testid': 'course-figure',
+            text: `${course.done} of ${course.total} chapters explored` }),
+          el('span', { class: 'sr-only', text: `${course.percent} per cent complete` })
+        ]),
+        el('div', {
+          class: 'rail', 'data-testid': 'home-rail', role: 'img',
+          'aria-label': `${course.done} of ${course.total} lessons complete, ${course.percent} per cent`
+        }, course.lessons.map((l) => el('i', {
+          class: state.completedLessons[l.id] ? 'is-done' : (l.id === cont.id ? 'is-now' : ''),
+          title: l.title
+        })))
+      ]),
+      el('a', {
+        class: 'btn btn-ghost', href: `#/lesson/${cont.id}`, 'data-testid': 'continue-learning',
+        text: resuming ? 'Continue reading' : 'Open this lesson'
+      }),
+      el('p', { class: 'jc-source', 'data-testid': 'jc-source' }, [
+        icon('evidence', 13),
+        `${book ? book.title : ''}, ${pages(cont.citation)}`
+      ])
+    ].filter(Boolean))
+  ]);
+}
+
+/**
+ * The mission route: four checkpoints on one visible path. A finished
+ * checkpoint does not merely change a number — its marker fills, its rule goes
+ * green and its action becomes a struck stamp.
+ */
+function missionRoute(quest, state, today) {
+  const reward = {
+    id: 'reward', title: 'Unlock today’s reward', icon: 'xp',
+    sub: 'Finish all three to complete today’s expedition.',
+    action: 'See your collection', href: '#/collection',
+    xp: 0, done: quest.done === quest.total
+  };
+  const stops = [...quest.tasks, reward];
+  const firstOpen = stops.findIndex((s) => !s.done);
+
+  return el('section', { class: 'route section', 'data-testid': 'quest-panel' }, [
+    el('div', { class: 'section-head' }, [
+      el('h2', { text: 'Mission route' }),
+      el('span', { class: 'meta', 'data-testid': 'quest-count',
+        text: `${quest.done} of ${quest.total} done` })
+    ]),
+    el('ol', { class: 'route-track' }, stops.map((stop, i) => {
+      const active = i === firstOpen;
+      const locked = stop.id === 'reward' && !stop.done;
+      return el('li', {
+        class: `checkpoint${stop.done ? ' is-done' : ''}${active ? ' is-active' : ''}${locked ? ' is-locked' : ''}`,
+        'data-testid': `quest-${stop.id}`
+      }, [
+        el('span', { class: 'cp-mark', 'aria-hidden': 'true' }, [icon(stop.done ? 'check' : stop.icon, 22)]),
+        el('div', { class: 'cp-body' }, [
+          el('span', { class: 'cp-title' }, [
+            stop.title,
+            stop.source === 'api'
+              ? el('span', { class: 'api-tag' }, [icon('api', 12), stop.sourceLabel])
+              : null
+          ].filter(Boolean)),
+          el('span', { class: 'cp-sub', text: stop.done ? 'Done today' : stop.sub })
+        ]),
+        el('div', { class: 'cp-side' }, [
+          stop.xp ? el('span', { class: 'cp-xp', text: `+${stop.xp} XP` }) : null,
+          stop.done
+            ? el('span', { class: 'stamp stamp-done stamp-press', text: 'Done' })
+            : el('a', {
+              class: `btn ${active ? 'btn-next' : 'btn-ghost'} btn-sm`,
+              href: stop.href, 'data-testid': `quest-action-${stop.id}`,
+              text: stop.id === 'reward' ? 'Finish the route' : stop.action
+            })
+        ].filter(Boolean))
+      ]);
+    }))
+  ]);
+}
+
+/**
+ * Today in History, on the dashboard. The same one request per date that the
+ * event page uses — the result is cached, so opening both does not call the
+ * API twice.
+ */
+async function renderHomeEvent(host, today) {
+  if (!host) return;
+  const result = await fetchEventsForDate(today);
+  if (!host.isConnected) return;
+  clear(host);
+
+  if (result.status === 'offline' || result.status === 'empty') {
+    host.append(
+      images.motif('16 / 10', 'No picture: the Wikimedia API could not be reached'),
+      el('p', { class: 'th-down', 'data-testid': 'home-event-down',
+        text: 'Today’s Wikimedia event could not be loaded.' }),
+      el('button', {
+        class: 'btn btn-ghost btn-sm', type: 'button', 'data-testid': 'home-event-retry',
+        onclick: () => {
+          clear(host);
+          host.append(el('div', { class: 'state-box' }, [el('span', { class: 'spinner' }), ' Retrying…']));
+          renderHomeEvent(host, today);
+        }
+      }, [icon('refresh', 15), 'Retry'])
+    );
+    return;
+  }
+
+  const evt = pickDailyEvent(result.events, today);
+  if (!evt) {
+    host.append(el('p', { class: 'th-down', text: 'Today’s Wikimedia event could not be loaded.' }));
+    return;
+  }
+
+  host.append(
+    evt.image
+      ? (() => {
+        const frame = el('div', { class: 'th-frame' });
+        const im = el('img', {
+          src: evt.image.src, alt: `Picture from the Wikipedia article on ${evt.title}`,
+          loading: 'lazy', decoding: 'async'
+        });
+        im.addEventListener('error', () => {
+          frame.replaceWith(images.motif('16 / 10', 'Wikipedia offered no picture for this event'));
+        }, { once: true });
+        frame.append(im);
+        return frame;
+      })()
+      : images.motif('16 / 10', 'Wikipedia offered no picture for this event'),
+    el('p', { class: 'th-year', text: evt.year }),
+    el('p', { class: 'th-title', text: evt.title }),
+    el('a', { class: 'btn btn-ghost btn-sm', href: '#/event', text: 'Explore event' })
+  );
+}
+
 /**
  * Today in History — the one screen whose content comes from outside TRIDENT.
  *
@@ -688,7 +909,11 @@ function renderStory() {
     otherClass ? el('p', { class: 'stamp stamp-warn', 'data-testid': 'story-other-class' },
       [icon('info', 15), `Today\u2019s story comes from Class ${otherClass}.`]) : null,
     el('h1', { class: 'title-serif story-title', text: story.title }),
-    storyMotif(),
+    // an editorial image only when one was extracted from the very pages this
+    // story is drawn from; otherwise the drawn motif stands in
+    images.forStory(story)
+      ? images.figure(images.forStory(story), { size: 'lesson', expandable: true, onSave: () => {} })
+      : storyMotif(),
     ...beats.flatMap((b) => [
       el('h2', { class: 'beat', text: b.name }),
       ...b.paras.map((para) => el('p', { text: para }))
@@ -823,6 +1048,9 @@ function renderCollection() {
     ]));
   }
 
+  /* ---- the Visual Archive ---- */
+  v.append(visualArchive(state));
+
   /* ---- saved items ---- */
   v.append(el('section', { class: 'section' }, [
     el('div', { class: 'section-head' }, [el('h2', { text: 'Saved' })]),
@@ -831,6 +1059,86 @@ function renderCollection() {
       ? el('p', { class: 'hint', text: `${openlibrary.ATTRIBUTION}. Saved books are reading suggestions, not verified syllabus sources, and they earn no XP.` })
       : null
   ].filter(Boolean)));
+}
+
+/**
+ * The Visual Archive: historical images the learner chose to keep. Each one
+ * carries the caption, credit and licence it was shown with, so the archive is
+ * a record of evidence, not a scrapbook. It earns no XP — keeping a picture is
+ * not an achievement.
+ */
+function visualArchive(state) {
+  const kept = state.savedImages || [];
+  const prof = profile.current(state);
+  const browse = prof && prof.mode === 'school'
+    ? images.forClass(profile.boardByValue(prof.board).name, prof.classLevel).slice(0, 8)
+    : [];
+
+  const section = el('section', { class: 'section', 'data-testid': 'visual-archive' }, [
+    el('div', { class: 'section-head' }, [
+      el('h2', { text: 'Visual Archive' }),
+      el('span', { class: 'meta', 'data-testid': 'archive-count',
+        text: `${kept.length} image${kept.length === 1 ? '' : 's'} kept` })
+    ])
+  ]);
+
+  if (kept.length) {
+    section.append(el('div', { class: 'archive-grid', 'data-testid': 'archive-grid' },
+      kept.map((img) => archiveTile(img, true))));
+  } else {
+    section.append(el('p', { class: 'lede', text:
+      'Keep historical images here with their sources. Save one from any lesson, or from the pictures of your class below.' }));
+  }
+
+  if (browse.length) {
+    const unsaved = browse.filter((b) => !kept.some((k) => k.id === b.id));
+    if (unsaved.length) {
+      section.append(
+        el('h3', { class: 'archive-sub', text: 'From your class’s textbooks' }),
+        el('div', { class: 'archive-grid', 'data-testid': 'archive-browse' },
+          unsaved.slice(0, 6).map((img) => archiveTile(img, false)))
+      );
+    }
+  }
+  return section;
+}
+
+function archiveTile(img, isKept) {
+  const tile = el('article', { class: 'archive-tile', 'data-testid': isKept ? 'archive-kept' : 'archive-offer' }, [
+    el('div', { class: 'at-frame' }, [
+      el('img', {
+        src: img.url, alt: img.alt, loading: 'lazy', decoding: 'async',
+        width: img.width || null, height: img.height || null
+      })
+    ]),
+    el('div', { class: 'at-body' }, [
+      el('span', { class: 'at-cap', text: img.caption }),
+      el('div', { class: 'at-foot' }, [
+        img.sourceType === 'textbook'
+          ? el('span', { class: 'hi-source is-textbook' }, [icon('evidence', 13), 'Verified textbook image'])
+          : el('a', { class: 'hi-source is-api', href: img.sourcePage, target: '_blank', rel: 'noopener noreferrer' },
+            [icon('api', 13), img.credit]),
+        el('button', {
+          class: `hi-save${isKept ? ' is-on' : ''}`, type: 'button',
+          'aria-pressed': String(isKept),
+          'data-testid': isKept ? 'archive-remove' : 'archive-add',
+          onclick: (e) => {
+            store.toggleSavedImage({
+              id: img.id, title: img.title, caption: img.caption, alt: img.alt, url: img.url,
+              sourceType: img.sourceType, credit: img.credit, sourcePage: img.sourcePage || null,
+              licence: img.licence, licenceUrl: img.licenceUrl || null,
+              width: img.width, height: img.height
+            });
+            // the tile visibly moves into (or out of) the archive
+            const card = e.currentTarget.closest('.archive-tile');
+            card.classList.add(isKept ? 'is-leaving' : 'is-arriving');
+            setTimeout(() => renderCollection(), 260);
+          }
+        }, [icon('saved', 13), isKept ? 'Remove' : 'Keep in archive'])
+      ])
+    ])
+  ]);
+  return tile;
 }
 
 /** Where a learner goes to earn a given badge, and what the button says. */
@@ -1082,6 +1390,33 @@ async function boot() {
   progress.init(DATA);
   timeline.init(DATA);
   brief.init(DATA);
+  images.init(DATA.historyImages);
+
+  // what the companion shows when it opens: facts computed here, from storage,
+  // so the companion itself never reads or writes it
+  companion.setTodayContext(() => {
+    const st = store.load();
+    const day = todayKey();
+    const course = library.courseProgress(st);
+    const q = gamify.questProgress(st, day);
+    const nextTask = q.tasks.find((t) => !t.done);
+    const nextLesson = library.continueLesson();
+    const cached = (() => {
+      try {
+        const raw = localStorage.getItem(`trident:wikimedia-event:${day}`);
+        const rec = raw ? JSON.parse(raw) : null;
+        const evt = rec && rec.events ? pickDailyEvent(rec.events, day) : null;
+        return evt ? `${evt.year} — ${evt.title}` : null;
+      } catch (err) { return null; }
+    })();
+    return {
+      progress: `${course.done} of ${course.total} chapters explored, ${q.done} of ${q.total} of today’s activities done.`,
+      next: nextTask ? { label: `${nextTask.action} — ${nextTask.title}`, href: nextTask.href }
+        : nextLesson ? { label: nextLesson.title, href: `#/lesson/${nextLesson.id}` } : null,
+      event: cached,
+      nextLessonTitle: nextLesson ? nextLesson.title : null
+    };
+  });
   companion.mount();
 
   gamify.setAnnouncer((message, kind) => {

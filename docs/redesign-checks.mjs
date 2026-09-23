@@ -664,25 +664,28 @@ async function main() {
      ====================================================================== */
   await open('#/dashboard');
   const actions = await evaluate(`(() => {
-    const rows = [...document.querySelectorAll('.station')];
+    const rows = [...document.querySelectorAll('.checkpoint')];
     return rows.map((r) => {
-      const go = r.querySelector('.station-go, .stamp');
-      const mark = r.querySelector('.station-mark');
-      const link = r.querySelector('.station-link');
+      const go = r.querySelector('.cp-side a, .cp-side .stamp');
+      const mark = r.querySelector('.cp-mark');
+      const xp = r.querySelector('.cp-xp');
       return {
         action: go ? go.textContent.trim() : null,
         markPx: mark ? Math.round(mark.getBoundingClientRect().width) : 0,
-        wholeRowClickable: !!(link && link.tagName === 'A' && link.getAttribute('href'))
+        xp: xp ? xp.textContent.trim() : null,
+        state: r.classList.contains('is-done') ? 'done' : r.classList.contains('is-active') ? 'active'
+          : r.classList.contains('is-locked') ? 'locked' : 'available'
       };
     });
   })()`);
-  const labelsOk = actions.length === 3
-    && actions.every((a) => a.action && a.markPx >= 38 && a.markPx <= 44 && a.wholeRowClickable);
+  const labelsOk = actions.length === 4
+    && actions.slice(0, 3).every((a) => a.action && a.xp && a.markPx >= 38)
+    && actions[0].state === 'active' && actions[3].state === 'locked';
   if (labelsOk) {
-    pass("21. Today's activities carry visible actions",
-      actions.map((a) => `${a.action} (${a.markPx}px mark)`).join(', ') + ' — each row is one link');
+    pass("21. The mission route shows action, time-reward and state at every checkpoint",
+      actions.map((a) => `${a.action}${a.xp ? ` (${a.xp})` : ''} [${a.state}]`).join(' → '));
   } else {
-    fail("21. Today's activities carry visible actions", JSON.stringify(actions));
+    fail("21. The mission route shows action, time-reward and state at every checkpoint", JSON.stringify(actions));
   }
 
   /* ======================================================================
@@ -764,6 +767,242 @@ async function main() {
       'one leap on hover, the class clears when it ends, a resting pointer does not restart it, and opening the drawer leaves the URL alone');
   } else {
     fail('24. The companion leaps once and rests', JSON.stringify(fish));
+  }
+
+  /* ======================================================================
+     25. The dashboard has one dominant action, and a mission starts in one tap
+     ====================================================================== */
+  await open('#/dashboard');
+  const cta = await evaluate(`(async () => {
+    const primaries = [...document.querySelectorAll('#view .btn-primary')]
+      .filter((b) => { const r = b.getBoundingClientRect(); return r.width > 0; });
+    const btn = document.querySelector('[data-testid="expedition-cta"]');
+    const text = btn ? btn.textContent.trim() : null;
+    btn.click();
+    await new Promise((r) => setTimeout(r, 900));
+    return { primaries: primaries.length, text, landed: location.hash };
+  })()`);
+  if (cta.primaries === 1 && /mission|expedition/i.test(cta.text) && /#\/(story|quiz|event|lesson)/.test(cta.landed)) {
+    pass('25. One dominant action, and a mission begins in one tap',
+      `"${cta.text}" is the only saffron button; one tap opened ${cta.landed}`);
+  } else {
+    fail('25. One dominant action, and a mission begins in one tap', JSON.stringify(cta));
+  }
+
+  /* ======================================================================
+     26. Every displayed image carries attribution; no broken image icons
+     ====================================================================== */
+  const imgIssues = [];
+  let imgCount = 0;
+  for (const [w, h] of [[1440, 900], [375, 812]]) {
+    for (const s of ['#/dashboard', '#/lesson/l-tn7-chola-local-government', '#/story', '#/collection', '#/onboarding']) {
+      await open(s, { width: w, height: h });
+      await sleep(900);
+      const r = await evaluate(`(() => {
+        const figs = [...document.querySelectorAll('#view figure.hi')];
+        const unattributed = figs.filter((f) => !f.querySelector('.hi-source') || !f.querySelector('.hi-cite'));
+        const tiles = [...document.querySelectorAll('#view .archive-tile')];
+        const tileNoSource = tiles.filter((t) => !t.querySelector('.hi-source'));
+        const imgs = [...document.querySelectorAll('#view img')];
+        const broken = imgs.filter((i) => i.complete && i.naturalWidth === 0);
+        const noAlt = imgs.filter((i) => !i.hasAttribute('alt'));
+        const dupAlt = figs.filter((f) => {
+          const im = f.querySelector('img'); const cap = f.querySelector('.hi-caption-text');
+          return im && cap && im.alt.trim() === cap.textContent.trim();
+        });
+        return { figs: figs.length + tiles.length, unattributed: unattributed.length + tileNoSource.length,
+          broken: broken.map((i) => i.src.split('/').pop()), noAlt: noAlt.length, dupAlt: dupAlt.length };
+      })()`);
+      imgCount += r.figs;
+      if (r.unattributed) imgIssues.push(`${w}px ${s}: ${r.unattributed} without attribution`);
+      if (r.broken.length) imgIssues.push(`${w}px ${s}: broken ${r.broken.join(',')}`);
+      if (r.noAlt) imgIssues.push(`${w}px ${s}: ${r.noAlt} images with no alt`);
+      if (r.dupAlt) imgIssues.push(`${w}px ${s}: ${r.dupAlt} alt texts duplicating their caption`);
+    }
+  }
+  if (!imgIssues.length && imgCount > 0) {
+    pass('26. Every image is attributed, has alt text, and loads', `${imgCount} images and tiles checked across five screens at two widths; none broken, none unattributed, no alt text repeating its caption`);
+  } else {
+    fail('26. Every image is attributed, has alt text, and loads', imgIssues.join(' | ') || 'no images found');
+  }
+
+  /* ======================================================================
+     27. Every textbook image has its book and page; nothing unverified shows
+     ====================================================================== */
+  const cat = await evaluate(`(async () => {
+    const c = await (await fetch('data/history-images.json')).json();
+    const imgs = c.images || [];
+    const tb = imgs.filter((i) => i.sourceType === 'textbook');
+    return {
+      total: imgs.length,
+      textbook: tb.length,
+      missingBookOrPage: tb.filter((i) => !i.bookTitle || !i.pageStart || !i.pageEnd).length,
+      unverified: imgs.filter((i) => i.verified !== true).length,
+      missingFields: imgs.filter((i) => !i.id || !i.title || !i.alt || !i.caption || !i.url || !i.credit || !i.licence).length,
+      primaries: new Set(tb.filter((i) => i.primary).map((i) => i.lessonId)).size,
+      sourcePdfsUnchanged: c.review && c.review.sourcePdfsUnchanged === true
+    };
+  })()`);
+  if (cat.textbook > 0 && !cat.missingBookOrPage && !cat.unverified && !cat.missingFields && cat.sourcePdfsUnchanged) {
+    pass('27. Every textbook image carries its book and pages', `${cat.textbook} images, all verified, all with book, chapter and pages; ${cat.primaries} lessons have a lead image; source PDFs recorded unchanged`);
+  } else {
+    fail('27. Every textbook image carries its book and pages', JSON.stringify(cat));
+  }
+
+  /* ======================================================================
+     28. No API key reaches the browser
+     ====================================================================== */
+  const leak = await evaluate(`(async () => {
+    const files = ['index.html', 'js/app.js', 'js/images.js', 'js/brief.js', 'js/companion.js', 'js/wikipedia.js',
+      'js/openlibrary.js', 'js/library.js', 'js/storage.js', 'data/history-images.json'];
+    const hits = [];
+    for (const f of files) {
+      const text = await (await fetch(f)).text();
+      if (/EUROPEANA_API_KEY|GEMINI_API_KEY|wskey=[A-Za-z0-9]|AIza[0-9A-Za-z_-]{20,}/.test(text)) hits.push(f);
+    }
+    const env = await fetch('.env').then((r) => r.status).catch(() => 'blocked');
+    return { hits, env };
+  })()`);
+  if (!leak.hits.length) {
+    pass('28. No API key reaches the browser', `ten served files scanned for key names and key-shaped strings: none found. Europeana is reached only through the server's /api/images/europeana route`);
+  } else {
+    fail('28. No API key reaches the browser', JSON.stringify(leak));
+  }
+
+  /* ======================================================================
+     29. A reward cannot be awarded twice
+     ====================================================================== */
+  await open('#/dashboard');
+  const twice = await evaluate(`(async () => {
+    const g = await import('./js/gamify.js');
+    const s = await import('./js/storage.js');
+    const day = '2031-01-01';
+    const before = s.load().xp;
+    const a = g.award('story', day, { lessons: [] });
+    const mid = s.load().xp;
+    const b = g.award('story', day, { lessons: [] });
+    const after = s.load().xp;
+    return { before, mid, after, first: a.xp, second: b.xp };
+  })()`);
+  if (twice.first === 30 && twice.second === 0 && twice.after === twice.mid && twice.mid === twice.before + 30) {
+    pass('29. A reward is granted once', `the same story reward asked for twice paid ${twice.first} XP, then ${twice.second}; total ${twice.before} → ${twice.after}`);
+  } else {
+    fail('29. A reward is granted once', JSON.stringify(twice));
+  }
+  await evaluate(`localStorage.setItem('trident.state', ${JSON.stringify(JSON.stringify(SEED))})`);
+
+  /* ======================================================================
+     30. Wikimedia Commons results are filtered, capped, cached and deduped
+     --------------------------------------------------------------------
+     Neither this sandbox nor the development machine's shell can reach
+     Wikimedia, so the live API is replaced by a response of the documented
+     shape. What this proves is the filtering, not that Commons is reachable.
+     ====================================================================== */
+  await open('#/dashboard');
+  const commons = await evaluate(`(async () => {
+    const mod = await import('./js/images.js');
+    Object.keys(localStorage).filter((k) => k.startsWith('trident:commons:')).forEach((k) => localStorage.removeItem(k));
+    let calls = 0;
+    const page = (id, full) => ({
+      pageid: id, title: 'File:Fixture ' + id + '.jpg',
+      imageinfo: [{
+        thumburl: full.thumb === false ? undefined : 'https://example.invalid/t' + id + '.jpg',
+        thumbwidth: 640, thumbheight: 480, mime: 'image/jpeg',
+        descriptionurl: full.page === false ? undefined : 'https://commons.wikimedia.org/wiki/File:Fixture_' + id + '.jpg',
+        extmetadata: {
+          LicenseShortName: full.licence === false ? undefined : { value: 'CC BY-SA 4.0' },
+          LicenseUrl: full.licence === false ? undefined : { value: 'https://creativecommons.org/licenses/by-sa/4.0' },
+          ObjectName: { value: 'Fixture ' + id }, ImageDescription: { value: 'A fixture image ' + id }
+        }
+      }]
+    });
+    const pages = {};
+    // nine complete records, and three each missing one required field
+    for (let i = 1; i <= 9; i++) pages[i] = page(i, {});
+    pages[20] = page(20, { thumb: false });
+    pages[21] = page(21, { page: false });
+    pages[22] = page(22, { licence: false });
+    const real = window.fetch;
+    window.fetch = async (u, o) => {
+      if (String(u).includes('commons.wikimedia.org')) {
+        calls++;
+        await new Promise((r) => setTimeout(r, 60));
+        return new Response(JSON.stringify({ query: { pages } }), { status: 200 });
+      }
+      return real(u, o);
+    };
+    const [a, b] = await Promise.all([mod.searchCommons('Chola temple'), mod.searchCommons('Chola temple')]);
+    const c = await mod.searchCommons('Chola temple');
+    window.fetch = async () => { throw new Error('offline'); };
+    const d = await mod.searchCommons('Pallava relief');
+    window.fetch = real;
+    const ids = a.results.map((r) => r.id);
+    return {
+      calls, count: a.results.length, sameForBoth: JSON.stringify(a) === JSON.stringify(b),
+      thirdStatus: c.status, offlineStatus: d.status, offlineResults: d.results.length,
+      incompleteLeaked: ids.some((x) => /-(20|21|22)$/.test(x)),
+      allHaveLicence: a.results.every((r) => r.licence && r.licenceUrl && r.sourcePage && r.url)
+    };
+  })()`);
+  if (commons.calls === 1 && commons.count === 6 && commons.sameForBoth && commons.thirdStatus === 'cache'
+      && !commons.incompleteLeaked && commons.allHaveLicence && commons.offlineStatus === 'offline' && commons.offlineResults === 0) {
+    pass('30. Commons results are filtered, capped at six, cached and deduplicated',
+      'twelve records offered → six returned, the three with no thumbnail, source page or licence never among them; two simultaneous searches made one request; the next came from cache; offline returned nothing and did not throw');
+  } else {
+    fail('30. Commons results are filtered, capped at six, cached and deduplicated', JSON.stringify(commons));
+  }
+
+  /* ======================================================================
+     31. The lesson's Commons drawer asks only when opened, and labels
+         every picture as Commons with its licence — never as textbook
+     --------------------------------------------------------------------
+     Same documented-shape stand-in as check 30; the thumbnails point at
+     files this app already serves so the layout can be seen.
+     ====================================================================== */
+  await open('#/lesson/l-tn7-chola-local-government');
+  const drawer = await evaluate(`(async () => {
+    Object.keys(localStorage).filter((k) => k.startsWith('trident:commons:')).forEach((k) => localStorage.removeItem(k));
+    let calls = 0;
+    const real = window.fetch;
+    const cat = await (await real('data/history-images.json')).json();
+    const urls = cat.images.slice(0, 3).map((i) => i.url);
+    const pages = {};
+    urls.forEach((u, i) => { pages[i + 1] = { pageid: 900 + i, title: 'File:Stand-in ' + i + '.jpg', imageinfo: [{
+      thumburl: u, thumbwidth: 640, thumbheight: 480, mime: 'image/webp',
+      descriptionurl: 'https://commons.wikimedia.org/wiki/File:Stand-in_' + i + '.jpg',
+      extmetadata: { LicenseShortName: { value: 'CC BY-SA 4.0' }, LicenseUrl: { value: 'https://creativecommons.org/licenses/by-sa/4.0' },
+        ObjectName: { value: 'Stand-in picture ' + (i + 1) }, ImageDescription: { value: 'A stand-in used by the test, number ' + (i + 1) } } }] }; });
+    window.fetch = async (u, o) => {
+      if (String(u).includes('commons.wikimedia.org')) { calls++; return new Response(JSON.stringify({ query: { pages } }), { status: 200 }); }
+      return real(u, o);
+    };
+    const d = document.querySelector('[data-testid="more-pictures"]');
+    if (!d) { window.fetch = real; return { missing: true }; }
+    const before = calls;
+    d.open = true; d.dispatchEvent(new Event('toggle'));
+    await new Promise((r) => setTimeout(r, 400));
+    const figs = [...d.querySelectorAll('figure.hi')];
+    const out = {
+      before, after: calls, figures: figs.length,
+      allCommons: figs.every((f) => /Wikimedia Commons/.test(f.querySelector('.hi-source').textContent)),
+      noTextbookLabel: !d.textContent.includes('Verified textbook image'),
+      allLicensed: figs.every((f) => f.querySelector('.hi-licence') && f.querySelector('a.hi-cite[href*="commons.wikimedia.org"]'))
+    };
+    // offline: a fresh topic via the retry path
+    Object.keys(localStorage).filter((k) => k.startsWith('trident:commons:')).forEach((k) => localStorage.removeItem(k));
+    window.fetch = async (u, o) => { if (String(u).includes('commons.wikimedia.org')) throw new Error('offline'); return real(u, o); };
+    const mod = await import('./js/images.js');
+    const off = await mod.searchCommons('A topic never searched');
+    out.offline = off.status;
+    window.fetch = real;
+    return out;
+  })()`);
+  if (drawer && !drawer.missing && drawer.before === 0 && drawer.after === 1 && drawer.figures === 3
+      && drawer.allCommons && drawer.noTextbookLabel && drawer.allLicensed && drawer.offline === 'offline') {
+    pass('31. The lesson asks Commons only when its drawer opens, and never calls a Commons picture a textbook image',
+      'the drawer sent nothing until it was opened, then one request; three pictures, each tagged Wikimedia Commons with its source page and licence linked; no "Verified textbook image" label among them');
+  } else {
+    fail('31. The lesson asks Commons only when its drawer opens, and never calls a Commons picture a textbook image', JSON.stringify(drawer));
   }
 
   /* ---- report ---- */

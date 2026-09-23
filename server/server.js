@@ -5,6 +5,9 @@
  *   GET  /api/daily-brief      whether the feature is switched on (never the key)
  *   POST /api/daily-brief      an anonymous progress summary -> a checked briefing
  *   POST /api/daily-brief/ask  the same summary + one question -> a scoped answer
+ *   GET  /api/images/europeana one topic -> up to six licensed records, or 501
+ *                              when no EUROPEANA_API_KEY is configured. The key
+ *                              is read here and never sent to the browser.
  *
  * Node's own http module — the only dependency in this project is the Gemini
  * SDK, and that is loaded lazily, so the app still serves with nothing
@@ -18,6 +21,7 @@ import { fileURLToPath } from 'node:url';
 
 import { LIMITS, PORT, hasApiKey, GEMINI_MODEL } from './config.js';
 import { brief, askGuide } from './brief.js';
+import { searchEuropeana, isConfigured as europeanaConfigured } from './europeana.js';
 
 const APP_ROOT = resolve(fileURLToPath(new URL('../', import.meta.url)));
 
@@ -159,6 +163,30 @@ export function createApp(deps = {}) {
         console.error('Daily Guide: unexpected failure answering a question.');
         sendJson(res, 500, { ok: false, reason: 'unavailable', message: 'Your Daily Guide is temporarily unavailable.' });
       }
+      return;
+    }
+
+    if (url.pathname === '/api/images/europeana') {
+      if (req.method !== 'GET') {
+        res.writeHead(405, { Allow: 'GET' });
+        res.end();
+        return;
+      }
+      if (!europeanaConfigured()) {
+        // the honest answer: this source is simply not set up here
+        sendJson(res, 501, {
+          status: 'not-configured', results: [],
+          message: 'Europeana is not configured on this server. Set EUROPEANA_API_KEY to enable it.'
+        });
+        return;
+      }
+      const gate = rateLimit(clientId(req));
+      if (!gate.allowed) {
+        sendJson(res, 429, { status: 'rate-limited', results: [], retryAfterSec: gate.retryAfterSec });
+        return;
+      }
+      const out = await searchEuropeana(url.searchParams.get('q') || '');
+      sendJson(res, 200, out);
       return;
     }
 

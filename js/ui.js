@@ -30,7 +30,7 @@ let toastTimer = null;
 export function toast(message, kind = '') {
   const node = document.getElementById('toast');
   clear(node);
-  node.className = `toast${kind ? ` is-${kind}` : ''}`;
+  node.className = `toast${kind ? ` is-${kind}` : ''}${kind === 'badge' ? ' is-reveal' : ''}`;
   node.append(icon(kind === 'badge' ? 'trophy' : kind === 'xp' ? 'bolt' : 'info', 20), el('span', { text: message }));
   node.hidden = false;
   clearTimeout(toastTimer);

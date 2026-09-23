@@ -161,14 +161,14 @@ export function questTasks(state, dateKey) {
   return [
     {
       id: 'story', title: 'Daily Story', icon: 'story',
-      xp: XP_RULES.story, href: '#/story', action: 'Read story',
+      xp: XP_RULES.story, href: '#/story', action: 'Read story', minutes: 2,
       sub: 'A retelling drawn from a verified textbook passage.',
       source: 'textbook',
       done: store.hasReward(rewardId('story', dateKey))
     },
     {
       id: 'quiz', title: 'Daily Quiz', icon: 'quiz',
-      xp: XP_RULES.quiz, href: '#/quiz', action: 'Start quiz',
+      xp: XP_RULES.quiz, href: '#/quiz', action: 'Start quiz', minutes: 2,
       sub: 'Five questions, each citing its page.',
       source: 'textbook',
       done: !!(state.dailyQuizByDate || {})[dateKey]
@@ -177,7 +177,7 @@ export function questTasks(state, dateKey) {
       // the one activity whose content comes from outside TRIDENT, and it
       // says so on the row rather than only on the page it opens
       id: 'event', title: 'Today in History', icon: 'api',
-      xp: XP_RULES.event, href: '#/event', action: 'Explore event',
+      xp: XP_RULES.event, href: '#/event', action: 'Explore event', minutes: 1,
       sub: 'A new historical event fetched for today.',
       source: 'api', sourceLabel: 'Live API · Wikimedia',
       done: store.hasReward(rewardId('event', dateKey))

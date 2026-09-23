@@ -14,6 +14,7 @@ import { el, clear, toast, announceToScreenReader } from './ui.js';
 import { icon } from './icons.js';
 import * as store from './storage.js';
 import * as profile from './profile.js';
+import * as images from './images.js';
 
 let DATA = null;
 export function init(data) { DATA = data; }
@@ -205,7 +206,9 @@ export function render(view, { change = false, onDone = null, onCancel = null } 
     const minutes = mine.reduce((sum, l) => sum + (l.readingMinutes || 4), 0);
     const topics = [...new Set(mine.map((l) => l.topic))];
 
+    const firstImg = mine.map((l) => images.primaryFor(l.id)).find(Boolean) || null;
     const body = el('div', { class: 'ob-summary', 'data-testid': 'ob-summary' }, [
+      firstImg ? images.figure(firstImg, { size: 'lesson' }) : null,
       el('h2', { text: draft.mode === 'school' ? `Class ${draft.classLevel} history` : 'Your practice set' }),
       el('p', { class: 'lede', 'data-testid': 'ob-preview',
         text: `${mine.length} lesson${mine.length === 1 ? '' : 's'}, about ${minutes} minutes of reading in all.` }),
@@ -216,12 +219,12 @@ export function render(view, { change = false, onDone = null, onCancel = null } 
     ].filter(Boolean));
 
     shell(change ? 4 : 3, change ? 4 : 3,
-      change ? 'Confirm your new path' : 'Ready to start',
+      change ? 'Confirm your new path' : 'Your first expedition is ready',
       summary.detail, body,
       [
         el('button', {
           class: 'btn btn-primary btn-lg', type: 'button', 'data-testid': 'ob-confirm', onclick: save
-        }, [icon('check', 18), change ? 'Save this path' : 'Start my first lesson']),
+        }, [icon('check', 18), change ? 'Save this path' : 'Start your first expedition']),
         el('button', {
           class: 'btn btn-ghost', type: 'button', 'data-testid': 'ob-confirm-back',
           onclick: () => (draft.mode === 'school' ? stepClass() : stepExam())

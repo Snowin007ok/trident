@@ -32,10 +32,18 @@ const SUGGESTIONS = [
   'Quiz me on today’s lesson'
 ];
 
+/* The app supplies today's facts when the panel opens: progress, the next
+   activity, today's event and the class's own lesson titles. The companion
+   never reads storage itself, so it can never write it either. */
+let contextFn = null;
+export function setTodayContext(fn) { contextFn = typeof fn === 'function' ? fn : null; }
+
 /* ------------------------------------------------------------ the pieces */
 
 let root = null;
 let launcher = null;
+let todayHost = null;
+let suggestionsHost = null;
 let panel = null;
 let backdrop = null;
 let answerHost = null;
@@ -143,6 +151,9 @@ function buildPanel() {
   }, [icon('cross', 16)]);
   closeBtn.addEventListener('click', () => close());
 
+  todayHost = el('div', { class: 'companion-today', 'data-testid': 'companion-today' });
+  suggestionsHost = el('div', { class: 'companion-suggestions', 'data-testid': 'companion-suggestions' });
+
   panel = el('aside', {
     class: 'companion-panel', id: 'companion-panel', 'data-testid': 'companion-panel',
     role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'companion-title', hidden: true
@@ -161,11 +172,9 @@ function buildPanel() {
     el('p', { class: 'companion-scope', 'data-testid': 'companion-scope',
       text: 'I can guide your progress, recommend what to study next and explain today’s activities. Open any lesson to study history from its verified textbook source.' }),
 
-    el('div', { class: 'companion-suggestions', 'data-testid': 'companion-suggestions' },
-      SUGGESTIONS.map((q) => el('button', {
-        class: 'btn btn-secondary btn-sm', type: 'button', text: q,
-        onclick: () => run(q)
-      }))),
+    todayHost,
+
+    suggestionsHost,
 
     form,
     answerHost,
@@ -177,6 +186,47 @@ function buildPanel() {
 
   backdrop = el('div', { class: 'companion-backdrop', 'data-testid': 'companion-backdrop', hidden: true });
   backdrop.addEventListener('click', () => close());
+}
+
+/**
+ * Today at a glance, from the facts the app hands over: progress, the next
+ * activity, and the day's event. Then the suggestions, the last of which names
+ * the learner's own next lesson so the questions belong to their class.
+ */
+function paintToday() {
+  if (!todayHost) return;
+  const ctx = contextFn ? contextFn() : null;
+  clear(todayHost);
+  clear(suggestionsHost);
+
+  if (ctx) {
+    // append() prints a null as the word "null", so absent rows are filtered
+    todayHost.append(...[
+      el('div', { class: 'ct-row' }, [
+        icon('progress', 16),
+        el('span', {}, [el('b', { text: 'Your progress ' }), ctx.progress])
+      ]),
+      ctx.next ? el('div', { class: 'ct-row' }, [
+        icon('compassRose', 16),
+        el('span', {}, [el('b', { text: 'Next ' }),
+          el('a', { href: ctx.next.href, onclick: () => close(), text: ctx.next.label })])
+      ]) : null,
+      ctx.event ? el('div', { class: 'ct-row is-api' }, [
+        icon('api', 16),
+        el('span', {}, [el('b', { text: 'Today in History ' }), ctx.event])
+      ]) : el('div', { class: 'ct-row is-api' }, [
+        icon('api', 16),
+        el('span', { text: 'Today’s Wikimedia event has not loaded yet.' })
+      ])
+    ].filter(Boolean));
+  }
+
+  const asks = SUGGESTIONS.slice(0, 3);
+  if (ctx && ctx.nextLessonTitle) asks.push(`Why study “${ctx.nextLessonTitle}” next?`);
+  else asks.push(SUGGESTIONS[3]);
+  asks.forEach((q) => suggestionsHost.append(el('button', {
+    class: 'btn btn-secondary btn-sm', type: 'button', text: q, onclick: () => run(q)
+  })));
 }
 
 /* ---------------------------------------------------------- focus trapping */
@@ -211,6 +261,7 @@ export function openPanel() {
   root.classList.add('is-open');
   launcher.setAttribute('aria-expanded', 'true');
   document.addEventListener('keydown', onKeydown, true);
+  paintToday();
   paintHistory();
   requestAnimationFrame(() => input.focus());
   say('Ask TRIDENT opened.');

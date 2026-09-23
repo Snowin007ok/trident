@@ -28,6 +28,9 @@
   --teal: #087F8C;
   --gold: #F4C542;
   --red: #C73A32;
+  /* a quiet breathing colour, used behind imagery and the expedition hero so
+     the page is not one unbroken sheet of cream */
+  --sky: #DCEEF5;
 
   /* ---- text-safe partners --------------------------------------------
      Saffron and gold are bright mid-tones: right for fills and markers,
@@ -49,6 +52,7 @@
   --wash-teal: #E4F2F3;
   --wash-gold: #FDF3D4;
   --wash-red: #FBEAE8;
+  --wash-sky: #EFF7FB;
 
   /* ---- type colours ---- */
   --text: var(--ink);
@@ -97,8 +101,8 @@
   --step-1:  1.0625rem;
   --step-2:  1.3125rem;
   --step-3:  clamp(1.5rem, 1.25rem + 1vw, 2rem);
-  --step-4:  clamp(1.875rem, 1.4rem + 2vw, 2.75rem);
-  --step-5:  clamp(2.25rem, 1.5rem + 3.4vw, 3.5rem);
+  --step-4:  clamp(1.75rem, 1.35rem + 1.6vw, 2.4rem);   /* page title 28-38px */
+  --step-5:  clamp(2rem, 1.5rem + 2.2vw, 3.05rem);      /* mission title 32-49px */
 
   --measure: 64ch;
   --shell: 1120px;
@@ -138,6 +142,7 @@
   --teal: #2FB3C0;
   --gold: #F4C542;
   --red: #E8756C;
+  --sky: #16303F;
 
   --saffron-ink: #FFB65C;
   --green-ink: #5FD196;
@@ -154,6 +159,7 @@
   --wash-teal: #0D2E33;
   --wash-gold: #332908;
   --wash-red: #381916;
+  --wash-sky: #102A38;
 
   --text: var(--ink);
   --text-muted: #9FB2C6;

@@ -7,6 +7,7 @@ import * as gamify from './gamify.js';
 import { todayKey } from './daily.js';
 import * as profile from './profile.js';
 import * as openlibrary from './openlibrary.js';
+import * as images from './images.js';
 
 let DATA = null;
 const filters = { path: 'all', classLevel: 'all', bookId: 'all', chapterId: 'all', era: 'all', q: '' };
@@ -461,6 +462,11 @@ export function renderLesson(view, lessonId) {
       })))
     ]),
 
+    // one large image, after the title and progress, expandable and saveable
+    images.primaryFor(lesson.id)
+      ? images.figure(images.primaryFor(lesson.id), { size: 'lesson', expandable: true, onSave: () => {} })
+      : null,
+
     el('p', { class: 'reader-intro', text: lesson.intro }),
 
     el('div', { class: 'passage', 'data-testid': 'passage' },
@@ -494,6 +500,7 @@ export function renderLesson(view, lessonId) {
 
     el('div', { class: 'reader-finish' }, [completeBtn, afterBox]),
 
+    era ? morePicturesSection(lesson, era) : null,
     era ? exploreBooksSection(lesson, era) : null
   ].filter(Boolean)));
 
@@ -540,6 +547,76 @@ export function continueLesson() {
 export function isOutsideClass(lesson) {
   const strict = profile.strictFn();
   return !!(strict && lesson && !strict(lesson));
+}
+
+/* ==========================================================================
+   More pictures — Wikimedia Commons, on request
+   --------------------------------------------------------------------------
+   Like the books drawer, nothing is requested until the learner opens it.
+   Every picture shown carries its source page and licence; a record missing
+   either never arrives here (images.searchCommons drops it). These are not
+   textbook images and are never labelled as such.
+   ========================================================================== */
+
+function morePicturesSection(lesson, era) {
+  const topic = openlibrary.topicFor(lesson, era ? era.label : null);
+  const body = el('div', { class: 'books-body', 'data-testid': 'commons-body' }, [
+    el('p', { class: 'hint', text: 'Open this section to look for related pictures.' })
+  ]);
+  let started = false;
+  const details = el('details', { class: 'panel books-panel section', 'data-testid': 'more-pictures' }, [
+    el('summary', { class: 'books-summary', 'data-testid': 'more-pictures-toggle' }, [
+      icon('api', 18),
+      el('span', {}, [
+        el('span', { class: 'books-title', text: 'More pictures from Wikimedia Commons' }),
+        el('span', { class: 'hint', text: `Openly licensed pictures for “${topic}”` })
+      ])
+    ]),
+    body,
+    el('p', { class: 'books-attribution' }, [
+      icon('info', 14),
+      ' Pictures from Wikimedia Commons, each with its own licence and source page. They are not from your textbook, and nothing in this lesson depends on them.'
+    ])
+  ]);
+  details.addEventListener('toggle', () => {
+    if (!details.open || started) return;
+    started = true;
+    loadPictures(body, topic);
+  });
+  return details;
+}
+
+async function loadPictures(body, topic) {
+  clear(body);
+  body.append(el('div', { class: 'state-box', 'data-testid': 'commons-loading' }, [
+    el('span', { class: 'spinner' }), ' Looking on Wikimedia Commons…'
+  ]));
+  const result = await images.searchCommons(topic);
+  clear(body);
+  if (result.status === 'offline') {
+    body.append(el('div', { class: 'state-box is-error', 'data-testid': 'commons-offline' }, [
+      el('p', { text: 'Wikimedia Commons could not be reached.' }),
+      el('p', { class: 'hint', text: 'The lesson and its textbook image are stored in this application and are unaffected.' }),
+      el('button', { class: 'btn btn-secondary btn-sm', type: 'button', onclick: () => loadPictures(body, topic) },
+        [icon('refresh', 16), 'Try again'])
+    ]));
+    return;
+  }
+  if (result.status === 'empty') {
+    body.append(el('div', { class: 'state-box', 'data-testid': 'commons-empty' }, [
+      el('p', { text: `No openly licensed pictures matched “${topic}”.` }),
+      el('p', { class: 'hint', text: 'Nothing is invented to fill the gap.' })
+    ]));
+    return;
+  }
+  const n = result.results.length;
+  body.append(
+    el('p', { class: 'hint', 'data-testid': 'commons-status', text: result.status === 'cache'
+      ? `${n} picture${n === 1 ? '' : 's'}, kept on this device from an earlier search.`
+      : `${n} picture${n === 1 ? '' : 's'} from Wikimedia Commons.` }),
+    el('div', { class: 'commons-grid', 'data-testid': 'commons-grid' },
+      result.results.map((img) => images.figure(img, { size: 'tile', expandable: true, onSave: () => {} })).filter(Boolean))
+  );
 }
 
 /* ==========================================================================

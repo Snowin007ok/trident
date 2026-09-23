@@ -162,8 +162,9 @@ console.log(`Model constant: ${GEMINI_MODEL}\n`);
 
   const gitignore = await readFile(new URL('../.gitignore', import.meta.url), 'utf8');
   const example = await readFile(new URL('../.env.example', import.meta.url), 'utf8');
-  check('B1b. .env is ignored by git and .env.example holds only an empty variable',
-    /^\.env$/m.test(gitignore) && example.trim() === 'GEMINI_API_KEY=',
+  const lines = example.split('\n').map((l) => l.trim()).filter((l) => l && !l.startsWith('#'));
+  check('B1b. .env is ignored by git and .env.example holds only empty variables',
+    /^\.env$/m.test(gitignore) && lines.includes('GEMINI_API_KEY=') && lines.every((l) => /^[A-Z_]+=$/.test(l)),
     `.env.example = ${JSON.stringify(example.trim())}`);
 }
 
@@ -535,6 +536,22 @@ await withKey(() => withServer({}, async () => {
     first.body.available === false && second.body.available === false && calls === 4,
     `${calls} model attempts across 2 requests (each retries once), nothing served from cache`);
 }));
+
+/* -------------------------- B34. Europeana without a key answers 501 */
+{
+  const saved = process.env.EUROPEANA_API_KEY;
+  delete process.env.EUROPEANA_API_KEY;
+  await withServer({}, async (base) => {
+    const res = await fetch(`${base}/api/images/europeana?q=Chola`);
+    const body = await res.json().catch(() => null);
+    const post = await fetch(`${base}/api/images/europeana`, { method: 'POST' });
+    check('B34. Europeana with no key answers 501 and sends no results; other methods are refused',
+      res.status === 501 && body && body.status === 'not-configured' && Array.isArray(body.results)
+      && body.results.length === 0 && post.status === 405 && !JSON.stringify(body).includes('wskey'),
+      `GET ${res.status} ${body && body.status}, POST ${post.status}`);
+  });
+  if (saved !== undefined) process.env.EUROPEANA_API_KEY = saved;
+}
 
 /* ----------------------------------------------------------------- summary */
 

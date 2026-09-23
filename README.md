@@ -135,7 +135,8 @@ TRIDENT_APP/
 ├── README.md               this file
 ├── assets/
 │   ├── trident-logo.png    the TRIDENT logo
-│   └── trident-fish.png    the twin fish, the Ask TRIDENT companion
+│   ├── trident-fish.png    the twin fish, the Ask TRIDENT companion
+│   └── history/textbooks/  62 reviewed WebP images from the cited textbook pages
 ├── css/
 │   ├── tokens.css          colour, spacing, type, shape and texture tokens
 │   ├── base.css            reset, layout, header, tricolour rule, bottom nav, motion
@@ -144,7 +145,7 @@ TRIDENT_APP/
 ├── js/
 │   ├── app.js              bootstrap, welcome, dashboard, story, collection, settings
 │   ├── router.js           hash router
-│   ├── storage.js          the only module that touches localStorage (schema v4)
+│   ├── storage.js          the only module that touches localStorage (schema v6)
 │   ├── profile.js          the learning profile and the personalisation it drives
 │   ├── onboarding.js       the guided board / class / examination flow
 │   ├── gamify.js           XP, levels, quest, badges, artefacts, eras
@@ -152,6 +153,7 @@ TRIDENT_APP/
 │   ├── timeline.js         the daily Timeline Challenge
 │   ├── daily.js            date-driven selection (quiz, story, event)
 │   ├── wikipedia.js        Wikimedia "On this day" client (one request per date)
+│   ├── images.js           verified image catalogue, figures, Commons search, Europeana proxy client
 │   ├── openlibrary.js      Open Library search client (cached, rate-limited)
 │   ├── brief.js            the Daily Briefing card, and the one call that asks the guide
 │   ├── companion.js        the floating twin-fish launcher and its drawer
@@ -161,12 +163,14 @@ TRIDENT_APP/
 │   └── ui.js               DOM helpers, modal, toast, citations, XP bar
 ├── data/
 │   ├── library.json        12 books, chapters, class availability
-│   ├── lessons.json        20 lessons with verbatim cited excerpts
+│   ├── lessons.json        30 lessons with verbatim cited excerpts
+│   ├── history-images.json the image catalogue: source, book, pages, licence, verified flag
 │   ├── questions.json      42 hand-written questions, 5 formats
 │   ├── stories.json        7 daily stories with mini-quizzes
 │   └── timeline.json       18 cited events for the Timeline Challenge
 ├── server/                 the Node backend (never served to the browser)
-│   ├── server.js           static files + GET/POST /api/daily-brief
+│   ├── server.js           static files + GET/POST /api/daily-brief + GET /api/images/europeana
+│   ├── europeana.js        optional Europeana proxy; reads EUROPEANA_API_KEY, never sent to the browser
 │   ├── brief.js            validate the summary, check the briefing, fall back locally
 │   ├── gemini.js           the only file that touches the SDK or the key
 │   ├── diagnose.js         npm run diagnose — checks the key without printing it
@@ -335,6 +339,31 @@ shape lives in one function (`requestOnThisDay` in `js/wikipedia.js`,
 `requestSearch` in `js/openlibrary.js`), so either can be replaced without
 touching the interface. Remote text is converted to plain text before it is
 displayed — nothing from either service is ever inserted as markup.
+
+### Historical images
+
+Pictures come from two kinds of source and are never confused:
+
+- **Verified textbook images** — 62 pictures extracted only from the page
+  ranges the lessons already cite, reviewed by eye, and stored as WebP in
+  `assets/history/textbooks/`. Each is labelled *Verified textbook image* with
+  its book and pages. Page decorations, publisher marks and whole pages were
+  rejected. The source PDFs were checked by SHA-256 before and after and are
+  unchanged.
+- **Wikimedia Commons** — the external source, searched only when a learner
+  opens *More pictures from Wikimedia Commons* in a lesson. A record is shown
+  only if it has a thumbnail, a source page and a licence with a link; at most
+  six; cached for seven days as `trident:commons:TOPIC`; one request per topic
+  at a time. Each picture is tagged *Wikimedia Commons* with its source page
+  and licence linked.
+- **Europeana** (optional) — reached only through the server's
+  `GET /api/images/europeana`, which reads `EUROPEANA_API_KEY` from the
+  environment. Without it the route answers 501 and the app carries on.
+
+`data/history-images.json` holds every record (id, source type, lesson, story,
+event, board, class, era, book, chapter, pages, passage id, url, dimensions,
+credit, licence, `verified`). Only records with `verified: true` and complete
+provenance are ever rendered. A failed image becomes a drawn motif.
 
 Open Library results are **supplementary reading suggestions**, not syllabus
 sources. No lesson text, quiz question or citation comes from either API.

@@ -4,88 +4,149 @@
    ========================================================================== */
 
 /* ==========================================================================
-   HOME — the mission, the day, the next reward
+   HOME — Today's Expedition
    ========================================================================== */
-.mission {
-  display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
-  gap: var(--sp-6); align-items: center;
+
+/* The hero: a picture and the facts beside it. Shorter than the white box it
+   replaces, and the picture carries the weight so the type need not. */
+.expedition {
+  display: grid; grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+  gap: 0; align-items: stretch; overflow: hidden;
   background: var(--surface); border: 2px solid var(--ink);
-  border-radius: var(--radius); padding: var(--sp-6);
-  margin-bottom: var(--sp-6);
+  border-radius: var(--radius); margin-bottom: var(--sp-5);
 }
-.mission-kicker {
-  display: block; font-size: var(--step--1); font-weight: 700;
-  color: var(--saffron-ink); margin-bottom: var(--sp-2);
+.exp-art { position: relative; background: var(--sky); min-height: 240px; }
+.exp-art .hi { margin: 0; height: 100%; }
+.exp-art .hi-frame { height: 100%; aspect-ratio: auto !important; border-radius: 0; border: 0; }
+.exp-art .hi-frame img { width: 100%; height: 100%; object-fit: cover; }
+.exp-art .hi-cap {
+  position: absolute; inset: auto 0 0 0;
+  /* a solid band, not a fade: the caption must read over any photograph */
+  background-color: rgba(20, 42, 67, 0.92);
+  color: #FFF8E8; padding: var(--sp-3) var(--sp-4);
 }
-.mission-title {
-  font-size: var(--step-5); line-height: 1.04; margin: 0 0 var(--sp-4);
-  letter-spacing: -0.015em;
-}
-.mission-body .stamp { margin-bottom: var(--sp-3); }
-.mission-body .btn-lg { font-size: var(--step-1); padding: var(--sp-4) var(--sp-6); min-height: 52px; }
+.exp-art .hi-cap .hi-caption-text { font-size: var(--step--1); }
+.exp-art .hi-source { color: #FFF8E8; border-color: rgba(255, 248, 232, 0.5); background: transparent; }
+.exp-art .hi-cite { color: rgba(255, 248, 232, 0.8); }
 
-.mission-progress { border-left: 1px solid var(--line); padding-left: var(--sp-6); }
-.mission-meta { margin-top: var(--sp-4); }
-
-/* --- today, drawn as a three-station traverse --- */
-.traverse { list-style: none; margin: 0; padding: 0; position: relative; max-width: 640px; }
-.traverse::before {
-  content: ''; position: absolute; left: 27px; top: 34px; bottom: 34px;
-  width: 2px; background: var(--line-strong);
+.exp-body { padding: var(--sp-6); display: flex; flex-direction: column; justify-content: center; }
+.exp-where {
+  display: flex; align-items: center; gap: 6px; margin: 0 0 var(--sp-2);
+  font-size: var(--step--1); font-weight: 600; color: var(--teal-ink);
 }
-.station { position: relative; }
-.station-link {
-  display: grid; grid-template-columns: 54px minmax(0, 1fr) auto;
+.exp-title { font-size: var(--step-5); line-height: 1.06; margin: 0 0 var(--sp-3); }
+.exp-facts { font-size: var(--step-1); margin: 0 0 var(--sp-5); color: var(--text); max-width: none; }
+.exp-xp { color: var(--gold-ink); }
+.exp-body .btn-lg { align-self: flex-start; font-size: var(--step-1); padding: var(--sp-4) var(--sp-6); min-height: 54px; }
+
+/* the small route inside the hero: three dots on a line */
+.exp-route {
+  list-style: none; display: flex; align-items: center; gap: 0;
+  margin: var(--sp-5) 0 0; padding: 0;
+}
+.exp-stop { display: flex; align-items: center; gap: 6px; font-size: var(--step--1); color: var(--text-muted); }
+.exp-stop + .exp-stop::before {
+  content: ''; width: 26px; height: 2px; background: var(--line-strong); margin: 0 10px;
+}
+.exp-dot {
+  width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center;
+  border: 2px solid var(--line-strong); background: var(--surface); color: var(--text-muted);
+}
+.exp-stop.is-done { color: var(--green-ink); }
+.exp-stop.is-done .exp-dot { background: var(--green); border-color: var(--green); color: var(--text-on-green); }
+.exp-stop.is-now { color: var(--saffron-ink); font-weight: 700; }
+.exp-stop.is-now .exp-dot { border-color: var(--saffron); color: var(--saffron-ink); }
+
+/* --- the pair below the hero --- */
+.home-pair {
+  display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: var(--sp-5); margin-bottom: var(--sp-6); align-items: start;
+}
+.home-pair-low { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+
+/* Continue your journey */
+.journey-card {
+  display: grid; grid-template-columns: 172px minmax(0, 1fr);
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius); overflow: hidden;
+}
+.jc-art { background: var(--sky); min-height: 100%; }
+.jc-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.jc-art .hi-motif { height: 100%; aspect-ratio: auto !important; border: 0; border-radius: 0; }
+.jc-body { padding: var(--sp-5); display: flex; flex-direction: column; gap: var(--sp-2); align-items: flex-start; }
+.jc-heading { font-size: var(--step-0); font-weight: 700; color: var(--text-muted); margin: 0; letter-spacing: 0; }
+.jc-title { font-size: var(--step-2); line-height: 1.2; margin: 0; max-width: none; }
+.jc-progress { width: 100%; margin: var(--sp-2) 0; }
+.jc-source {
+  display: flex; align-items: center; gap: 6px; margin: 0;
+  font-size: var(--step--2); color: var(--text-muted); max-width: none;
+}
+
+/* Today in History */
+.today-history {
+  background: var(--wash-sky); border: 1px solid var(--teal);
+  border-radius: var(--radius); padding: var(--sp-4);
+  display: flex; flex-direction: column;
+}
+.th-head { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; margin-bottom: var(--sp-3); }
+.th-head h2 { font-size: var(--step-1); margin: 0; }
+.th-frame, .today-history .hi-motif {
+  border-radius: var(--radius-sm); overflow: hidden; background: var(--sky);
+  aspect-ratio: 16 / 9 !important; margin-bottom: var(--sp-3); max-height: 180px;
+}
+.th-frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.th-year { font-weight: 800; font-size: var(--step-2); margin: 0; color: var(--teal-ink); }
+.th-title { margin: 0 0 var(--sp-3); font-weight: 600; }
+.th-down { margin: 0 0 var(--sp-3); color: var(--red-ink); font-weight: 600; }
+
+/* --- the mission route --- */
+.route-track { list-style: none; margin: 0; padding: 0; position: relative; }
+.route-track::before {
+  content: ''; position: absolute; left: 25px; top: 30px; bottom: 30px;
+  width: 3px; background: var(--line-strong);
+}
+.checkpoint {
+  display: grid; grid-template-columns: 52px minmax(0, 1fr) auto;
   align-items: center; gap: var(--sp-4);
-  padding: var(--sp-3); text-decoration: none; color: var(--text);
-  border: 1px solid transparent; border-radius: var(--radius);
-  transition: background var(--transition), border-color var(--transition), transform 90ms ease;
+  padding: var(--sp-3) var(--sp-3) var(--sp-3) 0; position: relative;
 }
-.station-link:hover { background: var(--surface); border-color: var(--line-strong); color: var(--text); }
-.station-link:active { transform: translateY(1px); background: var(--surface-sunken); }
-.station-mark {
-  width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center;
-  background: var(--surface); border: 2px solid var(--line-strong);
+.cp-mark {
+  width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--surface); border: 3px solid var(--line-strong);
   color: var(--text-muted); position: relative; z-index: 1;
 }
-/* saffron marks the one activity to do next, green one already done */
-.station.is-next .station-mark { border-color: var(--saffron); color: var(--saffron-ink); }
-.station.is-done .station-mark { background: var(--green); border-color: var(--green); color: var(--text-on-green); }
-.station-main { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-.station-title { font-weight: 700; display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; }
-.station-sub { font-size: var(--step--1); color: var(--text-muted); }
-.station-xp { font-weight: 700; font-size: var(--step--1); color: var(--gold-ink); white-space: nowrap; }
+.checkpoint.is-active .cp-mark { border-color: var(--saffron); color: var(--saffron-ink); }
+.checkpoint.is-done .cp-mark { background: var(--green); border-color: var(--green); color: var(--text-on-green); }
+/* the line behind a finished checkpoint turns with it */
+.checkpoint.is-done::before {
+  content: ''; position: absolute; left: 25px; top: 0; bottom: 0; width: 3px;
+  background: var(--green); z-index: 0;
+}
+.cp-body { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.cp-title { font-weight: 700; display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; }
+.cp-sub { font-size: var(--step--1); color: var(--text-muted); }
+.cp-side { display: flex; align-items: center; gap: var(--sp-3); white-space: nowrap; }
+.cp-xp { font-weight: 700; font-size: var(--step--1); color: var(--gold-ink); }
+.checkpoint.is-locked .cp-mark { border-style: dashed; }
 
-/* the action, visible on the row rather than implied by it */
-.station-go {
-  display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;
-  font-weight: 700; font-size: var(--step--1); color: var(--text);
-  border: 2px solid var(--line-strong); border-radius: var(--radius-sm);
-  padding: var(--sp-2) var(--sp-3); min-height: 40px;
-  background: var(--surface);
+/* --- the guide's invitation --- */
+.guide-invite {
+  display: flex; align-items: center; gap: var(--sp-4);
+  background: var(--wash-teal); border: 1px solid var(--teal);
+  border-radius: var(--radius); padding: var(--sp-4);
 }
-.station.is-next .station-go {
-  background: var(--saffron); border-color: var(--saffron); color: var(--text-on-saffron);
+.gi-fish {
+  width: 46px; height: 46px; border-radius: 50%; overflow: hidden; flex: none;
+  border: 2px solid var(--ink); background: var(--gold);
 }
-.station-link:hover .station-go { border-color: var(--ink); }
-.station.is-next .station-link:hover .station-go { border-color: var(--saffron-ink); }
-
-/* the one row whose content is fetched live */
-.api-tag {
-  display: inline-flex; align-items: center; gap: 4px;
-  font-size: var(--step--2); font-weight: 800; letter-spacing: 0.02em;
-  color: var(--teal-ink); background: var(--wash-teal);
-  border: 1px solid var(--teal); border-radius: var(--radius-xs);
-  padding: 1px var(--sp-2);
-}
-.station[data-testid="quest-event"] .station-mark { border-color: var(--teal); color: var(--teal-ink); }
-.station[data-testid="quest-event"].is-done .station-mark { background: var(--green); border-color: var(--green); color: var(--text-on-green); }
+.gi-fish img { width: 100%; height: 100%; object-fit: cover; }
+.guide-invite > div:not(.gi-fish) { flex-grow: 1; min-width: 0; display: flex; flex-direction: column; }
 
 /* --- next reward --- */
 .next-reward {
   display: flex; align-items: center; gap: var(--sp-4);
   border: 1px dashed var(--line-strong); border-radius: var(--radius);
-  padding: var(--sp-4) var(--sp-5); background: var(--surface);
+  padding: var(--sp-4); background: var(--surface);
 }
 .nr-art { flex: none; color: var(--line-strong); }
 .nr-body { flex-grow: 1; min-width: 0; display: flex; flex-direction: column; }
@@ -651,6 +712,18 @@
 }
 .companion:not(.is-open) .companion-launcher { animation: fish-float 4.5s ease-in-out infinite; }
 
+/* a ripple on the water, now and then, as if the fish had just surfaced */
+.companion-launcher::before {
+  content: ''; position: absolute; inset: -3px; border-radius: 50%;
+  border: 2px solid var(--teal); opacity: 0; pointer-events: none;
+}
+.companion:not(.is-open) .companion-launcher::before { animation: fish-ripple 7s ease-out 2s infinite; }
+@keyframes fish-ripple {
+  0%, 80% { opacity: 0; transform: scale(1); }
+  82% { opacity: 0.7; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.45); }
+}
+
 /* the gold glint, once in a while */
 .companion-sparkle, .companion-sparkle-2 {
   position: absolute; width: 7px; height: 7px; pointer-events: none;
@@ -689,6 +762,7 @@
   .companion:not(.is-open) .companion-launcher { animation: none; }
   .companion.is-leaping .companion-launcher { animation: none; }
   .companion-sparkle, .companion-sparkle-2 { animation: none; opacity: 0; }
+  .companion:not(.is-open) .companion-launcher::before { animation: none; opacity: 0; }
 }
 .companion.is-glowing .companion-launcher { box-shadow: 0 0 0 6px var(--wash-gold), 0 6px 0 rgba(20, 42, 67, 0.22); }
 
@@ -897,3 +971,179 @@
 .api-down h2 { margin: var(--sp-4) 0 var(--sp-2); font-size: var(--step-2); }
 .api-down p { margin-inline: auto; margin-bottom: var(--sp-5); }
 .api-down .btn { margin: 0 var(--sp-2) var(--sp-2); }
+
+/* ==========================================================================
+   Historical imagery
+   --------------------------------------------------------------------------
+   Every picture carries its source with it. A textbook image is labelled as
+   verified and cites its book and page; an API image names its collection and
+   links to the page it came from. The two never look alike.
+   ========================================================================== */
+.hi { margin: 0 0 var(--sp-5); }
+.hi-frame {
+  position: relative; overflow: hidden; background: var(--sky);
+  border: 1px solid var(--line); border-radius: var(--radius);
+  display: block;
+}
+.hi-frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.hi-motif { display: grid; place-items: center; }
+.hi-motif svg { width: 100%; height: 100%; display: block; }
+
+.hi-expand {
+  position: absolute; right: var(--sp-2); bottom: var(--sp-2);
+  width: 44px; height: 44px; display: grid; place-items: center; cursor: pointer;
+  background: var(--surface); border: 2px solid var(--ink); border-radius: var(--radius-sm);
+  color: var(--text);
+}
+.hi-expand:hover { background: var(--wash-saffron); }
+
+.hi-cap { margin-top: var(--sp-2); }
+.hi-caption-text { display: block; font-size: var(--step--1); line-height: 1.5; }
+.hi-meta {
+  display: flex; align-items: center; gap: var(--sp-2) var(--sp-3);
+  flex-wrap: wrap; margin-top: 4px;
+}
+.hi-source {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: var(--step--2); font-weight: 700;
+  border: 1px solid currentColor; border-radius: var(--radius-xs); padding: 1px var(--sp-2);
+}
+.hi-source.is-textbook { color: var(--green-ink); background: var(--wash-green); }
+.hi-source.is-api { color: var(--teal-ink); background: var(--wash-teal); }
+.hi-cite { font-size: var(--step--2); color: var(--text-muted); }
+a.hi-cite { color: var(--teal-ink); }
+
+.hi-save {
+  display: inline-flex; align-items: center; gap: 5px; cursor: pointer;
+  font-size: var(--step--2); font-weight: 700; color: var(--text);
+  background: var(--surface); border: 1px solid var(--line-strong);
+  border-radius: var(--radius-xs); padding: var(--sp-1) var(--sp-2); min-height: 30px;
+}
+.hi-save:hover { border-color: var(--ink); }
+.hi-save.is-on { color: var(--gold-ink); border-color: var(--gold); background: var(--wash-gold); }
+
+/* the big one under a lesson title fills the reading column; the expand
+   button shows the whole uncropped picture */
+.hi-lesson .hi-frame { width: 100%; aspect-ratio: 16 / 10 !important; }
+
+/* a thumbnail on a timeline milestone or an archive tile */
+.hi-thumb { margin: 0; }
+.hi-thumb .hi-frame { border-radius: var(--radius-sm); }
+.hi-thumb .hi-caption-text { font-size: var(--step--2); }
+
+/* --- expanded view --- */
+.hi-lb-backdrop {
+  position: fixed; inset: 0; z-index: 90; background: rgba(20, 42, 67, 0.82);
+  display: grid; place-items: center; padding: var(--sp-4);
+}
+.hi-lightbox {
+  background: var(--surface); border: 2px solid var(--ink); border-radius: var(--radius);
+  max-width: min(1000px, 94vw); max-height: 92vh; overflow: auto;
+  display: flex; flex-direction: column;
+}
+.hi-lightbox img { width: 100%; height: auto; display: block; }
+.hi-lb-foot { padding: var(--sp-4); display: flex; flex-direction: column; gap: var(--sp-2); align-items: flex-start; }
+.hi-lb-foot p { margin: 0; }
+
+/* ==========================================================================
+   The Visual Archive
+   ========================================================================== */
+.archive-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--sp-4);
+}
+.archive-tile {
+  border: 1px solid var(--line); border-radius: var(--radius);
+  background: var(--surface); overflow: hidden;
+  display: flex; flex-direction: column;
+}
+.archive-tile .at-frame { aspect-ratio: 4 / 3; background: var(--sky); overflow: hidden; }
+.archive-tile .at-frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.at-body { padding: var(--sp-3); display: flex; flex-direction: column; gap: var(--sp-2); flex-grow: 1; }
+.at-cap { font-size: var(--step--1); line-height: 1.45; }
+.at-foot { margin-top: auto; display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; }
+
+
+/* the one row whose content is fetched live */
+.api-tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: var(--step--2); font-weight: 800; letter-spacing: 0.02em;
+  color: var(--teal-ink); background: var(--wash-teal);
+  border: 1px solid var(--teal); border-radius: var(--radius-xs);
+  padding: 1px var(--sp-2);
+}
+
+/* the current checkpoint's action: clearly the next thing, but not a second
+   saffron button competing with the hero's */
+.btn-next {
+  background: var(--surface); border-color: var(--saffron); color: var(--saffron-ink);
+}
+.btn-next:hover { background: var(--wash-saffron); border-color: var(--saffron-ink); color: var(--saffron-ink); }
+
+/* timeline milestones: a small textbook thumbnail beside the revealed event */
+.tl-answer li.has-thumb { align-items: center; }
+.tl-ans-body { flex-grow: 1; min-width: 0; }
+.tl-thumb {
+  flex: none; width: 96px; height: 72px; object-fit: cover;
+  border-radius: var(--radius-sm); border: 1px solid var(--line); background: var(--sky);
+}
+
+.archive-sub { font-size: var(--step-1); margin: var(--sp-6) 0 var(--sp-3); color: var(--text-muted); }
+/* a kept image visibly travels into the archive, once */
+@keyframes into-archive { to { transform: translateY(-14px) scale(0.92); opacity: 0; } }
+.archive-tile.is-arriving, .archive-tile.is-leaving { animation: into-archive 240ms ease-in forwards; }
+
+/* ==========================================================================
+   Progress — the expedition route through the eras
+   ========================================================================== */
+.big-words { font-size: var(--step-3); margin: 0; line-height: 1.2; max-width: none; }
+.big-words b { font-size: var(--step-5); font-weight: 800; letter-spacing: -0.02em; margin-right: 4px; }
+
+.era-route {
+  list-style: none; margin: var(--sp-5) 0 0; padding: var(--sp-5) var(--sp-4);
+  display: flex; gap: 0; position: relative;
+  background: var(--wash-sky); border-radius: var(--radius);
+}
+/* the route itself: a tricolour line, one of the few places it is allowed */
+.era-route::before {
+  content: ''; position: absolute; left: calc(50% / var(--n, 5)); right: calc(50% / var(--n, 5)); top: calc(var(--sp-5) + 22px);
+  height: 3px;
+  /* a plain route line: green is kept for what is finished, so the line itself claims nothing */
+  background: repeating-linear-gradient(90deg, var(--line-strong) 0 10px, transparent 10px 16px);
+}
+.er-stop {
+  flex: 1; min-width: 0; position: relative; z-index: 1;
+  display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center;
+}
+.er-mark {
+  width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--surface); border: 3px solid var(--line-strong);
+}
+.er-stop.is-done .er-mark { background: var(--green); border-color: var(--green); color: var(--text-on-green); }
+.er-stop.is-here .er-mark { border-color: var(--saffron); box-shadow: 0 0 0 5px var(--wash-saffron); }
+.er-name { font-weight: 700; font-size: var(--step--1); }
+.er-count { font-size: var(--step--1); color: var(--text-muted); }
+.er-state { font-size: var(--step--2); font-weight: 700; color: var(--text-muted); }
+.er-stop.is-done .er-state { color: var(--green-ink); }
+.er-stop.is-here .er-state { color: var(--saffron-ink); }
+
+/* the companion's today block */
+.companion-today {
+  display: grid; gap: var(--sp-2); margin: 0 var(--sp-5); padding: var(--sp-3) var(--sp-4);
+  background: var(--wash-sky); border-radius: var(--radius); font-size: var(--step--1);
+}
+.companion-today:empty { display: none; }
+.ct-row { display: flex; align-items: flex-start; gap: var(--sp-2); }
+.ct-row svg { flex: none; margin-top: 2px; color: var(--text-muted); }
+.ct-row.is-api svg { color: var(--teal-ink); }
+.exp-done { display: flex; align-items: center; gap: 6px; margin: var(--sp-3) 0 0; color: var(--green-ink); font-weight: 700; }
+
+/* Wikimedia Commons pictures in a lesson: small, each with its own licence */
+.commons-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--sp-4); margin-top: var(--sp-3); align-items: start;
+}
+.commons-grid .hi { margin: 0; }
+.commons-grid .hi-frame { aspect-ratio: 4 / 3 !important; }
+.hi-licence { text-decoration: underline; }

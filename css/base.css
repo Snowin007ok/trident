@@ -347,7 +347,7 @@ p.stamp { align-items: flex-start; padding: var(--sp-2) var(--sp-3); }
   background: var(--ink); color: var(--text-on-ink);
   padding: var(--sp-3) var(--sp-5); border-radius: var(--radius);
   box-shadow: var(--shadow-lift); font-weight: 600;
-  max-width: min(92vw, 460px);
+  width: max-content; max-width: min(92vw, 460px);
 }
 .toast[hidden] { display: none !important; }
 .toast.is-xp { color: var(--gold); }
@@ -391,3 +391,16 @@ input:focus-visible, select:focus-visible { border-color: var(--ink); }
     scroll-behavior: auto !important;
   }
 }
+
+/* XP rising once toward its new total */
+.hud-xp.is-rising { color: var(--gold-ink); }
+.hud-xp.is-rising svg { animation: xp-glint 650ms ease-out; }
+@keyframes xp-glint { 0% { transform: scale(1) rotate(0); } 50% { transform: scale(1.35) rotate(40deg); } 100% { transform: scale(1) rotate(90deg); } }
+
+/* a new badge opens briefly rather than simply appearing */
+@keyframes badge-reveal {
+  0% { transform: translate(-50%, 16px) scale(0.86); opacity: 0; }
+  60% { transform: translate(-50%, -3px) scale(1.03); opacity: 1; }
+  100% { transform: translate(-50%, 0) scale(1); opacity: 1; }
+}
+.toast.is-reveal { animation: badge-reveal 360ms cubic-bezier(0.3, 1.3, 0.5, 1) both; border: 2px solid var(--gold); }

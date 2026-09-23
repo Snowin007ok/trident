@@ -97,14 +97,18 @@ export function renderProgress(view) {
     el('span', { class: 'meta', text: prettyDate(today) })
   ]));
 
-  /* --- the number that matters: how far through this class, with a flag
-     marking the milestone being walked towards --- */
+  /* --- the headline, in words, and the expedition route through the eras
+     this class covers. The exact percentage is kept for screen readers. --- */
   const milestone = nextMilestone(completed, totalLessons, lp);
+  const classWord = classProfile && classProfile.mode === 'school' ? `Class ${classProfile.classLevel} ` : '';
   view.append(el('section', { class: 'section', 'data-testid': 'passport-head' }, [
     el('div', { class: 'passport-head' }, [
       el('div', { class: 'passport-figure' }, [
-        el('span', { class: 'big-figure', 'data-testid': 'course-figure', text: `${completed} of ${totalLessons}` }),
-        el('p', { class: 'lede', style: 'margin:.35rem 0 0', text: `${scopeLabel} read — ${pct}% of the course.` })
+        el('p', { class: 'big-words', 'data-testid': 'course-figure' }, [
+          el('b', { text: `${completed} of ${totalLessons}` }),
+          ` ${classWord}chapters explored`
+        ]),
+        el('span', { class: 'sr-only', 'data-testid': 'course-percent', text: `${pct} per cent of the course complete` })
       ]),
       el('div', { class: 'milestone', 'data-testid': 'milestone' }, [
         milestoneFlag(milestone.percent, 52),
@@ -114,14 +118,11 @@ export function renderProgress(view) {
           el('span', { class: 'hint', text: milestone.note })
         ]),
         completed < totalLessons
-          ? el('a', { class: 'btn btn-primary', href: '#/library', text: 'Continue reading' })
+          ? el('a', { class: 'btn btn-primary', href: '#/library', text: 'Continue your expedition' })
           : el('span', { class: 'stamp stamp-done' }, [icon('check', 15), 'Course complete'])
       ])
     ]),
-    el('div', {
-      class: 'rail rail-lg', 'data-testid': 'progress-rail', role: 'img',
-      'aria-label': `${completed} of ${totalLessons} lessons complete`
-    }, scope.map((l) => el('i', { class: state.completedLessons[l.id] ? 'is-done' : '', title: l.title })))
+    eraRoute(scope, state)
   ]));
 
   /* --- four systems, kept apart so none is mistaken for another --- */
@@ -384,6 +385,42 @@ export function renderProgress(view) {
 }
 
 /* -------------------------------------------------------------- helpers */
+
+/**
+ * The expedition route: one checkpoint per era this class actually covers, in
+ * order. A finished era is green; the era you are in now carries the saffron
+ * "you are here" marker; eras still ahead are quiet. Each is labelled in words
+ * as well as colour.
+ */
+function eraRoute(scope, state) {
+  const eras = gamify.ERAS
+    .map((era) => {
+      const inEra = scope.filter((l) => l.era === era.id);
+      return { ...era, total: inEra.length, done: inEra.filter((l) => state.completedLessons[l.id]).length };
+    })
+    .filter((e) => e.total > 0);
+  if (!eras.length) return el('div');
+  // "you are here" is the era of the next unread lesson in course order,
+  // the same lesson Home offers to continue
+  const nextLesson = scope.find((l) => !state.completedLessons[l.id]);
+  const hereIdx = nextLesson ? eras.findIndex((e) => e.id === nextLesson.era) : -1;
+
+  return el('ol', { class: 'era-route', style: `--n: ${eras.length}`, 'data-testid': 'era-route', 'aria-label': 'Your route through the eras of this course' },
+    eras.map((e, i) => {
+      const state2 = e.done === e.total ? 'done' : (i === hereIdx ? 'here' : 'ahead');
+      const words = state2 === 'done' ? 'explored'
+        : state2 === 'here' ? 'you are here'
+        : e.done > 0 ? 'started' : 'not started yet';
+      return el('li', { class: `er-stop is-${state2}`, 'data-testid': `era-stop-${e.id}` }, [
+        el('span', { class: 'er-mark', 'aria-hidden': 'true' }, [
+          state2 === 'done' ? icon('check', 18) : eraEmblem(e.id, 20)
+        ]),
+        el('span', { class: 'er-name', text: e.label }),
+        el('span', { class: 'er-count', text: `${e.done} of ${e.total}` }),
+        el('span', { class: 'er-state', text: words })
+      ]);
+    }));
+}
 
 /**
  * The next thing worth walking towards: finishing the class if that is close,

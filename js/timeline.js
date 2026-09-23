@@ -7,6 +7,7 @@
 
 import { el, clear, toast } from './ui.js';
 import { icon, tricolourRule, eraEmblem } from './icons.js';
+import * as images from './images.js';
 import * as store from './storage.js';
 import * as gamify from './gamify.js';
 import { todayKey, prettyDate, hashString, seededShuffle } from './daily.js';
@@ -202,13 +203,20 @@ export function render(view) {
         ? `All four are in sequence, earliest first. ${xpLine}`
         : 'Here is the sequence, earliest first, with the date and the page each one is dated from.' }),
       el('ol', { class: 'tl-answer' },
-        solution.map((ev) => el('li', {}, [
-          el('span', { class: 't-year', text: ev.year }),
-          el('span', {}, [
-            el('span', { class: 't-event', text: ev.label }),
-            el('span', { class: 'tl-cite', text: citationLine(ev.citation) })
-          ])
-        ]))),
+        solution.map((ev) => {
+          const thumb = images.forCitation(ev.citation);
+          return el('li', { class: thumb ? 'has-thumb' : '' }, [
+            el('span', { class: 't-year', text: ev.year }),
+            el('span', { class: 'tl-ans-body' }, [
+              el('span', { class: 't-event', text: ev.label }),
+              el('span', { class: 'tl-cite', text: citationLine(ev.citation) })
+            ]),
+            thumb ? el('img', {
+              class: 'tl-thumb', src: thumb.url, alt: thumb.alt,
+              loading: 'lazy', decoding: 'async', width: 96, height: 72
+            }) : null
+          ].filter(Boolean));
+        })),
       el('p', { class: 'hint', text: 'Each date is the one given by the textbook cited beside it — that is what puts these four in this order.' })
     ]));
     liveRegion.textContent = solved

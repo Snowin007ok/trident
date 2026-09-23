@@ -113,3 +113,56 @@
   .book-block .section-head { flex-wrap: wrap; }
   .book-block .section-head .meta { margin-left: 0; width: 100%; }
 }
+
+/* --- the expedition dashboard at smaller sizes --- */
+@media (max-width: 980px) {
+  .home-pair, .home-pair-low { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 860px) {
+  .expedition { grid-template-columns: minmax(0, 1fr); }
+  .exp-art { min-height: 200px; }
+  .exp-art .hi-frame { aspect-ratio: 16 / 9 !important; }
+  .exp-body { padding: var(--sp-5); }
+}
+
+@media (max-width: 720px) {
+  .exp-body .btn-lg { align-self: stretch; }
+  .exp-route { flex-wrap: wrap; gap: var(--sp-2) 0; }
+  .exp-stop + .exp-stop::before { width: 16px; margin: 0 6px; }
+
+  .journey-card { grid-template-columns: minmax(0, 1fr); }
+  .jc-art { aspect-ratio: 16 / 9; }
+  .jc-body .btn { width: 100%; }
+
+  .checkpoint { grid-template-columns: 44px minmax(0, 1fr); row-gap: var(--sp-2); }
+  .cp-side { grid-column: 2; justify-self: start; }
+  .cp-mark { width: 44px; height: 44px; }
+  .route-track::before, .checkpoint.is-done::before { left: 21px; }
+
+  .guide-invite { flex-wrap: wrap; }
+  .guide-invite .btn { width: 100%; }
+
+  .archive-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+}
+
+@media (max-width: 720px) {
+  .era-route { flex-direction: column; gap: var(--sp-3); padding: var(--sp-4); }
+  .era-route::before { left: calc(var(--sp-4) + 22px); right: auto; top: 30px; bottom: 30px; width: 3px; height: auto;
+    background: linear-gradient(180deg, var(--saffron) 0 33.3%, var(--white) 33.3% 66.6%, var(--green) 66.6% 100%); }
+  .er-stop { flex-direction: row; text-align: left; gap: var(--sp-3); }
+  .er-count { margin-left: auto; }
+}
+
+/* Expedition on phones: the caption sits under the picture instead of over it,
+   so the picture stays a picture; the reward card gives its button a row. */
+@media (max-width: 720px) {
+  .exp-art { min-height: 0; }
+  .exp-art .hi-frame { height: auto; aspect-ratio: 2 / 1 !important; }
+  .exp-art .hi-cap { padding: var(--sp-2) var(--sp-4); }
+  .exp-body { padding: var(--sp-4) var(--sp-5); }
+  .exp-art .hi-cap { position: static; }
+  .next-reward { flex-wrap: wrap; }
+  .nr-body { flex: 1 1 calc(100% - 76px); }
+  .next-reward > .btn { margin-left: 68px; }
+}

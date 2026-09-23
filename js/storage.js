@@ -20,10 +20,13 @@
  *        It starts empty and is entirely separate from savedLessons: a book is
  *        a recommendation, never verified syllabus content, and saving one
  *        grants no XP.
+ *   v6 — adds savedImages, the Visual Archive. It starts empty, carries each
+ *        image's own source information with it, and grants no XP. No other
+ *        field is read or written by this migration.
  */
 
 const KEY = 'trident.state';
-export const SCHEMA_VERSION = 5;
+export const SCHEMA_VERSION = 6;
 
 function blankState() {
   return {
@@ -57,7 +60,11 @@ function blankState() {
     learningProfile: null,     // { mode, board, classLevel, exam, examStage, createdAt, updatedAt }
 
     /* ---- v5: Open Library suggestions the learner chose to keep ---- */
-    savedBooks: []             // { id, key, title, authors[], year, cover, url, topic, savedAt }[]
+    savedBooks: [],            // { id, key, title, authors[], year, cover, url, topic, savedAt }[]
+
+    /* ---- v6: the Visual Archive — historical images the learner kept, each
+       stored with the source information it was shown with ---- */
+    savedImages: []            // { id, title, caption, alt, url, sourceType, credit, sourcePage, licence, licenceUrl }[]
   };
 }
 
@@ -101,6 +108,9 @@ function migrate(raw) {
 
   // v4 -> v5: an empty book shelf. Nothing else is touched.
   if (!Array.isArray(s.savedBooks)) s.savedBooks = [];
+
+  // v5 -> v6: an empty Visual Archive. Nothing else is touched.
+  if (!Array.isArray(s.savedImages)) s.savedImages = [];
 
   if (typeof raw.xp !== 'number') {
     let xp = 0;
@@ -203,6 +213,21 @@ export function toggleSavedBook(book) {
     if (i >= 0) s.savedBooks.splice(i, 1);
     else s.savedBooks.unshift({ ...book, savedAt: new Date().toISOString() });
     if (s.savedBooks.length > 100) s.savedBooks.length = 100;
+  });
+}
+
+/**
+ * Keep or drop a historical image in the Visual Archive. The whole record is
+ * stored, so an archived image keeps its own caption, credit and licence even
+ * if it came from an API whose results have since changed.
+ */
+export function toggleSavedImage(image) {
+  return update((s) => {
+    if (!Array.isArray(s.savedImages)) s.savedImages = [];
+    const i = s.savedImages.findIndex((x) => x.id === image.id);
+    if (i >= 0) s.savedImages.splice(i, 1);
+    else s.savedImages.unshift({ ...image, savedAt: new Date().toISOString() });
+    if (s.savedImages.length > 200) s.savedImages.length = 200;
   });
 }
 
