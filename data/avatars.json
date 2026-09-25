@@ -1,0 +1,177 @@
+{
+ "schema": 1,
+ "note": "Profile avatars extracted from kings.zip (read-only). A name is given only where the original filename states it; no identity is inferred from the picture itself. These are learner profile avatars, not historical sources and not part of any lesson.",
+ "default": "portrait-01",
+ "avatars": [
+  {
+   "id": "portrait-01",
+   "src": "assets/avatars/portrait-01.webp",
+   "originalFile": "2529b984affc43c7dcf738e407f1a669.jpg",
+   "sourceSha256": "61ee01098ef257bda2f5d888d8f5fc7da5ccd3def2cae90f7a21018cb3bccc2b",
+   "alt": "Illustrated portrait of a crowned warrior with a jewelled headband",
+   "name": null,
+   "nameSource": null,
+   "crop": {
+    "x": 24,
+    "y": 111,
+    "size": 491,
+    "sourceWidth": 600,
+    "sourceHeight": 714
+   },
+   "bytes": 23796
+  },
+  {
+   "id": "portrait-02",
+   "src": "assets/avatars/portrait-02.webp",
+   "originalFile": "Alexander-the-Great-detail-painting-Porus-Charles.webp",
+   "sourceSha256": "a776a7f75de12388bac2e1320f50252b4c5fd5fe19127ea0a48c171e40f680db",
+   "alt": "Painted portrait of a young commander in a plumed golden helmet",
+   "name": "Alexander the Great",
+   "nameSource": "original filename",
+   "crop": {
+    "x": 202,
+    "y": 627,
+    "size": 472,
+    "sourceWidth": 1126,
+    "sourceHeight": 1600
+   },
+   "bytes": 14178
+  },
+  {
+   "id": "portrait-03",
+   "src": "assets/avatars/portrait-03.webp",
+   "originalFile": "Che_Guevara_-_Guerrillero_Heroico_by_Alberto_Korda.jpg",
+   "sourceSha256": "4f32db9d09ac686006843c06594880369385d6ea8ec8c2f40cbf62fd2362fe3d",
+   "alt": "Black-and-white photograph of a man in a beret",
+   "name": "Che Guevara",
+   "nameSource": "original filename",
+   "crop": {
+    "x": 192,
+    "y": 144,
+    "size": 896,
+    "sourceWidth": 1280,
+    "sourceHeight": 1482
+   },
+   "bytes": 7384
+  },
+  {
+   "id": "portrait-04",
+   "src": "assets/avatars/portrait-04.webp",
+   "originalFile": "charlemagne.webp",
+   "sourceSha256": "2243e33f6d31cc307f25efb0707e72a66a6e9e9dba9cdec9231e267f2c468f90",
+   "alt": "Painted portrait of a bearded ruler wearing a crown",
+   "name": "Charlemagne",
+   "nameSource": "original filename",
+   "crop": {
+    "x": 121,
+    "y": 79,
+    "size": 271,
+    "sourceWidth": 494,
+    "sourceHeight": 597
+   },
+   "bytes": 15194
+  },
+  {
+   "id": "portrait-05",
+   "src": "assets/avatars/portrait-05.webp",
+   "originalFile": "d4d97173f0dc45f1c6eb9b4376bc0e21-68428303a7e55.jpg",
+   "sourceSha256": "d85211fab1d706f874f2c5dfaf7a4826e29d56751eb4afa2324da4d25374424c",
+   "alt": "Painting of a woman warrior in a saffron turban on horseback",
+   "name": null,
+   "nameSource": null,
+   "crop": {
+    "x": 78,
+    "y": 25,
+    "size": 189,
+    "sourceWidth": 526,
+    "sourceHeight": 600
+   },
+   "bytes": 10292
+  },
+  {
+   "id": "portrait-06",
+   "src": "assets/avatars/portrait-06.webp",
+   "originalFile": "dimichele-1.jpg",
+   "sourceSha256": "ce73dbb380bc086509885d9534cf14ecd6db9878adcb726cddbd596b2309a857",
+   "alt": "Painted portrait of a long-haired man in a dark high-collared coat",
+   "name": null,
+   "nameSource": null,
+   "crop": {
+    "x": 375,
+    "y": 409,
+    "size": 1500,
+    "sourceWidth": 2500,
+    "sourceHeight": 3134
+   },
+   "bytes": 7306
+  },
+  {
+   "id": "portrait-07",
+   "src": "assets/avatars/portrait-07.webp",
+   "originalFile": "forzqx2ssqbwermvcguuj4fy_647_101515120457.avif",
+   "sourceSha256": "3dff60526ff16d629eca653ba2f77480f304e6250219748b527156a744523295",
+   "alt": "Miniature-style portrait of a ruler in a jewelled turban",
+   "name": null,
+   "nameSource": null,
+   "crop": {
+    "x": 96,
+    "y": 0,
+    "size": 386,
+    "sourceWidth": 690,
+    "sourceHeight": 388
+   },
+   "bytes": 14152
+  },
+  {
+   "id": "portrait-08",
+   "src": "assets/avatars/portrait-08.webp",
+   "originalFile": "images (1).jpeg",
+   "sourceSha256": "afe2e4e3cc4b20e86d9967948ee172051fbb1189e50b9c24775b29493e78ca38",
+   "alt": "Photograph of a woman in a dark dress, seen in profile",
+   "name": null,
+   "nameSource": null,
+   "crop": {
+    "x": 215,
+    "y": 32,
+    "size": 230,
+    "sourceWidth": 500,
+    "sourceHeight": 613
+   },
+   "bytes": 6162
+  },
+  {
+   "id": "portrait-09",
+   "src": "assets/avatars/portrait-09.webp",
+   "originalFile": "images.jpeg",
+   "sourceSha256": "4831e8f48b316eab1ef449bd6e1c5ebbba1c7bc6f18e108fb732d078edfeb796",
+   "alt": "Painted portrait of a young person with short dark hair wearing armour",
+   "name": null,
+   "nameSource": null,
+   "crop": {
+    "x": 217,
+    "y": 0,
+    "size": 252,
+    "sourceWidth": 701,
+    "sourceHeight": 438
+   },
+   "bytes": 7320
+  },
+  {
+   "id": "portrait-10",
+   "src": "assets/avatars/portrait-10.webp",
+   "originalFile": "rubens412.jpg",
+   "sourceSha256": "aeea161a738464175946cd912956bccfeb2987257876def2c5e7cc85629e386a",
+   "alt": "Painted portrait of a man wearing a laurel wreath and a red cloak",
+   "name": null,
+   "nameSource": null,
+   "crop": {
+    "x": 82,
+    "y": 63,
+    "size": 269,
+    "sourceWidth": 435,
+    "sourceHeight": 600
+   },
+   "bytes": 10784
+  }
+ ]
+}

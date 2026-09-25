@@ -250,11 +250,12 @@ async function main() {
     onScreen: document.querySelectorAll('#view .question').length,
     position: (document.querySelector('[data-testid="quiz-position"]')||{}).textContent,
     percent: (document.querySelector('[data-testid="quiz-percent"]')||{}).textContent,
-    railSegments: document.querySelectorAll('[data-testid="quiz-rail"] i').length,
+    meters: document.querySelectorAll('[data-testid="quiz-rail"]').length,
+    boxes: document.querySelectorAll('.q-progress i, .q-progress .rail').length,
     hasCheck: !!document.querySelector('[data-testid="quiz-check"]')
   })`);
-  if (quiz.onScreen === 1 && /Question 1 of 5/.test(quiz.position) && quiz.railSegments === 5 && quiz.hasCheck) {
-    pass('5. One question at a time', `${quiz.position.trim()}, ${quiz.percent.trim()}, five rail segments`);
+  if (quiz.onScreen === 1 && /Question 1 of 5/.test(quiz.position) && quiz.meters === 1 && quiz.boxes === 0 && quiz.hasCheck) {
+    pass('5. One question at a time', `${quiz.position.trim()}, ${quiz.percent.trim()}, one continuous progress track`);
   } else {
     fail('5. One question at a time', JSON.stringify(quiz));
   }
@@ -427,9 +428,12 @@ async function main() {
     return { count: focusables.length, reachable, focused,
       hasFocusRule: [...document.styleSheets].some((s) => { try { return [...s.cssRules].some((r) => /:focus-visible/.test(r.selectorText || '')); } catch { return false; } }) };
   })()`);
-  const smallTargets = await evaluate(`[...document.querySelectorAll('#view a, #view button, .bottom-nav a')]
+  await evaluate(`document.querySelector('[data-testid="profile-btn"]').click(); true`);
+  await sleep(250);
+  const smallTargets = await evaluate(`[...document.querySelectorAll('#view a, #view button, .bottom-nav a, .app-header a, .app-header button')]
     .filter((el) => { const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0 && r.height < 44 && !el.closest('.reader-top, .source, .more-filters'); })
-    .map((el) => el.textContent.trim().slice(0, 24))`);
+    .map((el) => el.textContent.trim().slice(0, 24) || el.getAttribute('aria-label'))`);
+  await evaluate(`document.querySelector('[data-testid="profile-btn"]').click(); true`);
   if (kb.reachable && kb.focused && kb.hasFocusRule && smallTargets.length === 0) {
     pass('11. Keyboard reaches everything, and focus is visible', `${kb.count} focusable elements, a :focus-visible outline is defined, every target at least 44px tall`);
   } else {
@@ -494,118 +498,196 @@ async function main() {
      15. No console errors and no horizontal overflow
      ====================================================================== */
   const overflow = [];
-  for (const [w, h] of [[1440, 900], [768, 1024], [375, 812]]) {
-    for (const s of SCREENS) {
+  const ALL_ROUTES = [...SCREENS, '#/event', '#/settings', '#/profile'];
+  for (const [w, h] of [[1440, 900], [1280, 800], [768, 1024], [375, 812]]) {
+    for (const s of ALL_ROUTES) {
       await open(s, { width: w, height: h });
-      const o = await evaluate('document.documentElement.scrollWidth > window.innerWidth + 1');
-      if (o) overflow.push(`${w}px ${s}`);
+      const o = await evaluate(`(() => {
+        const page = document.documentElement.scrollWidth > window.innerWidth + 1;
+        const hdr = document.querySelector('.header-inner');
+        const clipped = hdr && !hdr.closest('[hidden]') && hdr.scrollWidth > hdr.clientWidth + 1;
+        // text cut off by a card that hides its overflow
+        const cut = [];
+        document.querySelectorAll('#view b, #view span, #view p, #view h1, #view h2, #view h3, #view a, #view button').forEach((e) => {
+          if (!e.firstChild || e.firstChild.nodeType !== 3 || !e.textContent.trim()) return;
+          const r = e.getBoundingClientRect(); if (!r.width) return;
+          let p = e.parentElement;
+          while (p && p !== document.body) {
+            const cs = getComputedStyle(p);
+            if (cs.overflowX === 'hidden' || cs.overflowX === 'clip') {
+              const pr = p.getBoundingClientRect();
+              if (r.right > pr.right + 1 || r.left < pr.left - 1) cut.push(e.textContent.trim().slice(0, 30));
+              break;
+            }
+            p = p.parentElement;
+          }
+        });
+        return (page || clipped || cut.length) ? { page, clipped, cut: cut.slice(0, 3) } : false;
+      })()`);
+      if (o) overflow.push(`${w}px ${s} ${JSON.stringify(o)}`);
     }
   }
   const realErrors = consoleErrors.filter((e) => !/favicon|ERR_|404|daily-brief/i.test(e));
   if (!overflow.length && !realErrors.length) {
-    pass('15. No console errors, no horizontal overflow', '8 screens at 1440, 768 and 375');
+    pass('15. No console errors, no horizontal overflow', `${ALL_ROUTES.length} routes at 1440, 1280, 768 and 375: no page overflow, no clipped header, no text cut off inside a card; zero console errors and uncaught exceptions`);
   } else {
     fail('15. No console errors, no horizontal overflow', `overflow: ${overflow.join(', ') || 'none'}; errors: ${realErrors.slice(0, 3).join(' | ') || 'none'}`);
   }
 
   /* ======================================================================
-     16. At 0%, every segment is empty
+     16. The header band is the national tricolour, and only that
+     --------------------------------------------------------------------
+     Three touching stripes of equal width in #FF9933, #FFFFFF and #138808,
+     full width, 3-4px each stripe high, not announced, and identical at
+     0, 1 and 2 completed lessons and on every route.
      ====================================================================== */
-  await open('#/dashboard');
-  await evaluate(`localStorage.setItem('trident.state', JSON.stringify(Object.assign(
-    JSON.parse(localStorage.getItem('trident.state')), { completedLessons: {} })))`);
-  await open('#/dashboard');
-  const zero = await evaluate(`(() => {
-    const filled = (el) => {
-      const bg = getComputedStyle(el).backgroundColor;
-      const m = (bg.match(/[\d.]+/g) || []).map(Number);
-      if (m.length < 3) return false;
-      if (m.length > 3 && m[3] === 0) return false;
-      // "filled" means a saturated mark, not the paper-coloured empty segment
-      const max = Math.max(m[0], m[1], m[2]); const min = Math.min(m[0], m[1], m[2]);
-      return (max - min) > 40;
+  const BAND = `(() => {
+    const band = document.querySelector('[data-testid="tricolour-nav"]');
+    const r = band.getBoundingClientRect();
+    const parts = [...band.children].map((c) => { const b = c.getBoundingClientRect(); return { l: b.left, w: b.width, h: b.height, bg: getComputedStyle(c).backgroundColor }; });
+    return {
+      width: r.width, vw: document.documentElement.clientWidth, hidden: band.getAttribute('aria-hidden'),
+      role: band.getAttribute('role'), progressAttrs: ['aria-valuenow','aria-valuemax','value'].filter((a) => band.hasAttribute(a)).length,
+      anim: getComputedStyle(band).animationName, radius: getComputedStyle(band).borderRadius,
+      parts: parts.map((p) => ({ w: Math.round(p.w * 100) / 100, h: p.h, bg: p.bg, l: Math.round(p.l * 100) / 100 }))
     };
-    const out = {};
-    document.querySelectorAll('.rail').forEach((rail, i) => {
-      const segs = [...rail.querySelectorAll('i')];
-      out['rail' + i] = { total: segs.length, filled: segs.filter(filled).length };
-    });
-    return out;
-  })()`);
-  const anyFilled = Object.values(zero).filter((r) => r.filled > 0);
-  if (Object.keys(zero).length && !anyFilled.length) {
-    pass('16. At 0% every segment is empty', Object.entries(zero).map(([k, v]) => `${k}: 0 of ${v.total} filled`).join(', '));
+  })()`;
+  const bands = [];
+  for (const [label, done] of [['0 done', {}], ['1 done', { 'l-tn7-sources-monuments': '2026-09-20T09:00:00.000Z' }],
+    ['2 done', { 'l-tn7-sources-monuments': '2026-09-20T09:00:00.000Z', 'l-tn7-north-kingdoms': '2026-09-21T09:00:00.000Z' }]]) {
+    await open('#/dashboard');
+    await evaluate(`localStorage.setItem('trident.state', JSON.stringify(Object.assign(
+      JSON.parse(localStorage.getItem('trident.state')), { completedLessons: ${JSON.stringify(done)} })))`);
+    for (const route of ['#/dashboard', '#/library', '#/quiz']) {
+      await open(route);
+      bands.push({ label, route, b: await evaluate(BAND) });
+    }
+  }
+  await evaluate(`localStorage.setItem('trident.state', ${JSON.stringify(JSON.stringify(SEED))})`);
+  const want = ['rgb(255, 153, 51)', 'rgb(255, 255, 255)', 'rgb(19, 136, 8)'];
+  const bandProblems = bands.filter(({ b }) => {
+    const [a, m, c] = b.parts;
+    const equal = b.parts.length === 3 && Math.abs(a.w - m.w) < 1 && Math.abs(m.w - c.w) < 1;
+    const touching = b.parts.length === 3 && Math.abs(a.l + a.w - m.l) < 0.6 && Math.abs(m.l + m.w - c.l) < 0.6;
+    const colours = b.parts.every((p, i) => p.bg === want[i]);
+    const height = b.parts.every((p) => p.h >= 3 && p.h <= 4);
+    return !(equal && touching && colours && height && Math.abs(b.width - b.vw) < 1 && b.hidden === 'true'
+      && !b.progressAttrs && b.anim === 'none' && (b.radius === '0px' || b.radius === ''));
+  });
+  const same = new Set(bands.map(({ b }) => JSON.stringify(b.parts))).size === 1;
+  if (!bandProblems.length && same) {
+    const p = bands[0].b.parts;
+    pass('16. The header band is the national tricolour, not a progress bar',
+      `three touching stripes of ${p[0].w}px each, ${p[0].h}px high, #FF9933 / #FFFFFF / #138808, full width, aria-hidden, no progress attributes, no animation; identical at 0, 1 and 2 lessons on Home, Learn and Practice`);
   } else {
-    fail('16. At 0% every segment is empty', JSON.stringify(zero));
+    fail('16. The header band is the national tricolour, not a progress bar', JSON.stringify(bandProblems.slice(0, 2).concat(same ? [] : ['changes between states'])));
   }
 
   /* ======================================================================
-     17. n of m fills exactly n, and a finished rail is all green
+     17. Course progress is exact: 0%, 33.33%, 66.67%, 100% for 0-3 lessons
+     --------------------------------------------------------------------
+     A Class 6 learner (three lessons). The same number drives the Home
+     journey card, the Learn page and the lesson reader, each through the one
+     shared meter, with real progressbar values and no segment boxes.
      ====================================================================== */
-  const tn7 = await evaluate(`(async () => (await (await fetch('data/lessons.json')).json()).lessons
-    .filter((l) => l.path === 'tn' && l.classLevel === '7').map((l) => l.id))()`);
+  const tn6 = await evaluate(`(async () => (await (await fetch('data/lessons.json')).json()).lessons
+    .filter((l) => l.path === 'tn' && l.classLevel === '6').map((l) => l.id))()`);
   const counts = [];
-  for (const n of [0, 1, 2, tn7.length]) {
-    // the page is reloaded from the harness, not from inside the page, so the
-    // execution context survives
+  for (let n = 0; n <= tn6.length; n += 1) {
+    // leave any page that saves reading time on exit before rewriting the state
+    await open('#/progress');
     await evaluate(`(() => {
       const s = JSON.parse(localStorage.getItem('trident.state'));
       const done = {};
-      ${JSON.stringify(tn7)}.slice(0, ${n}).forEach((id) => { done[id] = '2026-09-20T09:00:00.000Z'; });
+      ${JSON.stringify(tn6)}.slice(0, ${n}).forEach((id) => { done[id] = '2026-09-20T09:00:00.000Z'; });
       s.completedLessons = done;
+      s.learningProfile = Object.assign({}, s.learningProfile, { classLevel: '6' });
       localStorage.setItem('trident.state', JSON.stringify(s));
       return true;
     })()`);
+    const read = `(() => {
+      const m = (id) => { const p = document.querySelector('[data-testid="' + id + '"]'); if (!p) return null;
+        const w = p.closest('.meter');
+        return { now: p.getAttribute('aria-valuenow'), max: p.getAttribute('aria-valuemax'), min: p.getAttribute('aria-valuemin'),
+          role: p.getAttribute('role'), label: p.getAttribute('aria-label'), pct: w.dataset.percent, value: p.value, pmax: p.max,
+          h: p.getBoundingClientRect().height, boxes: w.querySelectorAll('i').length }; };
+      return m;
+    })()`;
     await open('#/dashboard');
-    const m = await evaluate(`(() => {
-      const rail = document.querySelector('[data-testid="home-rail"]');
-      const segs = [...rail.querySelectorAll('i')];
-      return {
-        total: segs.length,
-        done: segs.filter((s) => s.classList.contains('is-done')).length,
-        green: segs.filter((s) => getComputedStyle(s).backgroundColor === 'rgb(19, 138, 75)').length
-      };
-    })()`);
-    counts.push({ n, ...m });
-  }
-  const wrong = counts.filter((c) => c.done !== c.n || c.green !== c.n);
-  if (!wrong.length && counts.length === 4) {
-    pass('17. n of m fills exactly n, and a finished rail is all green',
-      counts.map((c) => `${c.n} of ${c.total} → ${c.green} green`).join(', '));
-  } else {
-    fail('17. n of m fills exactly n, and a finished rail is all green', JSON.stringify(counts));
+    const home = await evaluate(`(${read})('home-rail')`);
+    const words = await evaluate(`(document.querySelector('[data-testid="course-figure"]')||{}).textContent`);
+    await open('#/library');
+    const lib = await evaluate(`(${read})('course-rail')`);
+    const libWords = await evaluate(`(document.querySelector('[data-testid="course-count"]')||{}).textContent`);
+    const libAction = await evaluate(`(document.querySelector('[data-testid="course-action"]')||{}).textContent`);
+    await open('#/lesson/' + tn6[0]);
+    const reader = await evaluate(`(${read})('reader-rail')`);
+    counts.push({ n, home, lib, reader, words, libWords, libAction });
   }
   await evaluate(`localStorage.setItem('trident.state', ${JSON.stringify(JSON.stringify(SEED))})`);
+  const expectPct = (n) => (n / tn6.length * 100).toFixed(2);
+  const badCounts = counts.filter((c) => [c.home, c.lib, c.reader].some((m) => !m || m.now !== String(c.n)
+    || m.max !== String(tn6.length) || m.min !== '0' || m.role !== 'progressbar' || !m.label || m.pct !== expectPct(c.n)
+    || m.h < 10 || m.boxes !== 0)
+    || c.words.trim() !== `${c.n} of ${tn6.length} chapters explored`
+    || !c.libWords.startsWith(`${c.n} of ${tn6.length} lessons read — ${Math.round(c.n / tn6.length * 100)}% of the course`)
+    || c.libAction.trim() !== (c.n === 0 ? 'Start learning' : c.n === tn6.length ? 'Review lessons' : 'Continue reading'));
+  if (tn6.length === 3 && !badCounts.length) {
+    pass('17. Course progress is exact at every count, in one shared component',
+      counts.map((c) => `${c.n} of 3 → ${c.home.pct}% ("${c.libAction.trim()}")`).join(', ') + '; the same on Home, Learn and the lesson reader; role="progressbar" with real min, max and value; 10px+ track, no boxes');
+  } else {
+    fail('17. Course progress is exact at every count, in one shared component', JSON.stringify(badCounts.slice(0, 2)));
+  }
 
   /* ======================================================================
-     18. Quiz completion advances only once a question is answered
+     18. Quiz progress follows the question, and is never red before an error
      ====================================================================== */
   await open('#/quiz');
   const quizAdvance = await evaluate(`(async () => {
-    const pct = () => (document.querySelector('[data-testid="quiz-percent"]') || {}).textContent;
-    const railFilled = () => [...document.querySelectorAll('[data-testid="quiz-rail"] i')]
-      .filter((s) => s.classList.contains('is-done') || s.classList.contains('is-wrong')).length;
-    const before = { pct: pct(), filled: railFilled(), pos: (document.querySelector('[data-testid="quiz-position"]')||{}).textContent };
-    const first = document.querySelector('.options input, .match-row select');
-    if (first) {
-      if (first.tagName === 'SELECT') {
-        [...document.querySelectorAll('.match-row select')].forEach((s) => {
-          s.selectedIndex = 1; s.dispatchEvent(new Event('change', { bubbles: true }));
-        });
-      } else { first.checked = true; first.dispatchEvent(new Event('change', { bubbles: true })); }
+    const data = await (await fetch('data/questions.json')).json();
+    const all = data.questions || data;
+    const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+    const meter = () => {
+      const p = document.querySelector('[data-testid="quiz-rail"]');
+      // the fill colour: the element's color drives the native fill in every engine
+      const fill = p.closest('.meter').classList.contains('is-quiz') ? getComputedStyle(p).color : 'not-quiz';
+      return { pct: (document.querySelector('[data-testid="quiz-percent"]') || {}).textContent,
+        pos: (document.querySelector('[data-testid="quiz-position"]') || {}).textContent,
+        now: p.getAttribute('aria-valuenow'), share: p.closest('.meter').dataset.percent, fill };
+    };
+    const steps = [];
+    for (let i = 0; i < 5; i += 1) {
+      steps.push(meter());
+      const prompt = document.querySelector('.question-prompt').textContent.trim();
+      const q = all.find((x) => x.prompt.trim() === prompt);
+      const radios = [...document.querySelectorAll('.options input')];
+      if (radios.length) {
+        // answer the first one wrong, so the red check below is meaningful
+        const pick = i === 0 ? radios.find((r) => Number(r.value) !== q.answerIndex) : radios.find((r) => Number(r.value) === q.answerIndex) || radios[0];
+        pick.checked = true; pick.dispatchEvent(new Event('change', { bubbles: true }));
+      } else {
+        [...document.querySelectorAll('.match-row select')].forEach((s) => { s.selectedIndex = 1; s.dispatchEvent(new Event('change', { bubbles: true })); });
+        const mv = document.querySelector('.order-item button:not([disabled])'); if (mv) mv.click();
+      }
+      await wait(60);
+      document.querySelector('[data-testid="quiz-check"]').click();
+      await wait(120);
+      if (i === 0) steps[0].afterWrong = meter();
+      const next = document.querySelector('[data-testid="quiz-next"]');
+      if (i < 4) { next.click(); await wait(150); }
     }
-    const afterChoose = { pct: pct(), filled: railFilled() };
-    document.querySelector('[data-testid="quiz-check"]').click();
-    await new Promise((r) => setTimeout(r, 200));
-    return { before, afterChoose, afterCheck: { pct: pct(), filled: railFilled() } };
+    return steps;
   })()`);
-  if (/0% complete/.test(quizAdvance.before.pct) && quizAdvance.before.filled === 0
-      && quizAdvance.afterChoose.filled === 0 && quizAdvance.afterCheck.filled === 1
-      && /20% complete/.test(quizAdvance.afterCheck.pct)) {
-    pass('18. Quiz completion advances only on answering',
-      `${quizAdvance.before.pos.trim()} at ${quizAdvance.before.pct.trim()} with an empty rail; after checking, ${quizAdvance.afterCheck.pct.trim()} and one segment`);
+  const red = 'rgb(199, 58, 50)';
+  const q18ok = quizAdvance.length === 5
+    && quizAdvance.every((st, i) => st.pct.trim() === `${(i + 1) * 20}% complete` && st.pos.trim() === `Question ${i + 1} of 5`
+      && st.share === ((i + 1) * 20).toFixed(2) && st.fill !== red)
+    && quizAdvance[0].afterWrong && quizAdvance[0].afterWrong.fill !== red;
+  if (q18ok) {
+    pass('18. Quiz progress follows the question and is never red',
+      quizAdvance.map((st) => `${st.pos.trim()} → ${st.pct.trim()}`).join(', ') + `; fill ${quizAdvance[0].fill}, unchanged after a wrong answer`);
   } else {
-    fail('18. Quiz completion advances only on answering', JSON.stringify(quizAdvance));
+    fail('18. Quiz progress follows the question and is never red', JSON.stringify(quizAdvance));
   }
 
   /* ======================================================================
@@ -1003,6 +1085,240 @@ async function main() {
       'the drawer sent nothing until it was opened, then one request; three pictures, each tagged Wikimedia Commons with its source page and licence linked; no "Verified textbook image" label among them');
   } else {
     fail('31. The lesson asks Commons only when its drawer opens, and never calls a Commons picture a textbook image', JSON.stringify(drawer));
+  }
+
+  /* ======================================================================
+     32. The header's figures say what they are: "0 days", "0 XP", "1 day"
+     ====================================================================== */
+  const statFor = async (streak, xp) => {
+    await open('#/dashboard');
+    await evaluate(`(() => { const s = JSON.parse(localStorage.getItem('trident.state'));
+      const d = new Date(); const k = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+      s.streak = { current: ${streak}, best: ${streak}, lastDate: ${streak} ? k : null }; s.xp = ${xp};
+      localStorage.setItem('trident.state', JSON.stringify(s)); return true; })()`);
+    await open('#/dashboard');
+    // reach the streak the way a keyboard user does: focus the item before it, then Tab
+    await evaluate(`document.querySelector('[data-testid="hud-course"]').focus(); true`);
+    await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9 });
+    await send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9 });
+    await sleep(150);
+    return evaluate(`(() => {
+      const st = document.querySelector('[data-testid="hud-streak"]');
+      const focusedIt = document.activeElement === st; const xp = document.querySelector('[data-testid="hud-xp"]');
+      const vis = (e) => e.querySelector('.stat-value').innerText.replace(/\\s+/g, ' ').trim();
+      const tip = getComputedStyle(st.querySelector('.stat-tip'));
+      const tipShown = tip.visibility === 'visible' && Number(tip.opacity) > 0.9;
+      const outline = getComputedStyle(st).outlineStyle;
+      return { streak: vis(st), xp: vis(xp), sl: st.getAttribute('aria-label'), xl: xp.getAttribute('aria-label'),
+        tipShown, outline, focusedIt, tags: st.tagName + '/' + xp.tagName, border: getComputedStyle(st).borderTopWidth,
+        bg: getComputedStyle(st).backgroundColor };
+    })()`);
+  };
+  const s0 = await statFor(0, 0);
+  const s1 = await statFor(1, 30);
+  const s2 = await statFor(2, 1250);
+  await evaluate(`localStorage.setItem('trident.state', ${JSON.stringify(JSON.stringify(SEED))})`);
+  const statsOk = s0.streak === '0 days' && s0.xp === '0 XP' && s0.sl === '0-day learning streak' && s0.xl === '0 experience points'
+    && s1.streak === '1 day' && s1.sl === '1-day learning streak' && s2.streak === '2 days' && s2.xp === '1,250 XP'
+    && s0.tipShown && s0.outline !== 'none' && s0.tags === 'SPAN/SPAN' && s0.border === '0px';
+  if (statsOk) {
+    pass('32. The header says "0 days" and "0 XP", never a bare zero',
+      `"${s0.streak}" (aria-label "${s0.sl}"), "${s0.xp}" ("${s0.xl}"); "${s1.streak}"; "${s2.streak}", "${s2.xp}"; tooltip shown on keyboard focus; plain text, not styled as buttons`);
+  } else {
+    fail('32. The header says "0 days" and "0 XP", never a bare zero', JSON.stringify({ s0, s1, s2 }));
+  }
+
+  /* ======================================================================
+     33. Answer cards: one border width, consistent green and red, and long
+         answers never collide with their status label
+     ====================================================================== */
+  const answerStates = [];
+  for (const [w, h] of [[1440, 900], [375, 812]]) {
+    await evaluate(`localStorage.removeItem('trident.state'); true`);
+    await open('#/quiz', { width: w, height: h });
+    answerStates.push(await evaluate(`(async () => {
+      const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+      const data = await (await fetch('data/questions.json')).json();
+      const all = data.questions || data;
+      const opts = () => [...document.querySelectorAll('.option')];
+      const bw = (o) => getComputedStyle(o).borderTopWidth + '/' + getComputedStyle(o).borderLeftWidth;
+      const q = all.find((x) => x.prompt.trim() === document.querySelector('.question-prompt').textContent.trim());
+      const before = { widths: opts().map(bw), marked: document.querySelectorAll('.option.is-correct, .option.is-wrong, .opt-mark:not(:empty)').length, w: opts()[0].getBoundingClientRect().width };
+      const wrongInput = [...document.querySelectorAll('.option input')].find((i) => Number(i.value) !== q.answerIndex);
+      wrongInput.checked = true; wrongInput.dispatchEvent(new Event('change', { bubbles: true }));
+      await wait(300);
+      const chosen = wrongInput.closest('.option');
+      const selected = { width: bw(chosen), border: getComputedStyle(chosen).borderTopColor, bg: getComputedStyle(chosen).backgroundColor };
+      document.querySelector('[data-testid="quiz-check"]').click();
+      await wait(300);
+      const right = document.querySelector('.option.is-correct'); const wrong = document.querySelector('.option.is-wrong');
+      const tone = (o) => ({ border: getComputedStyle(o).borderTopColor, icon: getComputedStyle(o.querySelector('.opt-mark svg')).color,
+        label: getComputedStyle(o.querySelector('.opt-mark')).color, text: o.querySelector('.opt-mark').textContent.trim(), width: bw(o) });
+      // make the wrong answer very long and measure the text against its label
+      wrong.querySelector('span:not(.opt-mark)').textContent = 'A deliberately long answer that keeps going so that it must wrap across several lines on every screen size, to prove the status label never sits on top of it.';
+      await wait(50);
+      const overlaps = opts().filter((o) => { const t = o.querySelector('span:not(.opt-mark)').getBoundingClientRect(); const m = o.querySelector('.opt-mark');
+        if (!m.textContent.trim()) return false; const r = m.getBoundingClientRect();
+        return !(t.right <= r.left + 0.5 || r.right <= t.left + 0.5 || t.bottom <= r.top + 0.5 || r.bottom <= t.top + 0.5); }).length;
+      const afterWidths = opts().map(bw);
+      return { before, selected, right: tone(right), wrong: tone(wrong), overlaps, afterWidths, wAfter: opts()[0].getBoundingClientRect().width };
+    })()`));
+  }
+  const green = 'rgb(14, 107, 58)'; const redInk = 'rgb(168, 43, 36)';
+  const ansOk = answerStates.every((a) => a.before.marked === 0
+    && [...a.before.widths, a.selected.width, ...a.afterWidths].every((x) => x === '2px/2px')
+    && a.selected.border === 'rgb(20, 42, 67)'
+    && a.right.border === green && a.right.icon === green && a.right.label === green && a.right.text === 'Correct answer'
+    && a.wrong.border === redInk && a.wrong.icon === redInk && a.wrong.label === redInk && a.wrong.text === 'Your answer'
+    && a.overlaps === 0 && Math.abs(a.before.w - a.wAfter) < 0.5);
+  if (ansOk) {
+    pass('33. Answer cards keep one 2px border; green and red are each one colour; long answers clear their label',
+      'nothing marked before checking; chosen = navy border; correct = border, icon and "Correct answer" all ' + green + '; your wrong answer = border, icon and "Your answer" all ' + redInk + '; a very long answer wraps clear of its label at 1440 and 375');
+  } else {
+    fail('33. Answer cards keep one 2px border; green and red are each one colour; long answers clear their label', JSON.stringify(answerStates));
+  }
+  await evaluate(`localStorage.setItem('trident.state', ${JSON.stringify(JSON.stringify(SEED))})`);
+
+  /* ======================================================================
+     34. The verified-image caption: badge, then title, then citation — and
+         the title and citation pass AA on a solid surface
+     ====================================================================== */
+  await open('#/lesson/l-tn7-chola-local-government');
+  const cap = await evaluate(`(() => {
+    const lin = (c) => { c /= 255; return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
+    const lum = (rgb) => 0.2126 * lin(rgb[0]) + 0.7152 * lin(rgb[1]) + 0.0722 * lin(rgb[2]);
+    const parse = (x) => (x.match(/[\\d.]+/g) || []).map(Number);
+    const ratio = (a, b) => { const A = lum(a), B = lum(b); return (Math.max(A, B) + 0.05) / (Math.min(A, B) + 0.05); };
+    const fig = document.querySelector('.reader figure.hi');
+    const capEl = fig.querySelector('.hi-cap');
+    const bgc = parse(getComputedStyle(capEl).backgroundColor);
+    const title = fig.querySelector('[data-testid="hi-title"]'); const cite = fig.querySelector('[data-testid="hi-cite"]');
+    const badge = fig.querySelector('.hi-source');
+    const order = [...capEl.querySelectorAll('.hi-source, [data-testid="hi-title"], [data-testid="hi-cite"]')].map((e) => e.className.includes('hi-source') ? 'badge' : e.dataset.testid);
+    const size = (e) => parseFloat(getComputedStyle(e).fontSize);
+    const frame = fig.querySelector('.hi-frame').getBoundingClientRect(); const c = capEl.getBoundingClientRect();
+    return { bgAlpha: bgc.length > 3 ? bgc[3] : 1, title: ratio(parse(getComputedStyle(title).color), bgc), cite: ratio(parse(getComputedStyle(cite).color), bgc),
+      titleSize: size(title), citeSize: size(cite), badgeSize: size(badge), titleWeight: Number(getComputedStyle(title).fontWeight),
+      order: order.join(' > '), below: c.top >= frame.bottom - 0.5, badgeText: badge.textContent.trim(), citeText: cite.textContent.trim() };
+  })()`);
+  if (cap.bgAlpha === 1 && cap.title >= 4.5 && cap.cite >= 4.5 && cap.titleSize >= 20 && cap.titleSize > cap.citeSize && cap.titleSize > cap.badgeSize
+      && cap.titleWeight >= 600 && cap.order === 'badge > hi-title > hi-cite' && cap.below && cap.badgeText === 'Verified textbook image') {
+    pass('34. The textbook-image caption reads badge → title → citation, all AA',
+      `solid navy band below the picture; title ${cap.titleSize}px/${cap.titleWeight} at ${cap.title.toFixed(1)}:1, citation ${cap.citeSize}px at ${cap.cite.toFixed(1)}:1; citation unchanged: "${cap.citeText}"`);
+  } else {
+    fail('34. The textbook-image caption reads badge → title → citation, all AA', JSON.stringify(cap));
+  }
+
+  /* ======================================================================
+     35. Avatars: a stable default, a choice that survives reload and leaves
+         progress alone, and the emblem when a portrait cannot load
+     ====================================================================== */
+  await open('#/dashboard');
+  const av1 = await evaluate(`(() => ({ src: document.querySelector('[data-testid="avatar-img"]').getAttribute('src'), alt: document.querySelector('[data-testid="avatar-img"]').alt }))()`);
+  await open('#/dashboard');
+  const av2 = await evaluate(`document.querySelector('[data-testid="avatar-img"]').getAttribute('src')`);
+  const beforeState = await evaluate(`(() => { const s = JSON.parse(localStorage.getItem('trident.state')); return JSON.stringify({ xp: s.xp, streak: s.streak, done: s.completedLessons, rewards: s.awardedRewards, saved: s.savedLessons }); })()`);
+  const picked = await evaluate(`(async () => {
+    document.querySelector('[data-testid="profile-btn"]').click();
+    await new Promise((r) => setTimeout(r, 250));
+    const menu = document.querySelector('[data-testid="profile-menu"]');
+    const local = (document.querySelector('[data-testid="profile-local"]') || {}).textContent;
+    const r = menu.getBoundingClientRect();
+    const options = menu.querySelectorAll('[role="radio"]').length;
+    document.querySelector('[data-testid="avatar-portrait-04"]').click();
+    await new Promise((r) => setTimeout(r, 150));
+    return { local: (local || '').trim(), inView: r.left >= 0 && r.right <= innerWidth && r.top >= 0, options,
+      header: document.querySelector('[data-testid="avatar-img"]').getAttribute('src'),
+      checked: document.querySelector('[data-testid="avatar-portrait-04"]').getAttribute('aria-checked'),
+      signedIn: /signed in|log ?out|account/i.test(menu.textContent) };
+  })()`);
+  await open('#/dashboard');
+  const afterReload = await evaluate(`(() => { const s = JSON.parse(localStorage.getItem('trident.state'));
+    return { src: document.querySelector('[data-testid="avatar-img"]').getAttribute('src'), stored: s.avatarId,
+      progress: JSON.stringify({ xp: s.xp, streak: s.streak, done: s.completedLessons, rewards: s.awardedRewards, saved: s.savedLessons }) }; })()`);
+  const broken = await evaluate(`(async () => {
+    const img = document.querySelector('[data-testid="avatar-img"]');
+    img.src = 'assets/avatars/does-not-exist.webp';
+    await new Promise((r) => setTimeout(r, 500));
+    return { src: img.getAttribute('src'), fallback: img.closest('.avatar-frame').classList.contains('is-fallback'), broken: img.complete && img.naturalWidth === 0 };
+  })()`);
+  const mobileMenu = await (async () => {
+    await open('#/dashboard', { width: 375, height: 812 });
+    return evaluate(`(async () => { document.querySelector('[data-testid="profile-btn"]').click(); await new Promise((r) => setTimeout(r, 250));
+      const r = document.querySelector('[data-testid="profile-menu"]').getBoundingClientRect();
+      return { left: r.left, right: r.right, vw: innerWidth }; })()`);
+  })();
+  await evaluate(`localStorage.setItem('trident.state', ${JSON.stringify(JSON.stringify(SEED))})`);
+  const avOk = av1.src === 'assets/avatars/portrait-01.webp' && av2 === av1.src && av1.alt === 'Selected historical portrait avatar'
+    && picked.options === 10 && picked.header === 'assets/avatars/portrait-04.webp' && picked.checked === 'true'
+    && picked.local === 'Local learner profile — progress is saved on this device.' && !picked.signedIn && picked.inView
+    && afterReload.src === 'assets/avatars/portrait-04.webp' && afterReload.stored === 'portrait-04' && afterReload.progress === beforeState
+    && broken.fallback && /trident-logo\.png$/.test(broken.src) && !broken.broken
+    && mobileMenu.left >= 0 && mobileMenu.right <= mobileMenu.vw;
+  if (avOk) {
+    pass('35. Avatars: stable default, choice survives reload, progress untouched, emblem on failure',
+      'default portrait-01 on two loads; ten portraits in the picker; portrait-04 chosen → header updates, stored as avatarId only, still there after reload; XP, streak, lessons, rewards and saved items identical; a failed portrait shows the TRIDENT emblem; the menu says "Local learner profile — progress is saved on this device." and stays inside a 375px screen');
+  } else {
+    fail('35. Avatars: stable default, choice survives reload, progress untouched, emblem on failure', JSON.stringify({ av1, av2, picked, afterReload, beforeState, broken, mobileMenu }));
+  }
+
+  /* ======================================================================
+     36. The sticky header never covers the page
+     ====================================================================== */
+  const covered = [];
+  for (const [w, h] of [[1440, 900], [375, 812]]) {
+    for (const r of ['#/dashboard', '#/library', '#/lesson/l-tn7-chola-local-government', '#/quiz', '#/progress', '#/collection']) {
+      await open(r, { width: w, height: h });
+      const res = await evaluate(`(async () => {
+        const hdr = document.querySelector('.app-header'); const hb = hdr.getBoundingClientRect();
+        const first = document.querySelector('#view h1, #view h2');
+        const top0 = first ? first.getBoundingClientRect().top : 999;
+        const hs = getComputedStyle(hdr);
+        const bg = (hs.backgroundColor.match(/[\\d.]+/g) || []).map(Number);
+        const opaque = bg.length === 3 || bg[3] === 1;
+        // jump to a heading further down, as an anchor or focus would
+        const heads = [...document.querySelectorAll('#view h2, #view h3')];
+        const far = heads[heads.length - 1];
+        let farTop = 999;
+        if (far) { far.scrollIntoView({ block: 'start' }); await new Promise((r) => setTimeout(r, 80)); farTop = far.getBoundingClientRect().top; }
+        const hb2 = hdr.getBoundingClientRect();
+        const scrolled = window.scrollY > 0;
+        window.scrollTo(0, 0);
+        return { headerBottom: Math.round(hb.bottom), firstTop: Math.round(top0), opaque, z: hs.zIndex, pos: hs.position,
+          farTop: Math.round(farTop), headerBottom2: Math.round(hb2.bottom), scrolled, pad: getComputedStyle(document.documentElement).scrollPaddingTop };
+      })()`);
+      if (!(res.firstTop >= res.headerBottom && res.opaque && res.pos === 'sticky' && Number(res.z) >= 30
+        && (!res.scrolled || res.farTop >= res.headerBottom2 - 1))) covered.push(`${w}px ${r}: ${JSON.stringify(res)}`);
+    }
+  }
+  if (!covered.length) {
+    pass('36. The sticky header never covers content', 'opaque, sticky, z-index 30; the first heading sits below it and a heading scrolled into view lands below it (scroll-padding-top) on six routes at 1440 and 375');
+  } else {
+    fail('36. The sticky header never covers content', covered.slice(0, 3).join(' | '));
+  }
+
+  /* ======================================================================
+     37. Lesson, question, story, timeline and image data are byte-for-byte
+         the committed versions
+     ====================================================================== */
+  {
+    const { createHash } = await import('node:crypto');
+    const { readFile } = await import('node:fs/promises');
+    const GOLDEN = {
+      'data/lessons.json': 'b68cad1684008d4aa576f894f1d205fac490830217dbcf73d920284932ffe223',
+      'data/questions.json': 'b6ec3f4ffbb9eab0f45ae44e355e245de2fc33dc6cdc31b59e546576f92222ae',
+      'data/stories.json': '1a6c80bb6209cbf8e3c87e8566777c7ee80090bcc5f12c93eccd672288a40313',
+      'data/timeline.json': '131153db2813f8e5f4ffeda5f605f136381eeb9f5267da02e53eac3a41c83da9',
+      'data/library.json': '272f25785dab4c562b73dcf4b54a7e550ea2ac86d3ad02b580859641d99588d9',
+      'data/history-images.json': '14353fd146adf8d9da40e208d7c5649a3c73d9b80f7aa193bf49956cf1f8ebd2'
+    };
+    const changed = [];
+    for (const [f, h] of Object.entries(GOLDEN)) {
+      const got = createHash('sha256').update(await readFile(new URL(`../${f}`, import.meta.url))).digest('hex');
+      if (got !== h) changed.push(f);
+    }
+    if (!changed.length) pass('37. Lesson, citation and quiz data are byte-for-byte unchanged', 'SHA-256 of lessons, questions, stories, timeline, library and the image catalogue match the committed files');
+    else fail('37. Lesson, citation and quiz data are byte-for-byte unchanged', changed.join(', '));
   }
 
   /* ---- report ---- */

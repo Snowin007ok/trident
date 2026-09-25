@@ -1,8 +1,7 @@
 /* ==========================================================================
    TRIDENT base — the page, the chrome, and the primitives every screen uses.
-   The layout device that runs through the whole app is the rail: a line
-   divided into one segment per real thing (a lesson, a question, a day's
-   activity), filled as those things are done.
+   Progress everywhere is one continuous meter (see "Progress" below); the
+   tricolour appears once, as the brand band under the header.
    ========================================================================== */
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -87,18 +86,21 @@ small { font-size: var(--step--1); }
 /* ==========================================================================
    Header — brand, four destinations, and the learner's standing
    ========================================================================== */
+/* Sticky, fully opaque, above page content and below menus and dialogs. Its
+   height is one token, so anchors and focus land below it, never under it. */
+html { scroll-padding-top: calc(var(--header-h) + var(--sp-4)); }
 .app-header {
   position: sticky; top: 0; z-index: 30;
-  background: var(--paper);
-  border-bottom: 2px solid var(--ink);
+  background-color: var(--paper); background-image: none;
 }
 .header-inner {
   display: flex; align-items: center; gap: var(--sp-4);
-  min-height: 62px; padding-block: var(--sp-2);
+  min-height: calc(var(--header-h) - var(--flag-height) - 2px); padding-block: var(--sp-2);
+  min-width: 0;
 }
 
 .brand {
-  display: flex; align-items: center; gap: var(--sp-2);
+  display: flex; align-items: center; gap: var(--sp-2); min-height: 44px;
   text-decoration: none; color: var(--text); flex: none;
 }
 .brand-mark { width: 30px; height: 30px; object-fit: contain; flex: none; }
@@ -109,11 +111,11 @@ small { font-size: var(--step--1); }
 .brand-text em { display: none; }
 
 /* --- the four destinations ------------------------------------------- */
-.primary-nav { margin-left: var(--sp-4); min-width: 0; }
+.primary-nav { margin-left: var(--sp-2); min-width: 0; }
 .primary-nav ul { display: flex; gap: var(--sp-1); list-style: none; margin: 0; padding: 0; }
 .primary-nav a {
   display: flex; align-items: center; gap: var(--sp-2);
-  padding: var(--sp-2) var(--sp-3);
+  padding: var(--sp-2) 10px; min-height: 44px;
   text-decoration: none; color: var(--text); font-weight: 600;
   border-radius: var(--radius-sm);
   border-bottom: 3px solid transparent;
@@ -130,69 +132,105 @@ small { font-size: var(--step--1); }
 /* --- standing: class progress, streak, profile ------------------------ */
 .hud { display: flex; align-items: center; gap: var(--sp-3); margin-left: auto; min-width: 0; }
 
-.hud-course { display: flex; flex-direction: column; gap: 3px; min-width: 116px; }
+.hud-course { display: flex; flex-direction: column; justify-content: center; gap: 3px; white-space: nowrap; min-height: 44px; }
 .hud-course b { font-size: var(--step--1); font-weight: 700; line-height: 1; }
 .hud-course span { font-size: var(--step--2); color: var(--text-muted); line-height: 1; }
 
-.hud-streak {
-  display: inline-flex; align-items: center; gap: 5px;
-  font-weight: 700; font-size: var(--step--1);
-  color: var(--saffron-ink);
-  padding: var(--sp-1) var(--sp-2);
-  border: 1px solid var(--line); border-radius: var(--radius-sm);
-  background: var(--surface);
+/* streak and XP: labelled figures, quieter than the class chip and plainly
+   not buttons (no border, no fill). The tooltip appears on hover and focus. */
+.stat-chip {
+  position: relative; display: inline-flex; align-items: center; gap: 5px;
+  font-size: var(--step--1); font-weight: 700; line-height: 1;
+  padding: var(--sp-2) var(--sp-1); border-radius: var(--radius-sm);
+  white-space: nowrap; cursor: default;
 }
-.hud-streak svg { width: 15px; height: 15px; }
-
-.hud-xp {
-  display: inline-flex; align-items: center; gap: 5px;
-  font-weight: 700; font-size: var(--step--1); color: var(--gold-ink);
+.stat-chip svg { width: 16px; height: 16px; flex: none; }
+.stat-unit { font-weight: 600; }
+.hud-streak { color: var(--saffron-ink); }
+.hud-xp { color: var(--gold-ink); }
+.stat-chip:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.stat-tip {
+  position: absolute; top: calc(100% + 8px); right: 0; z-index: 70;
+  width: max-content; max-width: 240px; white-space: normal;
+  padding: var(--sp-2) var(--sp-3); border-radius: var(--radius-sm);
+  background: var(--ink); color: var(--text-on-ink);
+  font-size: var(--step--1); font-weight: 600; line-height: 1.4;
+  opacity: 0; visibility: hidden; pointer-events: none;
 }
-.hud-xp svg { width: 15px; height: 15px; }
+.stat-chip:hover .stat-tip, .stat-chip:focus .stat-tip { opacity: 1; visibility: visible; }
 
-/* the profile button holds settings and the learning-path change */
+/* the profile button: the learner's portrait, "Explorer", and a chevron */
 .profile-btn {
   display: inline-flex; align-items: center; gap: var(--sp-2);
-  background: var(--surface); border: 1px solid var(--line-strong);
-  border-radius: var(--radius-sm); padding: var(--sp-2) var(--sp-3);
-  cursor: pointer; font-weight: 600; font-size: var(--step--1);
+  min-height: 44px; background: var(--surface); border: 1px solid var(--line-strong);
+  border-radius: 999px; padding: 3px var(--sp-3) 3px 3px;
+  cursor: pointer; font-weight: 700; font-size: var(--step--1);
   color: var(--text); white-space: nowrap;
 }
 .profile-btn:hover { border-color: var(--ink); }
-.profile-btn .avatar {
-  width: 22px; height: 22px; border-radius: 50%; flex: none;
-  background: var(--ink); color: var(--text-on-ink);
-  display: grid; place-items: center; font-size: 11px; font-weight: 800;
-}
+.avatar-host { display: inline-flex; }
 
-.profile-menu {
-  position: absolute; right: 0; top: calc(100% + 6px); z-index: 60;
-  min-width: 230px; background: var(--surface);
-  border: 2px solid var(--ink); border-radius: var(--radius);
-  box-shadow: var(--shadow-lift); padding: var(--sp-2);
+/* portrait frames: a circle, a thin navy ring and a gold keyline */
+.avatar-frame {
+  display: inline-block; flex: none; border-radius: 50%; overflow: hidden;
+  background: var(--sky); border: 2px solid var(--ink);
+  box-shadow: 0 0 0 2px var(--gold);
 }
+.avatar-frame img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center 30%; }
+.avatar-frame.is-fallback { background: var(--paper); }
+.avatar-frame.is-fallback img { object-fit: contain; padding: 3px; }
+.avatar-header { width: 34px; height: 34px; margin: 2px; }
+.avatar-menu { width: 56px; height: 56px; margin: 2px; }
+.avatar-thumb { width: 100%; aspect-ratio: 1; border-width: 1px; box-shadow: none; }
+
 .profile-wrap { position: relative; }
-.profile-menu .pm-head {
-  padding: var(--sp-2) var(--sp-3) var(--sp-3);
-  border-bottom: 1px solid var(--line); margin-bottom: var(--sp-2);
+.profile-menu {
+  position: absolute; right: 0; top: calc(100% + 8px); z-index: 60;
+  width: min(340px, calc(100vw - 2rem)); max-height: calc(100vh - var(--header-h) - 24px); overflow-y: auto;
+  background: var(--surface); border: 2px solid var(--ink); border-radius: var(--radius);
+  box-shadow: var(--shadow-lift); padding: var(--sp-3);
 }
-.profile-menu .pm-head b { display: block; font-size: var(--step-0); }
-.profile-menu .pm-head span { font-size: var(--step--1); color: var(--text-muted); }
-.profile-menu button, .profile-menu a {
-  display: flex; align-items: center; gap: var(--sp-3); width: 100%;
-  background: none; border: 0; text-align: left; cursor: pointer;
+.profile-menu .pm-head { display: flex; align-items: center; gap: var(--sp-3); padding: var(--sp-1) var(--sp-1) var(--sp-3); }
+.pm-who b { display: block; font-size: var(--step-1); }
+.pm-who span { font-size: var(--step--1); color: var(--text-muted); }
+.pm-local {
+  display: flex; align-items: flex-start; gap: var(--sp-2); margin: 0 0 var(--sp-3);
+  padding: var(--sp-2) var(--sp-3); background: var(--surface-sunken); border-radius: var(--radius-sm);
+  font-size: var(--step--1); color: var(--text); max-width: none;
+}
+.pm-local svg { flex: none; margin-top: 2px; }
+.pm-section { border-top: 1px solid var(--line); padding-top: var(--sp-3); }
+.pm-label { font-size: var(--step--1); font-weight: 700; margin: 0 0 var(--sp-2); }
+.avatar-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--sp-2); margin-bottom: var(--sp-3); }
+.avatar-option {
+  display: block; padding: 3px; min-width: 44px; min-height: 44px;
+  background: none; border: 2px solid transparent; border-radius: 50%; cursor: pointer;
+}
+.avatar-option:hover { border-color: var(--line-strong); }
+.avatar-option.is-on { border-color: var(--saffron); }
+.avatar-option:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; border-radius: 50%; }
+.pm-links { border-top: 1px solid var(--line); padding-top: var(--sp-2); }
+.pm-links a {
+  display: flex; align-items: center; gap: var(--sp-3); min-height: 44px;
   padding: var(--sp-2) var(--sp-3); border-radius: var(--radius-sm);
   color: var(--text); text-decoration: none; font-size: var(--step-0);
 }
-.profile-menu button:hover, .profile-menu a:hover { background: var(--surface-sunken); }
+.pm-links a:hover { background: var(--surface-sunken); }
 
-/* the tricolour survives as one structural rule, here and nowhere else */
-.tricolour-rule { display: flex; height: 3px; }
-.tricolour-rule i { flex: 1; display: block; }
-.tricolour-rule i:nth-child(1) { background: var(--saffron); }
-.tricolour-rule i:nth-child(2) { background: var(--white); }
-.tricolour-rule i:nth-child(3) { background: var(--green); }
-:root[data-theme="dark"] .tricolour-rule i:nth-child(2) { background: var(--line-strong); }
+/* The national band: three equal, touching stripes under the header. It is
+   brand identity, not a measurement — no track, no gaps, no rounded ends, no
+   animation, nothing that changes with the learner's progress. A navy
+   hairline above and below keeps the white stripe visible on parchment. */
+.tricolour-rule {
+  display: grid; grid-template-columns: 1fr 1fr 1fr;
+  height: calc(var(--flag-height) + 2px);
+  border-block: 1px solid var(--flag-edge);
+  background: var(--flag-white);
+}
+.tricolour-rule i { display: block; min-width: 0; }
+.tricolour-rule i:nth-child(1) { background: var(--flag-saffron); }
+.tricolour-rule i:nth-child(2) { background: var(--flag-white); }
+.tricolour-rule i:nth-child(3) { background: var(--flag-green); }
 
 /* ==========================================================================
    Mobile bar — the same four destinations, labels always visible
@@ -227,36 +265,64 @@ small { font-size: var(--step--1); }
 .app-footer p { max-width: none; margin: 0; }
 
 /* ==========================================================================
-   The rail — one segment per real thing. The app's signature device.
+   Progress — one component for every "how far through" in the app.
+   A native <progress>: a continuous rounded track, a solid fill, and the
+   real value and maximum exposed to assistive technology. Chapter
+   boundaries may be marked with ticks; there are never separate boxes.
    ========================================================================== */
-.rail {
-  display: flex; gap: 3px; width: 100%;
-  --rail-h: 10px;
+.meter { position: relative; width: 100%; }
+.meter progress {
+  -webkit-appearance: none; appearance: none;
+  display: block; width: 100%; height: var(--meter-height);
+  border: 1px solid var(--meter-track-edge); border-radius: var(--meter-radius);
+  background: var(--meter-track); color: var(--meter-fill);
+  overflow: hidden; box-sizing: border-box;
 }
-.rail i {
-  flex: 1; display: block; height: var(--rail-h);
-  background: var(--surface);
-  border: 1px solid var(--line-strong);
-  border-radius: 1px;
+.meter progress::-webkit-progress-bar { background: var(--meter-track); border-radius: var(--meter-radius); }
+.meter progress::-webkit-progress-value {
+  background: var(--meter-fill); border-radius: var(--meter-radius);
+  transition: width 320ms ease-out;
 }
-/* A segment is filled only when the thing it stands for is finished. The
-   segment you are on is marked by a heavier outline, never by a fill, so a
-   learner at 0% sees an empty rail rather than one orange block that reads
-   as progress already made. */
-.rail i.is-done { background: var(--green); border-color: var(--green); }
-.rail i.is-now {
-  background: var(--surface);
-  border-color: var(--ink); border-width: 2px;
-}
-.rail.rail-sm { --rail-h: 6px; gap: 2px; }
-.rail.rail-lg { --rail-h: 16px; gap: 4px; }
+.meter progress::-moz-progress-bar { background: var(--meter-fill); border-radius: var(--meter-radius); }
+.meter.is-quiz progress { color: var(--meter-fill-quiz); }
+.meter.is-quiz progress::-webkit-progress-value { background: var(--meter-fill-quiz); }
+.meter.is-quiz progress::-moz-progress-bar { background: var(--meter-fill-quiz); }
 
-.rail-legend {
-  display: flex; align-items: baseline; justify-content: space-between;
-  gap: var(--sp-3); margin-bottom: var(--sp-2);
+/* ticks at the boundaries between steps, drawn over the track */
+.meter-ticks {
+  position: absolute; inset: 0; pointer-events: none; border-radius: var(--meter-radius);
+  --n: 1;
+  background-image: repeating-linear-gradient(90deg,
+    transparent 0 calc(100% / var(--n) - 1px), var(--meter-tick) calc(100% / var(--n) - 1px) calc(100% / var(--n) + 1px));
+  background-size: 100% 100%;
+  -webkit-mask: linear-gradient(90deg, #000 0 calc(100% - 3px), transparent 0);
+          mask: linear-gradient(90deg, #000 0 calc(100% - 3px), transparent 0);
 }
-.rail-legend b { font-weight: 700; }
-.rail-legend span { color: var(--text-muted); font-size: var(--step--1); }
+.meter[data-steps="2"] .meter-ticks { --n: 2; }
+.meter[data-steps="3"] .meter-ticks { --n: 3; }
+.meter[data-steps="4"] .meter-ticks { --n: 4; }
+.meter[data-steps="5"] .meter-ticks { --n: 5; }
+.meter[data-steps="6"] .meter-ticks { --n: 6; }
+.meter[data-steps="7"] .meter-ticks { --n: 7; }
+.meter[data-steps="8"] .meter-ticks { --n: 8; }
+.meter[data-steps="9"] .meter-ticks { --n: 9; }
+.meter[data-steps="10"] .meter-ticks { --n: 10; }
+.meter[data-steps="11"] .meter-ticks { --n: 11; }
+.meter[data-steps="12"] .meter-ticks { --n: 12; }
+
+/* the words above a meter: what it counts on the left, the share on the right */
+.meter-legend {
+  display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap;
+  gap: var(--sp-1) var(--sp-3); margin-bottom: var(--sp-2);
+}
+.meter-legend b { font-weight: 700; font-size: var(--step-0); }
+.meter-legend span { color: var(--text-muted); font-size: var(--step--1); }
+.meter-legend .is-complete { color: var(--green-ink); font-weight: 700; display: inline-flex; align-items: center; gap: 4px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .meter progress::-webkit-progress-value { transition: none; }
+}
+
 
 /* ==========================================================================
    Buttons — the screen gets one saffron control and no more

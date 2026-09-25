@@ -1,6 +1,6 @@
 /** Library browsing and the lesson reader (exploration pages). */
 
-import { el, clear, toast, citationBlock, tag, xpBar, pages } from './ui.js';
+import { el, clear, toast, citationBlock, tag, xpBar, pages, progressMeter } from './ui.js';
 import { icon, eraIcon, eraEmblem } from './icons.js';
 import * as store from './storage.js';
 import * as gamify from './gamify.js';
@@ -127,17 +127,28 @@ export function renderLibrary(view) {
 
   /* ---- where you are in your own class ---- */
   view.append(el('section', { class: 'course-head section', 'data-testid': 'course-head' }, [
-    el('div', { class: 'course-top' }, [
-      el('div', {}, [
-        el('h1', { text: course.label }),
-        el('p', { class: 'lede', 'data-testid': 'course-count',
-          text: `${course.done} of ${course.total} lessons read — ${course.percent}% of the course.` })
+    el('h1', { text: course.label }),
+    el('div', { class: 'course-progress' }, [
+      el('div', { class: 'cp-meter' }, [
+        el('div', { class: 'meter-legend' }, [
+          el('b', { 'data-testid': 'course-count', text: readWords(course) }),
+          course.total && course.done >= course.total
+            ? el('span', { class: 'is-complete' }, [icon('check', 14), 'Course complete'])
+            : null
+        ]),
+        courseMeter(course, 'course-rail')
       ]),
-      course.done < course.total
-        ? el('a', { class: 'btn btn-primary', href: `#/lesson/${(continueLesson() || {}).id || ''}`, text: 'Continue reading' })
-        : el('span', { class: 'stamp stamp-done' }, [icon('check', 15), 'Course complete'])
-    ]),
-    railFor(course.lessons, state, 'course-rail')
+      el('a', {
+        class: 'btn btn-primary', 'data-testid': 'course-action',
+        href: course.done >= course.total ? '#/library' : `#/lesson/${(continueLesson() || {}).id || ''}`,
+        text: courseAction(course, state),
+        onclick: course.done >= course.total && course.total ? (e) => {
+          e.preventDefault();
+          const first = document.querySelector('[data-testid="library-results"]');
+          if (first) first.scrollIntoView({ block: 'start' });
+        } : null
+      })
+    ])
   ]));
 
   /* ---- the chapter journey: books as waypoints on one line ---- */
@@ -151,16 +162,25 @@ export function renderLibrary(view) {
   renderResults(results);
 }
 
-/** One segment per lesson, filled as they are read. The app's signature. */
-function railFor(lessons, state, testId) {
-  const nextId = (continueLesson() || {}).id;
-  return el('div', {
-    class: 'rail rail-lg', 'data-testid': testId || null, role: 'img',
-    'aria-label': `${lessons.filter((l) => state.completedLessons[l.id]).length} of ${lessons.length} lessons complete`
-  }, lessons.map((l) => el('i', {
-    class: state.completedLessons[l.id] ? 'is-done' : (l.id === nextId ? 'is-now' : ''),
-    title: l.title
-  })));
+/** "0 of 3 lessons read — 0% of the course" */
+export function readWords(course) {
+  return `${course.done} of ${course.total} lesson${course.total === 1 ? '' : 's'} read — ${course.percent}% of the course`;
+}
+
+/** The action beside the course meter depends on where the learner is. */
+export function courseAction(course, state) {
+  if (course.total && course.done >= course.total) return 'Review lessons';
+  const started = course.done > 0 || Object.keys((state && state.readingPositions) || {}).length > 0;
+  return started ? 'Continue reading' : 'Start learning';
+}
+
+/** The course, drawn by the shared progress component. */
+export function courseMeter(course, testId) {
+  return progressMeter({
+    value: course.done, max: course.total, testId,
+    label: `${course.label} course progress`,
+    valueText: `${course.done} of ${course.total} lessons read, ${course.percent} per cent of the course`
+  });
 }
 
 /**
@@ -410,10 +430,7 @@ export function renderLesson(view, lessonId) {
       paintAfter();
       document.dispatchEvent(new CustomEvent('trident:hud'));
     }
-    document.querySelectorAll('[data-testid="reader-rail"] i').forEach((seg, i) => {
-      const l = course.lessons[i];
-      if (l) seg.className = store.load().completedLessons[l.id] ? 'is-done' : (l.id === lesson.id ? 'is-now' : '');
-    });
+    paintReaderMeter();
   });
 
   const saveBtn = el('button', {
@@ -430,6 +447,17 @@ export function renderLesson(view, lessonId) {
   });
 
   const outside = isOutsideClass(lesson);
+
+  // the class meter under the title, repainted when this lesson is marked
+  const readerMeterHost = el('div');
+  function paintReaderMeter() {
+    const now = courseProgress(store.load());
+    clear(readerMeterHost);
+    readerMeterHost.append(courseMeter(now, 'reader-rail'));
+    const words = document.querySelector('[data-testid="reader-progress"]');
+    if (words) words.textContent = `${now.done} of ${now.total} lessons read`;
+  }
+  paintReaderMeter();
 
   view.append(el('article', { class: 'reader', 'data-testid': 'reader' }, [
     /* --- where this sits: one line, no repeated board and class --- */
@@ -449,17 +477,12 @@ export function renderLesson(view, lessonId) {
 
     el('h1', { class: 'title-serif reader-title', text: lesson.title }),
 
-    el('div', { class: 'reader-rail' }, [
-      el('div', { class: 'rail-legend' }, [
+    el('div', { class: 'reader-rail', 'data-testid': 'reader-progress-wrap' }, [
+      el('div', { class: 'meter-legend' }, [
         el('b', { text: course.label }),
-        el('span', { 'data-testid': 'reader-progress', text: `${course.done} of ${course.total} lessons` })
+        el('span', { 'data-testid': 'reader-progress', text: `${course.done} of ${course.total} lessons read` })
       ]),
-      el('div', {
-        class: 'rail', 'data-testid': 'reader-rail', role: 'img',
-        'aria-label': `${course.done} of ${course.total} lessons in this class complete`
-      }, course.lessons.map((l) => el('i', {
-        class: state.completedLessons[l.id] ? 'is-done' : (l.id === lesson.id ? 'is-now' : ''), title: l.title
-      })))
+      readerMeterHost
     ]),
 
     // one large image, after the title and progress, expandable and saveable

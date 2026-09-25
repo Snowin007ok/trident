@@ -136,7 +136,8 @@ TRIDENT_APP/
 ├── assets/
 │   ├── trident-logo.png    the TRIDENT logo
 │   ├── trident-fish.png    the twin fish, the Ask TRIDENT companion
-│   └── history/textbooks/  62 reviewed WebP images from the cited textbook pages
+│   ├── history/textbooks/  62 reviewed WebP images from the cited textbook pages
+│   └── avatars/            ten 256px WebP portrait avatars (profile only, never lesson content)
 ├── css/
 │   ├── tokens.css          colour, spacing, type, shape and texture tokens
 │   ├── base.css            reset, layout, header, tricolour rule, bottom nav, motion
@@ -145,7 +146,7 @@ TRIDENT_APP/
 ├── js/
 │   ├── app.js              bootstrap, welcome, dashboard, story, collection, settings
 │   ├── router.js           hash router
-│   ├── storage.js          the only module that touches localStorage (schema v6)
+│   ├── storage.js          the only module that touches localStorage (schema v7)
 │   ├── profile.js          the learning profile and the personalisation it drives
 │   ├── onboarding.js       the guided board / class / examination flow
 │   ├── gamify.js           XP, levels, quest, badges, artefacts, eras
@@ -154,6 +155,7 @@ TRIDENT_APP/
 │   ├── daily.js            date-driven selection (quiz, story, event)
 │   ├── wikipedia.js        Wikimedia "On this day" client (one request per date)
 │   ├── images.js           verified image catalogue, figures, Commons search, Europeana proxy client
+│   ├── avatars.js          portrait avatars: the picker, the stored choice, the emblem fallback
 │   ├── openlibrary.js      Open Library search client (cached, rate-limited)
 │   ├── brief.js            the Daily Briefing card, and the one call that asks the guide
 │   ├── companion.js        the floating twin-fish launcher and its drawer
@@ -165,6 +167,7 @@ TRIDENT_APP/
 │   ├── library.json        12 books, chapters, class availability
 │   ├── lessons.json        30 lessons with verbatim cited excerpts
 │   ├── history-images.json the image catalogue: source, book, pages, licence, verified flag
+│   ├── avatars.json        the ten profile portraits, each mapped to its original file in kings.zip
 │   ├── questions.json      42 hand-written questions, 5 formats
 │   ├── stories.json        7 daily stories with mini-quizzes
 │   └── timeline.json       18 cited events for the Timeline Challenge

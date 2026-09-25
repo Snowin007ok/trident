@@ -129,20 +129,49 @@ export function tag(text, variant, iconName) {
   ]);
 }
 
-/** Segmented saffron / ivory / green XP bar inside a navy track. */
-export function xpBar(percent, leftLabel, rightLabel, testId) {
-  const pct = Math.max(0, Math.min(100, percent));
+/**
+ * The one progress component. Every "how far through" in the app — the
+ * course, the lesson journey, the quiz, the learning paths — is drawn by this,
+ * so the track, fill, height and arithmetic are the same everywhere.
+ *
+ *   value / max     the real counts (3 of 10), never a pre-rounded share
+ *   label           the accessible name ("Class 6 history course progress")
+ *   valueText       what a screen reader hears for the value
+ *   variant         'quiz' uses the quiz accent; everything else is navy
+ *   ticks           mark the boundaries between steps (only up to 12 steps)
+ *
+ * It returns the element; percent() gives the same share for any text beside it.
+ */
+export function percent(value, max) {
+  const v = Math.max(0, Math.min(Number(value) || 0, Number(max) || 0));
+  return max > 0 ? (v / max) * 100 : 0;
+}
+
+export function progressMeter({ value, max, label, valueText, variant = '', ticks = true, testId = null }) {
+  const safeMax = Math.max(0, Number(max) || 0);
+  const safeValue = Math.max(0, Math.min(Number(value) || 0, safeMax));
+  const bar = el('progress', {
+    max: String(safeMax || 1), value: String(safeValue),
+    role: 'progressbar', 'aria-valuemin': '0', 'aria-valuemax': String(safeMax),
+    'aria-valuenow': String(safeValue), 'aria-label': label,
+    'aria-valuetext': valueText || `${safeValue} of ${safeMax}`,
+    'data-testid': testId
+  });
+  const steps = ticks && safeMax >= 2 && safeMax <= 12 ? String(safeMax) : null;
+  return el('div', {
+    class: `meter${variant ? ` is-${variant}` : ''}${safeMax && safeValue >= safeMax ? ' is-full' : ''}`,
+    'data-steps': steps, 'data-percent': percent(safeValue, safeMax).toFixed(2)
+  }, [bar, steps ? el('span', { class: 'meter-ticks', 'aria-hidden': 'true' }) : null]);
+}
+
+/** Level progress, drawn with the same component. */
+export function xpBar(pct, leftLabel, rightLabel, testId) {
+  const value = Math.round(Math.max(0, Math.min(100, pct)));
   return el('div', { 'data-testid': testId || null }, [
-    (leftLabel || rightLabel) ? el('div', { class: 'xp-meta' }, [
-      el('span', { html: leftLabel || '' }),
-      el('span', { html: rightLabel || '' })
+    (leftLabel || rightLabel) ? el('div', { class: 'meter-legend' }, [
+      el('b', { text: String(leftLabel || '').replace(/<[^>]+>/g, '') }),
+      el('span', { text: String(rightLabel || '').replace(/<[^>]+>/g, '') })
     ]) : null,
-    el('div', {
-      class: 'xp-track', role: 'progressbar',
-      'aria-valuenow': String(Math.round(pct)), 'aria-valuemin': '0', 'aria-valuemax': '100',
-      'aria-label': leftLabel ? String(leftLabel).replace(/<[^>]+>/g, '') : 'Experience progress'
-    }, [
-      el('div', { class: 'xp-fill', style: `width:${pct}%` }, [el('i'), el('i'), el('i')])
-    ])
+    progressMeter({ value, max: 100, label: 'Experience towards the next level', valueText: `${value} per cent`, ticks: false })
   ]);
 }

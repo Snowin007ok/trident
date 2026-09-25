@@ -10,7 +10,7 @@
  * quiz history, badges, artefacts and saved items cannot be affected.
  */
 
-import { el, clear, toast, announceToScreenReader } from './ui.js';
+import { el, clear, toast, announceToScreenReader, progressMeter } from './ui.js';
 import { icon } from './icons.js';
 import * as store from './storage.js';
 import * as profile from './profile.js';
@@ -40,14 +40,11 @@ export function render(view, { change = false, onDone = null, onCancel = null } 
         el('span', { class: 'eyebrow', text: change ? 'Change learning path' : 'Set up your learning path' }),
         heading,
         lead ? el('p', { class: 'ob-lead', text: lead }) : null,
-        el('ol', { class: 'ob-steps', 'aria-label': `Step ${stepIndex} of ${total}` },
-          Array.from({ length: total }, (_, i) => el('li', {
-            class: i + 1 === stepIndex ? 'is-current' : (i + 1 < stepIndex ? 'is-done' : ''),
-            'aria-current': i + 1 === stepIndex ? 'step' : null
-          }, [
-            el('span', { class: 'ob-step-dot', text: String(i + 1) }),
-            el('span', { class: 'sr-only', text: i + 1 < stepIndex ? 'completed' : (i + 1 === stepIndex ? 'current step' : 'upcoming') })
-          ])))
+        // where you are in setup, drawn by the same meter as every other progress
+        el('div', { class: 'ob-steps', 'data-testid': 'ob-steps' }, [
+          el('div', { class: 'meter-legend' }, [el('b', { text: `Step ${stepIndex} of ${total}` })]),
+          progressMeter({ value: stepIndex, max: total, label: 'Setup progress', valueText: `Step ${stepIndex} of ${total}` })
+        ])
       ].filter(Boolean)),
       body,
       el('div', { class: 'ob-actions' }, actions.filter(Boolean))

@@ -8,7 +8,7 @@
  * stored activity.
  */
 
-import { el, clear, xpBar, tag } from './ui.js';
+import { el, clear, xpBar, tag, progressMeter } from './ui.js';
 import { icon, levelEmblem, badgeArt, artefactArt, eraIcon, eraEmblem, milestoneFlag } from './icons.js';
 import * as store from './storage.js';
 import * as gamify from './gamify.js';
@@ -108,8 +108,11 @@ export function renderProgress(view) {
           el('b', { text: `${completed} of ${totalLessons}` }),
           ` ${classWord}chapters explored`
         ]),
-        el('span', { class: 'sr-only', 'data-testid': 'course-percent', text: `${pct} per cent of the course complete` })
-      ]),
+        el('span', { class: 'sr-only', 'data-testid': 'course-percent', text: `${pct} per cent of the course complete` }),
+        completed === 0
+          ? el('p', { class: 'hint zero-note', 'data-testid': 'zero-lessons', text: 'No lessons completed yet. Start your first lesson to begin the route.' })
+          : null
+      ].filter(Boolean)),
       el('div', { class: 'milestone', 'data-testid': 'milestone' }, [
         milestoneFlag(milestone.percent, 52),
         el('div', {}, [
@@ -118,7 +121,7 @@ export function renderProgress(view) {
           el('span', { class: 'hint', text: milestone.note })
         ]),
         completed < totalLessons
-          ? el('a', { class: 'btn btn-primary', href: '#/library', text: 'Continue your expedition' })
+          ? el('a', { class: 'btn btn-primary', href: '#/library', text: completed === 0 ? 'Start your first lesson' : 'Continue your expedition' })
           : el('span', { class: 'stamp stamp-done' }, [icon('check', 15), 'Course complete'])
       ])
     ]),
@@ -128,12 +131,12 @@ export function renderProgress(view) {
   /* --- four systems, kept apart so none is mistaken for another --- */
   view.append(el('div', { class: 'figure-grid', 'data-testid': 'passport-figures' }, [
     el('div', { class: 'figure is-course' }, [
-      el('b', { text: `${acc.pct}%` }),
-      el('span', { text: acc.asked ? `quiz accuracy, ${acc.correct} of ${acc.asked} right` : 'no questions answered yet' })
+      el('b', { text: acc.asked ? `${acc.pct}%` : 'No quiz yet' }),
+      el('span', { text: acc.asked ? `quiz accuracy, ${acc.correct} of ${acc.asked} right` : 'Answer today’s questions to see your accuracy' })
     ]),
     el('div', { class: 'figure is-streak' }, [
-      el('b', { text: String(streak) }),
-      el('span', { text: `day streak — best ${state.streak.best || 0}` })
+      el('b', { text: `${streak} ${streak === 1 ? 'day' : 'days'}` }),
+      el('span', { text: `study streak — best ${state.streak.best || 0} ${(state.streak.best || 0) === 1 ? 'day' : 'days'}` })
     ]),
     el('div', { class: 'figure is-level' }, [
       el('b', { text: `Level ${lp.current.level}` }),
@@ -244,11 +247,11 @@ export function renderProgress(view) {
           el('span', { text: r.name }),
           el('span', { class: 'hint', text: r.total ? `${r.done} of ${r.total}` : 'no lessons indexed yet' })
         ]),
-        el('div', {
-          class: 'pp-track', role: 'progressbar',
-          'aria-valuenow': String(Math.round(pct)), 'aria-valuemin': '0', 'aria-valuemax': '100',
-          'aria-label': `${r.name}: ${r.done} of ${r.total} lessons complete`
-        }, [el('div', { class: `pp-fill ${r.id}`, style: `width:${pct}%` })])
+        el('div', { class: 'pp-track' }, [progressMeter({
+          value: r.done, max: r.total, ticks: false,
+          label: `${r.name} progress`,
+          valueText: `${r.done} of ${r.total} lessons complete, ${Math.round(pct)} per cent`
+        })])
       ]);
     }))
   ]));

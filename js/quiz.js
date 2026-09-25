@@ -10,7 +10,7 @@
  * or revisiting the finished quiz can never pay out twice.
  */
 
-import { el, clear, toast, evidenceCard, tag } from './ui.js';
+import { el, clear, toast, evidenceCard, tag, progressMeter } from './ui.js';
 import { icon } from './icons.js';
 import * as store from './storage.js';
 import * as gamify from './gamify.js';
@@ -289,17 +289,15 @@ export function renderDailyQuiz(view) {
     }
   }
 
-  /* ---- the rail counts answers given, not where the cursor is: the first
-     segment stays empty until question one has actually been answered ---- */
-  function answeredCount() { return revealed.filter(Boolean).length; }
-
-  function railNode() {
-    return el('div', {
-      class: 'rail', 'data-testid': 'quiz-rail', role: 'img',
-      'aria-label': `${answeredCount()} of ${questions.length} questions answered`
-    }, questions.map((q, i) => el('i', {
-      class: revealed[i] ? (isCorrect(q, answers[i]) ? 'is-done' : 'is-wrong') : (i === at ? 'is-now' : '')
-    })));
+  /* ---- progress follows the question you are on: question 1 of 5 is 20%,
+     question 5 is 100%. It uses the quiz accent, never red — red is kept for
+     an incorrect answer. ---- */
+  function meterNode() {
+    return progressMeter({
+      value: at + 1, max: questions.length, variant: 'quiz', testId: 'quiz-rail', ticks: false,
+      label: 'Quiz progress',
+      valueText: `Question ${at + 1} of ${questions.length}, ${Math.round(((at + 1) / questions.length) * 100)} per cent complete`
+    });
   }
 
   function paint() {
@@ -308,7 +306,7 @@ export function renderDailyQuiz(view) {
     const q = questions[at];
     const name = `q-${at}`;
     const isOpen = !revealed[at];
-    const pct = Math.round((answeredCount() / questions.length) * 100);
+    const pct = Math.round(((at + 1) / questions.length) * 100);
 
     let body;
     if (q.type === 'match') {
@@ -344,21 +342,14 @@ export function renderDailyQuiz(view) {
 
     stage.append(el('article', { class: 'question', 'data-testid': `question-${at}` }, [
       el('div', { class: 'q-progress' }, [
-        el('div', { class: 'rail-legend' }, [
+        el('div', { class: 'meter-legend q-legend' }, [
           el('b', { 'data-testid': 'quiz-position', text: `Question ${at + 1} of ${questions.length}` }),
           el('span', { 'data-testid': 'quiz-percent', text: `${pct}% complete` })
         ]),
-        railNode(),
+        meterNode(),
         el('div', { class: 'q-timer' }, [timerBtn, timerNode])
       ]),
-      el('div', { class: 'q-head' }, [
-        // the question number, struck like a seal
-        el('span', { class: 'q-medallion', 'aria-hidden': 'true' }, [
-          el('b', { text: String(at + 1) }),
-          el('i', { text: `of ${questions.length}` })
-        ]),
-        el('h1', { class: 'question-prompt', text: q.prompt })
-      ]),
+      el('h1', { class: 'question-prompt', text: q.prompt }),
       body,
       revealed[at] ? explanationBlock(q, isCorrect(q, answers[at])) : null,
       action

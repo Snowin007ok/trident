@@ -1,6 +1,6 @@
 /** TRIDENT application shell: data loading, chrome, dashboard, features, settings. */
 
-import { el, clear, toast, openModal, citationBlock, tag, xpBar, announceToScreenReader, pages } from './ui.js';
+import { el, clear, toast, openModal, citationBlock, tag, xpBar, announceToScreenReader, pages, progressMeter } from './ui.js';
 import { icon, iconSolid, levelEmblem, gatewayMotif, journeyThreads, expeditionPath, tricolourRule, badgeArt, artefactArt, eraEmblem, expeditionRoute, milestoneFlag } from './icons.js';
 import * as store from './storage.js';
 import { route, setNotFound, start, go, onAfterNavigate, currentPath } from './router.js';
@@ -17,6 +17,7 @@ import * as onboarding from './onboarding.js';
 import * as brief from './brief.js';
 import * as companion from './companion.js';
 import * as images from './images.js';
+import * as avatars from './avatars.js';
 
 const view = document.getElementById('view');
 const header = document.getElementById('appHeader');
@@ -33,15 +34,16 @@ async function loadJSON(path) {
 }
 
 async function loadData() {
-  const [libraryData, lessons, questions, stories, timelineData, historyImages] = await Promise.all([
+  const [libraryData, lessons, questions, stories, timelineData, historyImages, avatarData] = await Promise.all([
     loadJSON('data/library.json'), loadJSON('data/lessons.json'),
     loadJSON('data/questions.json'), loadJSON('data/stories.json'),
     loadJSON('data/timeline.json'),
     // the image catalogue is optional: a missing or broken file leaves the app
     // running with no pictures rather than not running at all
-    loadJSON('data/history-images.json').catch(() => ({ images: [] }))
+    loadJSON('data/history-images.json').catch(() => ({ images: [] })),
+    loadJSON('data/avatars.json').catch(() => ({ avatars: [] }))
   ]);
-  return { library: libraryData, lessons, questions, stories, timeline: timelineData, historyImages };
+  return { library: libraryData, lessons, questions, stories, timeline: timelineData, historyImages, avatarData };
 }
 
 /* ------------------------------------------------------------ view helper */
@@ -124,13 +126,32 @@ function renderHud() {
       el('b', { text: course.label }),
       el('span', { text: `${course.done} of ${course.total} lessons` })
     ]),
-    el('span', {
-      class: 'hud-streak', 'data-testid': 'hud-streak',
-      'aria-label': `Current streak: ${streak} ${streak === 1 ? 'day' : 'days'}`
-    }, [icon('flame', 15), String(streak)]),
+    statChip({
+      cls: 'hud-streak', testId: 'hud-streak', ic: 'flame',
+      value: String(streak), unit: streak === 1 ? 'day' : 'days',
+      label: `${streak}-day learning streak`,
+      tip: 'Study streak: days in a row you have learned something'
+    }),
     xpCounter(state.xp || 0),
     profileControl(state)
   );
+}
+
+/**
+ * A labelled figure in the header: icon, number and unit ("0 days", "0 XP"),
+ * never a bare number. It is information, not a control, so it is not styled
+ * as a button; it can take keyboard focus only to show its tooltip.
+ */
+function statChip({ cls, testId, ic, value, valueNode, unit, label, tip }) {
+  const tipId = `${testId}-tip`;
+  return el('span', {
+    class: `stat-chip ${cls}`, 'data-testid': testId, role: 'img', tabindex: '0',
+    'aria-label': label, 'aria-describedby': tipId
+  }, [
+    icon(ic, 16),
+    el('span', { class: 'stat-value', 'aria-hidden': 'true' }, [valueNode || el('span', { text: value }), ' ', el('span', { class: 'stat-unit', text: unit })]),
+    el('span', { class: 'stat-tip', id: tipId, role: 'tooltip', text: tip })
+  ]);
 }
 
 /**
@@ -140,19 +161,23 @@ function renderHud() {
  */
 let lastXpShown = null;
 function xpCounter(xp) {
-  const num = el('span', { 'data-testid': 'hud-xp-num', text: String(lastXpShown ?? xp) });
-  const node = el('span', { class: 'hud-xp', 'data-testid': 'hud-xp', 'aria-label': `${xp} experience points` },
-    [icon('xp', 15), num]);
+  const fmtXp = (n) => Number(n).toLocaleString('en-IN');
+  const num = el('span', { 'data-testid': 'hud-xp-num', text: fmtXp(lastXpShown ?? xp) });
+  const node = statChip({
+    cls: 'hud-xp', testId: 'hud-xp', ic: 'xp', valueNode: num, unit: 'XP',
+    label: `${fmtXp(xp)} experience points`,
+    tip: 'Experience points: earned by reading, quizzes and today’s activities'
+  });
   const from = lastXpShown;
   lastXpShown = xp;
   const still = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (from === null || xp <= from || still) { num.textContent = String(xp); return node; }
+  if (from === null || xp <= from || still) { num.textContent = fmtXp(xp); return node; }
   node.classList.add('is-rising');
   const start = performance.now();
   const span = 650;
   const step = (now) => {
     const k = Math.min(1, (now - start) / span);
-    num.textContent = String(Math.round(from + (xp - from) * (1 - Math.pow(1 - k, 3))));
+    num.textContent = fmtXp(Math.round(from + (xp - from) * (1 - Math.pow(1 - k, 3))));
     if (k < 1) requestAnimationFrame(step);
     else setTimeout(() => node.classList.remove('is-rising'), 400);
   };
@@ -160,15 +185,20 @@ function xpCounter(xp) {
   return node;
 }
 
-/** The profile button and its menu: settings, learning path, theme. */
+/**
+ * The profile button and its menu. This is a local learner profile — nothing
+ * is signed in and nothing leaves the device — and the menu says so. The
+ * portrait is the learner's chosen avatar; the TRIDENT logo stays the brand.
+ */
 function profileControl(state) {
   const prof = profile.current(state);
   const wrap = el('div', { class: 'profile-wrap' });
+  const avatarHost = el('span', { class: 'avatar-host' }, [avatars.portrait(avatars.current(state))]);
   const btn = el('button', {
     class: 'profile-btn', type: 'button', 'data-testid': 'profile-btn',
     'aria-haspopup': 'true', 'aria-expanded': 'false',
-    'aria-label': 'Your profile, settings and learning path'
-  }, [el('span', { class: 'avatar', 'aria-hidden': 'true', text: 'L' }), icon('down', 14)]);
+    'aria-label': 'Explorer — local learner profile, portrait avatar and settings'
+  }, [avatarHost, el('span', { class: 'profile-name', text: 'Explorer' }), icon('down', 14)]);
 
   let menu = null;
   function close() {
@@ -183,23 +213,40 @@ function profileControl(state) {
 
   btn.addEventListener('click', () => {
     if (menu) { close(); return; }
-    menu = el('div', { class: 'profile-menu', role: 'menu', 'data-testid': 'profile-menu' }, [
+    const headAvatar = el('span', { class: 'pm-avatar' }, [avatars.portrait(avatars.current(), { size: 'menu' })]);
+    const pick = avatars.picker(() => {
+      // the new portrait shows at once, in the menu and the header; nothing else changes
+      const a = avatars.current();
+      clear(headAvatar); headAvatar.append(avatars.portrait(a, { size: 'menu' }));
+      clear(avatarHost); avatarHost.append(avatars.portrait(a));
+      announceToScreenReader('Portrait avatar changed.');
+    });
+    menu = el('div', { class: 'profile-menu', role: 'dialog', 'aria-label': 'Your learner profile', 'data-testid': 'profile-menu' }, [
       el('div', { class: 'pm-head' }, [
-        el('b', { text: 'Guest learner' }),
-        el('span', { 'data-testid': 'profile-path', text: prof ? profile.label(prof) : 'No learning path chosen' })
+        headAvatar,
+        el('div', { class: 'pm-who' }, [
+          el('b', { text: 'Explorer' }),
+          el('span', { 'data-testid': 'profile-path', text: prof ? profile.label(prof) : 'No learning path chosen' })
+        ])
       ]),
-      el('a', { href: '#/profile', role: 'menuitem', onclick: close },
-        [icon('learn', 17), 'Change class or board']),
-      el('a', { href: '#/collection', role: 'menuitem', onclick: close },
-        [icon('collection', 17), 'Your collection']),
-      el('a', { href: '#/settings', role: 'menuitem', onclick: close },
-        [icon('settings', 17), 'Settings'])
+      el('p', { class: 'pm-local', 'data-testid': 'profile-local' }, [
+        icon('info', 14), 'Local learner profile — progress is saved on this device.'
+      ]),
+      el('div', { class: 'pm-section' }, [
+        el('p', { class: 'pm-label', id: 'pm-avatar-label', text: 'Portrait avatar' }),
+        pick.node
+      ]),
+      el('nav', { class: 'pm-links', 'aria-label': 'Profile links' }, [
+        el('a', { href: '#/profile', onclick: close }, [icon('learn', 17), 'Change class or board']),
+        el('a', { href: '#/collection', onclick: close }, [icon('collection', 17), 'Your collection']),
+        el('a', { href: '#/settings', onclick: close }, [icon('settings', 17), 'Settings'])
+      ])
     ]);
     wrap.append(menu);
     btn.setAttribute('aria-expanded', 'true');
     document.addEventListener('keydown', onKey, true);
     document.addEventListener('mousedown', onOutside, true);
-    (menu.querySelector('a') || menu).focus();
+    (menu.querySelector('.avatar-option[tabindex="0"]') || menu.querySelector('a') || menu).focus();
   });
 
   wrap.append(btn);
@@ -377,9 +424,11 @@ function renderDashboard() {
       el('h1', { class: 'title-serif exp-title', 'data-testid': 'exp-title',
         text: era ? `The ${era.label} expedition` : 'Today’s expedition' }),
       el('p', { class: 'exp-facts', 'data-testid': 'exp-facts' }, [
+        // what it is and how long on one line (the dot is bound to the word
+        // before it, so no line starts with one); the reward on its own line
         el('b', { text: `${quest.total} short ${quest.total === 1 ? 'activity' : 'activities'}` }),
-        el('span', { text: minutes ? ` · about ${minutes} minute${minutes === 1 ? '' : 's'} · ` : ' · ' }),
-        el('b', { class: 'exp-xp', text: openXp ? `earn up to ${openXp} XP` : 'all XP earned today' })
+        minutes ? `\u00a0· about ${minutes}\u00a0minute${minutes === 1 ? "" : "s"}` : null,
+        el('b', { class: 'exp-xp', text: openXp ? `Earn up to ${openXp} XP` : 'All XP earned today' })
       ]),
       // once today's three are done, the next thing worth doing is the lesson
       // in hand — so the one big button moves on to it rather than announcing
@@ -477,6 +526,11 @@ function isFirstOpen(quest, i) {
   return quest.tasks.findIndex((t) => !t.done) === i;
 }
 
+/** "0 of 3 chapters explored" — the words beside every course meter. */
+export function exploredWords(done, total, noun) {
+  return `${done} of ${total} ${noun}${total === 1 ? '' : 's'} explored`;
+}
+
 /**
  * Continue your journey — the lesson left part-read, as an illustrated
  * chapter card with its real completion and its book and page.
@@ -485,9 +539,22 @@ function journeyCard(cont, course, state, resuming, outside) {
   if (!cont) {
     return el('section', { class: 'journey-card', 'data-testid': 'journey-card' }, [
       el('div', { class: 'jc-body' }, [
-        el('h2', { text: 'Continue your journey' }),
-        el('p', { text: 'You have read every lesson in your class.' }),
-        el('a', { class: 'btn btn-ghost', href: '#/library', text: 'Open the library' })
+        el('h2', { class: 'jc-heading', text: 'Continue your journey' }),
+        el('p', { class: 'jc-title title-serif', text: 'You have explored every chapter in your class.' }),
+        el('div', { class: 'jc-progress' }, [
+          el('div', { class: 'meter-legend' }, [
+            el('b', { 'data-testid': 'course-figure', text: exploredWords(course.done, course.total, 'chapter') }),
+            el('span', { class: 'is-complete' }, [icon('check', 14), 'All explored'])
+          ]),
+          progressMeter({
+            value: course.done, max: course.total, testId: 'home-rail',
+            label: `${course.label}: chapters explored`,
+            valueText: `${course.done} of ${course.total} chapters explored, ${course.percent} per cent`
+          })
+        ]),
+        el('div', { class: 'jc-actions' }, [
+          el('a', { class: 'btn btn-ghost', href: '#/library', 'data-testid': 'continue-learning', text: 'Review lessons' })
+        ])
       ])
     ]);
   }
@@ -509,23 +576,24 @@ function journeyCard(cont, course, state, resuming, outside) {
       outside ? el('span', { class: 'stamp stamp-warn', 'data-testid': 'mission-outside' },
         [icon('info', 14), `From Class ${cont.classLevel}`]) : null,
       el('div', { class: 'jc-progress' }, [
-        el('div', { class: 'rail-legend' }, [
-          el('b', { 'data-testid': 'course-figure',
-            text: `${course.done} of ${course.total} chapters explored` }),
-          el('span', { class: 'sr-only', text: `${course.percent} per cent complete` })
+        el('div', { class: 'meter-legend' }, [
+          el('b', { 'data-testid': 'course-figure', text: exploredWords(course.done, course.total, 'chapter') }),
+          course.done >= course.total && course.total
+            ? el('span', { class: 'is-complete' }, [icon('check', 14), 'All explored'])
+            : el('span', { text: `${course.percent}%` })
         ]),
-        el('div', {
-          class: 'rail', 'data-testid': 'home-rail', role: 'img',
-          'aria-label': `${course.done} of ${course.total} lessons complete, ${course.percent} per cent`
-        }, course.lessons.map((l) => el('i', {
-          class: state.completedLessons[l.id] ? 'is-done' : (l.id === cont.id ? 'is-now' : ''),
-          title: l.title
-        })))
+        progressMeter({
+          value: course.done, max: course.total, testId: 'home-rail',
+          label: `${course.label}: chapters explored`,
+          valueText: `${course.done} of ${course.total} chapters explored, ${course.percent} per cent`
+        })
       ]),
-      el('a', {
-        class: 'btn btn-ghost', href: `#/lesson/${cont.id}`, 'data-testid': 'continue-learning',
-        text: resuming ? 'Continue reading' : 'Open this lesson'
-      }),
+      el('div', { class: 'jc-actions' }, [
+        el('a', {
+          class: 'btn btn-ghost', href: `#/lesson/${cont.id}`, 'data-testid': 'continue-learning',
+          text: course.done === 0 && !resuming ? 'Start your first lesson' : (resuming ? 'Continue reading' : 'Open this lesson')
+        })
+      ]),
       el('p', { class: 'jc-source', 'data-testid': 'jc-source' }, [
         icon('evidence', 13),
         `${book ? book.title : ''}, ${pages(cont.citation)}`
@@ -1391,6 +1459,7 @@ async function boot() {
   timeline.init(DATA);
   brief.init(DATA);
   images.init(DATA.historyImages);
+  avatars.init(DATA.avatarData);
 
   // what the companion shows when it opens: facts computed here, from storage,
   // so the companion itself never reads or writes it

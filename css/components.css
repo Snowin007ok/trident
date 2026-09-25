@@ -15,19 +15,11 @@
   background: var(--surface); border: 2px solid var(--ink);
   border-radius: var(--radius); margin-bottom: var(--sp-5);
 }
-.exp-art { position: relative; background: var(--sky); min-height: 240px; }
-.exp-art .hi { margin: 0; height: 100%; }
-.exp-art .hi-frame { height: 100%; aspect-ratio: auto !important; border-radius: 0; border: 0; }
-.exp-art .hi-frame img { width: 100%; height: 100%; object-fit: cover; }
-.exp-art .hi-cap {
-  position: absolute; inset: auto 0 0 0;
-  /* a solid band, not a fade: the caption must read over any photograph */
-  background-color: rgba(20, 42, 67, 0.92);
-  color: #FFF8E8; padding: var(--sp-3) var(--sp-4);
-}
-.exp-art .hi-cap .hi-caption-text { font-size: var(--step--1); }
-.exp-art .hi-source { color: #FFF8E8; border-color: rgba(255, 248, 232, 0.5); background: transparent; }
-.exp-art .hi-cite { color: rgba(255, 248, 232, 0.8); }
+.exp-art { position: relative; background: var(--sky); min-height: 240px; display: flex; }
+.exp-art .hi { margin: 0; display: flex; flex-direction: column; width: 100%; }
+.exp-art .hi-frame { flex: 1 1 auto; min-height: 200px; aspect-ratio: auto !important; border-radius: 0; border: 0; }
+.exp-art .hi-frame img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.exp-art .hi-cap { border-radius: 0; padding: var(--sp-3) var(--sp-5) var(--sp-4); gap: var(--sp-2); }
 
 .exp-body { padding: var(--sp-6); display: flex; flex-direction: column; justify-content: center; }
 .exp-where {
@@ -36,7 +28,7 @@
 }
 .exp-title { font-size: var(--step-5); line-height: 1.06; margin: 0 0 var(--sp-3); }
 .exp-facts { font-size: var(--step-1); margin: 0 0 var(--sp-5); color: var(--text); max-width: none; }
-.exp-xp { color: var(--gold-ink); }
+.exp-xp { display: block; color: var(--gold-ink); margin-top: 2px; }
 .exp-body .btn-lg { align-self: flex-start; font-size: var(--step-1); padding: var(--sp-4) var(--sp-6); min-height: 54px; }
 
 /* the small route inside the hero: three dots on a line */
@@ -64,23 +56,33 @@
 }
 .home-pair-low { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 
-/* Continue your journey */
+/* Continue your journey: picture | text, on one grid. The picture keeps its
+   proportions (cover, never stretched) and the text column stacks heading,
+   era, title, progress, action and source on one 8px rhythm. */
 .journey-card {
-  display: grid; grid-template-columns: 172px minmax(0, 1fr);
+  display: grid; grid-template-columns: 184px minmax(0, 1fr);
   background: var(--surface); border: 1px solid var(--line);
   border-radius: var(--radius); overflow: hidden;
 }
-.jc-art { background: var(--sky); min-height: 100%; }
-.jc-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.jc-art .hi-motif { height: 100%; aspect-ratio: auto !important; border: 0; border-radius: 0; }
-.jc-body { padding: var(--sp-5); display: flex; flex-direction: column; gap: var(--sp-2); align-items: flex-start; }
-.jc-heading { font-size: var(--step-0); font-weight: 700; color: var(--text-muted); margin: 0; letter-spacing: 0; }
-.jc-title { font-size: var(--step-2); line-height: 1.2; margin: 0; max-width: none; }
-.jc-progress { width: 100%; margin: var(--sp-2) 0; }
-.jc-source {
-  display: flex; align-items: center; gap: 6px; margin: 0;
-  font-size: var(--step--2); color: var(--text-muted); max-width: none;
+.jc-art { background: var(--sky); position: relative; min-height: 232px; }
+.jc-art img {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; object-position: center; display: block;
 }
+.jc-art .hi-motif { position: absolute; inset: 0; height: 100%; aspect-ratio: auto !important; border: 0; border-radius: 0; }
+.jc-body {
+  padding: var(--sp-5); display: grid; gap: var(--sp-2);
+  align-content: start; justify-items: start; min-width: 0;
+}
+.jc-heading { font-size: var(--step-0); font-weight: 700; color: var(--text-muted); margin: 0; letter-spacing: 0; }
+.jc-title { font-size: var(--step-2); line-height: 1.25; margin: 0; max-width: 32ch; }
+.jc-progress { width: 100%; margin-top: var(--sp-2); }
+.jc-actions { margin-top: var(--sp-2); }
+.jc-source {
+  display: flex; align-items: flex-start; gap: 6px; margin: var(--sp-1) 0 0;
+  font-size: var(--step--1); color: var(--text-muted); max-width: none;
+}
+.jc-source svg { flex: none; margin-top: 3px; }
 
 /* Today in History */
 .today-history {
@@ -156,12 +158,16 @@
 /* ==========================================================================
    LEARN — the class, the journey, the books
    ========================================================================== */
-.course-top {
-  display: flex; align-items: flex-end; justify-content: space-between;
-  gap: var(--sp-5); flex-wrap: wrap; margin-bottom: var(--sp-4);
+.course-head h1 { margin-bottom: var(--sp-3); }
+/* the course meter and its action share a row, with clear air between them
+   so the button never reads as the end of the bar */
+.course-progress {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end; gap: var(--sp-3) var(--sp-6);
+  padding: var(--sp-4) var(--sp-5); background: var(--surface);
+  border: 1px solid var(--line); border-radius: var(--radius);
 }
-.course-top h1 { margin-bottom: var(--sp-1); }
-.course-top .lede { margin: 0; }
+.cp-meter { min-width: 0; }
 
 .journey-track {
   list-style: none; margin: 0; padding: 0;
@@ -312,7 +318,8 @@
 .quiz-stage { max-width: var(--shell-read); margin-inline: auto; }
 .question { margin-bottom: var(--sp-6); }
 .q-progress { margin-bottom: var(--sp-5); }
-.q-timer { display: flex; align-items: center; gap: var(--sp-3); margin-top: var(--sp-3); }
+.q-timer { display: flex; align-items: center; gap: var(--sp-3); margin-top: var(--sp-2); }
+.q-timer .btn-quiet { margin-left: calc(var(--sp-3) * -1); }
 .timer {
   font-variant-numeric: tabular-nums; font-weight: 700; font-size: var(--step--1);
   color: var(--text-muted);
@@ -320,7 +327,6 @@
 .timer.is-low { color: var(--saffron-ink); }
 .timer.is-out { color: var(--red-ink); }
 
-.rail i.is-wrong { background: var(--red); border-color: var(--red); }
 
 .question-prompt {
   font-size: var(--step-3); line-height: 1.22; margin: 0 0 var(--sp-5);
@@ -328,24 +334,56 @@
 .question-prompt:focus { outline: none; }
 
 .options { list-style: none; margin: 0 0 var(--sp-5); padding: 0; display: grid; gap: var(--sp-3); }
+
+/* One answer card. Every state keeps the same 2px border and radius, so a
+   card never changes size or shifts when it is chosen or marked. */
 .option {
-  display: flex; align-items: center; gap: var(--sp-3);
-  padding: var(--sp-4); min-height: 56px; cursor: pointer;
+  box-sizing: border-box; overflow: hidden;
+  display: grid; grid-template-columns: 22px minmax(0, 1fr) auto;
+  align-items: center; gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4); min-height: 56px; cursor: pointer;
+  font-size: var(--step-0); font-weight: 500; line-height: 1.45;
   background: var(--surface); border: 2px solid var(--line-strong);
   border-radius: var(--radius);
+  transition: border-color var(--transition), background-color var(--transition);
 }
-.option:hover { border-color: var(--ink); }
-.option input { accent-color: var(--saffron); width: 20px; height: 20px; flex: none; }
-.option:has(input:checked) { border-color: var(--saffron); background: var(--wash-saffron); }
-.option.is-correct { border-color: var(--green); background: var(--wash-green); }
-.option.is-wrong { border-color: var(--red); background: var(--wash-red); }
+.option > span:not(.opt-mark) { min-width: 0; overflow-wrap: anywhere; line-height: 1.45; }
+.option:hover { border-color: var(--ink); background: var(--wash-navy); }
+
+/* the radio: drawn, but still the native control underneath */
+.option input {
+  -webkit-appearance: none; appearance: none; margin: 0;
+  width: 22px; height: 22px; border-radius: 50%; flex: none;
+  border: 2px solid var(--text-muted); background: var(--surface);
+  display: grid; place-items: center; cursor: pointer;
+}
+.option input:checked { border-color: var(--ink); box-shadow: inset 0 0 0 4px var(--surface); background: var(--ink); }
+.option input:focus-visible { outline: none; }
+.option:has(input:focus-visible) { outline: 3px solid var(--ink); outline-offset: 3px; }
+
+/* chosen, not yet checked */
+.option:has(input:checked) { border-color: var(--ink); background: var(--wash-navy); }
+
+/* after checking: green for the right answer, red for a wrong choice —
+   and the words say it too, so colour is never the only signal */
+.option.is-correct, .option.is-correct:hover, .option.is-correct:has(input:checked) {
+  border-color: var(--green-ink); background: var(--wash-green);
+}
+.option.is-wrong, .option.is-wrong:hover, .option.is-wrong:has(input:checked) {
+  border-color: var(--red-ink); background: var(--wash-red);
+}
+.option.is-correct input:checked { border-color: var(--green-ink); background: var(--green-ink); }
+.option.is-wrong input:checked { border-color: var(--red-ink); background: var(--red-ink); }
+.option.is-unanswered { opacity: 1; }
+.option:has(input:disabled) { cursor: default; }
+
 .opt-mark {
-  margin-left: auto; display: inline-flex; align-items: center; gap: 4px;
+  display: inline-flex; align-items: center; gap: 6px; justify-self: end;
   font-size: var(--step--1); font-weight: 700; white-space: nowrap;
 }
+.opt-mark:empty { display: none; }
 .option.is-correct .opt-mark { color: var(--green-ink); }
 .option.is-wrong .opt-mark { color: var(--red-ink); }
-
 .match-row {
   display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: var(--sp-4); align-items: center;
@@ -551,7 +589,7 @@
 .figure span { font-size: var(--step--1); color: var(--text-muted); }
 .figure.is-streak b { color: var(--saffron-ink); }
 .figure.is-level b { color: var(--gold-ink); }
-.figure.is-course b { color: var(--green-ink); }
+.figure.is-course b { color: var(--ink); }
 
 .drawer { border-top: 1px solid var(--line); }
 .drawer summary { cursor: pointer; font-weight: 600; padding: var(--sp-4) 0; color: var(--teal-ink); }
@@ -662,12 +700,24 @@
 
 .onboarding { max-width: 720px; margin-inline: auto; }
 .ob-head { margin-bottom: var(--sp-5); }
-.ob-steps { display: flex; gap: var(--sp-2); margin-bottom: var(--sp-5); list-style: none; padding: 0; }
-.ob-step-dot { flex: 1; height: 5px; background: var(--line); border-radius: 2px; }
-.ob-step-dot.is-on { background: var(--saffron); }
+.ob-steps { margin: var(--sp-4) 0 var(--sp-5); max-width: 420px; }
+
+/* a selection card: a real button, one border width in every state */
+.ob-card {
+  box-sizing: border-box; display: grid; gap: var(--sp-1); align-content: start; justify-items: start;
+  width: 100%; min-height: 88px; padding: var(--sp-4); text-align: left; cursor: pointer;
+  font: inherit; color: var(--text); background: var(--surface);
+  border: 2px solid var(--line-strong); border-radius: var(--radius);
+  transition: border-color var(--transition), background-color var(--transition);
+}
+.ob-card:hover { border-color: var(--ink); background: var(--wash-navy); }
+.ob-card:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+.ob-card.is-selected { border-color: var(--saffron); background: var(--wash-saffron); }
+.ob-card.is-disabled { cursor: not-allowed; background: var(--surface-sunken); border-style: dashed; }
+.ob-card-tick { display: inline-flex; align-items: center; gap: 4px; margin-top: var(--sp-1); font-size: var(--step--1); font-weight: 700; color: var(--saffron-ink); }
 .ob-cards { display: grid; gap: var(--sp-3); grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); }
 .ob-cards-2 { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
-.ob-card-top { display: flex; align-items: center; gap: var(--sp-2); }
+.ob-card-top { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px var(--sp-2); }
 .ob-card-title { font-weight: 700; font-size: var(--step-1); }
 .ob-card-blurb, .ob-card-meta, .ob-card-why { font-size: var(--step--1); color: var(--text-muted); }
 .ob-card-state { font-size: var(--step--2); color: var(--saffron-ink); font-weight: 700; }
@@ -905,24 +955,6 @@
 .lesson-row:focus-within { background: var(--surface); outline: 2px solid var(--saffron); outline-offset: -2px; }
 
 /* --- the quiz's question medallion --- */
-.q-head { display: flex; align-items: flex-start; gap: var(--sp-4); margin-bottom: var(--sp-5); }
-.q-medallion {
-  flex: none; width: 62px; height: 62px; border-radius: 50%;
-  display: grid; place-items: center; gap: 0;
-  border: 3px solid var(--ink); background: var(--surface);
-  box-shadow: 0 3px 0 var(--ink);
-}
-.q-medallion b { font-size: var(--step-3); font-weight: 800; line-height: 1; }
-.q-medallion i { font-style: normal; font-size: 10px; color: var(--text-muted); line-height: 1; }
-.q-head .question-prompt { margin: 0; padding-top: var(--sp-1); }
-
-/* answer selection reads at a glance */
-.option { transition: border-color var(--transition), background var(--transition), transform 90ms ease; }
-.option:active { transform: translateY(1px); }
-.option:has(input:checked) { box-shadow: inset 4px 0 0 var(--saffron); }
-.option.is-correct { box-shadow: inset 4px 0 0 var(--green); }
-.option.is-wrong { box-shadow: inset 4px 0 0 var(--red); }
-
 /* --- the timeline's chronological nodes --- */
 .tl-card::after {
   content: ''; position: absolute; left: calc(var(--sp-6) * -1 - 5px);
@@ -998,27 +1030,51 @@
 }
 .hi-expand:hover { background: var(--wash-saffron); }
 
-.hi-cap { margin-top: var(--sp-2); }
-.hi-caption-text { display: block; font-size: var(--step--1); line-height: 1.5; }
-.hi-meta {
-  display: flex; align-items: center; gap: var(--sp-2) var(--sp-3);
-  flex-wrap: wrap; margin-top: 4px;
-}
+/* Caption hierarchy: a small badge, then the description as the strongest
+   line, then the citation, quieter but still AA. */
+.hi-cap { display: grid; gap: var(--sp-2); margin-top: var(--sp-2); justify-items: start; }
+.hi-badges { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2) var(--sp-3); flex-wrap: wrap; width: 100%; }
+.hi-caption-text { display: block; font-size: var(--step-0); font-weight: 600; line-height: 1.4; max-width: 62ch; }
+.hi-meta { display: flex; align-items: baseline; gap: var(--sp-1) var(--sp-3); flex-wrap: wrap; }
 .hi-source {
   display: inline-flex; align-items: center; gap: 5px;
-  font-size: var(--step--2); font-weight: 700;
-  border: 1px solid currentColor; border-radius: var(--radius-xs); padding: 1px var(--sp-2);
+  font-size: var(--step--2); font-weight: 700; line-height: 1.3;
+  border: 1px solid currentColor; border-radius: var(--radius-xs); padding: 2px var(--sp-2);
 }
 .hi-source.is-textbook { color: var(--green-ink); background: var(--wash-green); }
 .hi-source.is-api { color: var(--teal-ink); background: var(--wash-teal); }
-.hi-cite { font-size: var(--step--2); color: var(--text-muted); }
+.hi-cite { font-size: var(--step--1); color: var(--text-muted); line-height: 1.45; overflow-wrap: anywhere; max-width: 72ch; }
 a.hi-cite { color: var(--teal-ink); }
+
+/* On a lesson, a story and the Home hero the caption is a solid navy band
+   under the picture — never laid over it. Fixed colours, so it reads the same
+   in both themes. */
+.hi-lesson .hi-cap, .hi-story .hi-cap, .hi-hero .hi-cap {
+  margin-top: 0; padding: var(--sp-4) var(--sp-5) var(--sp-5); gap: var(--sp-3);
+  background: var(--caption-surface); color: var(--caption-text);
+  border-radius: 0 0 var(--radius) var(--radius);
+}
+.hi-lesson .hi-frame, .hi-story .hi-frame { border-radius: var(--radius) var(--radius) 0 0; border-bottom: 0; }
+.hi-lesson .hi-caption-text, .hi-story .hi-caption-text {
+  font-size: clamp(1.125rem, 1rem + 0.6vw, 1.375rem); font-weight: 600; line-height: 1.35; color: var(--caption-text);
+}
+.hi-hero .hi-caption-text { font-size: var(--step-1); color: var(--caption-text); }
+.hi-lesson .hi-cite, .hi-story .hi-cite, .hi-hero .hi-cite { color: var(--caption-muted); }
+.hi-lesson a.hi-cite, .hi-story a.hi-cite, .hi-hero a.hi-cite { color: var(--caption-link); }
+.hi-lesson .hi-source.is-textbook, .hi-story .hi-source.is-textbook, .hi-hero .hi-source.is-textbook {
+  color: #0E6B3A; background: #E8F5ED; border-color: #E8F5ED;
+}
+.hi-lesson .hi-source.is-api, .hi-story .hi-source.is-api, .hi-hero .hi-source.is-api {
+  color: #066873; background: #E4F2F3; border-color: #E4F2F3;
+}
+.hi-lesson .hi-save, .hi-story .hi-save, .hi-hero .hi-save { color: var(--caption-text); background: transparent; border-color: rgba(255, 248, 232, 0.55); }
+.hi-lesson .hi-save.is-on, .hi-story .hi-save.is-on, .hi-hero .hi-save.is-on { color: #142A43; background: #F4C542; border-color: #F4C542; }
 
 .hi-save {
   display: inline-flex; align-items: center; gap: 5px; cursor: pointer;
   font-size: var(--step--2); font-weight: 700; color: var(--text);
   background: var(--surface); border: 1px solid var(--line-strong);
-  border-radius: var(--radius-xs); padding: var(--sp-1) var(--sp-2); min-height: 30px;
+  border-radius: var(--radius-xs); padding: var(--sp-1) var(--sp-2); min-height: 44px;
 }
 .hi-save:hover { border-color: var(--ink); }
 .hi-save.is-on { color: var(--gold-ink); border-color: var(--gold); background: var(--wash-gold); }
@@ -1099,13 +1155,14 @@ a.hi-cite { color: var(--teal-ink); }
    ========================================================================== */
 .big-words { font-size: var(--step-3); margin: 0; line-height: 1.2; max-width: none; }
 .big-words b { font-size: var(--step-5); font-weight: 800; letter-spacing: -0.02em; margin-right: 4px; }
+.zero-note { margin: var(--sp-2) 0 0; }
 
 .era-route {
   list-style: none; margin: var(--sp-5) 0 0; padding: var(--sp-5) var(--sp-4);
   display: flex; gap: 0; position: relative;
   background: var(--wash-sky); border-radius: var(--radius);
 }
-/* the route itself: a tricolour line, one of the few places it is allowed */
+/* the route itself: a plain dashed line — the tricolour is kept for the brand band */
 .era-route::before {
   content: ''; position: absolute; left: calc(50% / var(--n, 5)); right: calc(50% / var(--n, 5)); top: calc(var(--sp-5) + 22px);
   height: 3px;

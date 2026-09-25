@@ -26,14 +26,14 @@
      of that corner, and the last block on a page keeps clear of it. */
   #view .btn-block { max-width: calc(100% - 84px); }
   #view > *:last-child { margin-bottom: 96px; }
-  .next-reward, .goal, .course-top { padding-right: 84px; }
+  .next-reward, .goal { padding-right: 84px; }
 }
 
 @media (max-width: 720px) {
   .filter-row { grid-template-columns: minmax(0, 1fr); gap: var(--sp-3); }
 
-  .course-top { align-items: flex-start; }
-  .course-top .btn { width: 100%; }
+  .course-progress { grid-template-columns: minmax(0, 1fr); }
+  .course-progress .btn { width: 100%; }
 
   /* the journey rail turns on its side */
   .journey-track { flex-direction: column; border-top: 0; border-left: 2px solid var(--line-strong); padding-top: 0; padding-left: var(--sp-5); gap: var(--sp-2); }
@@ -66,14 +66,21 @@
 @media (max-width: 480px) {
   :root { --sp-6: 1.5rem; --sp-7: 2.25rem; }
 
-  .shell { width: min(100% - 1.5rem, var(--shell)); }
+  .shell { width: min(100% - 2rem, var(--shell)); }
   .mission { padding: var(--sp-5); }
   .mission-title { font-size: var(--step-4); }
   .reader-title, .story-title { font-size: var(--step-4); }
   .question-prompt { font-size: var(--step-2); }
 
-  .brand-text strong { font-size: 0.92rem; }
-  .hud-xp { display: none; }
+  /* the header on a phone: logo and wordmark, the two labelled figures and
+     the portrait — everything inside the 16px gutters, nothing clipped */
+  .header-inner { gap: var(--sp-2); }
+  .brand-text strong { font-size: 0.9rem; letter-spacing: 0.1em; }
+  .profile-name { display: none; }
+  .profile-btn { padding: 3px; }
+  .profile-btn > svg { display: none; }
+  .hud { gap: var(--sp-1); }
+  .stat-chip { padding-inline: 2px; }
 
   .src-detail { grid-template-columns: minmax(0, 1fr); gap: 2px var(--sp-3); }
   .src-detail dt { margin-top: var(--sp-2); }
@@ -88,7 +95,7 @@
     bottom: calc(72px + env(safe-area-inset-bottom, 0px));
   }
   #view .btn-block { max-width: calc(100% - 72px); }
-  .next-reward, .goal, .course-top { padding-right: 70px; }
+  .next-reward, .goal { padding-right: 70px; }
   .companion-tip { display: none; }
   .toast { bottom: calc(84px + env(safe-area-inset-bottom, 0px)); }
 }
@@ -104,8 +111,6 @@
   .station-go, .station .stamp { grid-column: 2; justify-self: start; }
   .traverse::before { top: 30px; bottom: 30px; left: 23px; }
 
-  .q-head { gap: var(--sp-3); }
-  .q-medallion { width: 50px; height: 50px; }
 
   .milestone { flex-wrap: wrap; }
   .milestone .btn { width: 100%; }
@@ -132,8 +137,8 @@
   .exp-stop + .exp-stop::before { width: 16px; margin: 0 6px; }
 
   .journey-card { grid-template-columns: minmax(0, 1fr); }
-  .jc-art { aspect-ratio: 16 / 9; }
-  .jc-body .btn { width: 100%; }
+  .jc-art { aspect-ratio: 16 / 9; min-height: 0; }
+  .jc-body .btn, .jc-actions { width: 100%; }
 
   .checkpoint { grid-template-columns: 44px minmax(0, 1fr); row-gap: var(--sp-2); }
   .cp-side { grid-column: 2; justify-self: start; }
@@ -149,7 +154,7 @@
 @media (max-width: 720px) {
   .era-route { flex-direction: column; gap: var(--sp-3); padding: var(--sp-4); }
   .era-route::before { left: calc(var(--sp-4) + 22px); right: auto; top: 30px; bottom: 30px; width: 3px; height: auto;
-    background: linear-gradient(180deg, var(--saffron) 0 33.3%, var(--white) 33.3% 66.6%, var(--green) 66.6% 100%); }
+    background: repeating-linear-gradient(180deg, var(--line-strong) 0 10px, transparent 10px 16px); }
   .er-stop { flex-direction: row; text-align: left; gap: var(--sp-3); }
   .er-count { margin-left: auto; }
 }
@@ -158,11 +163,29 @@
    so the picture stays a picture; the reward card gives its button a row. */
 @media (max-width: 720px) {
   .exp-art { min-height: 0; }
-  .exp-art .hi-frame { height: auto; aspect-ratio: 2 / 1 !important; }
-  .exp-art .hi-cap { padding: var(--sp-2) var(--sp-4); }
+  .exp-art .hi-frame { height: auto; min-height: 0; aspect-ratio: 5 / 2 !important; }
+  .exp-art .hi-cap { padding: var(--sp-3) var(--sp-4); gap: var(--sp-1); }
+  .hi-hero .hi-caption-text { font-size: var(--step-0); }
   .exp-body { padding: var(--sp-4) var(--sp-5); }
-  .exp-art .hi-cap { position: static; }
   .next-reward { flex-wrap: wrap; }
   .nr-body { flex: 1 1 calc(100% - 76px); }
   .next-reward > .btn { margin-left: 68px; }
+}
+
+/* answers on phones: the status moves under the answer text */
+@media (max-width: 720px) {
+  .option { grid-template-columns: 22px minmax(0, 1fr); row-gap: var(--sp-1); }
+  .opt-mark { grid-column: 2; justify-self: start; white-space: normal; }
+}
+
+/* on a phone the mission button sits high on the screen, clear of the companion */
+@media (max-width: 480px) {
+  .exp-body .btn-lg { font-size: var(--step-0); padding: var(--sp-3) var(--sp-2); min-height: 52px; }
+  .exp-title { margin-bottom: var(--sp-2); }
+  /* the mission and its button come first on a phone; the picture follows */
+  .exp-art { order: 2; }
+  .exp-art .hi-frame { aspect-ratio: 16 / 9 !important; }
+  /* the route wraps on a phone, so its connectors would start a line alone */
+  .exp-route { gap: var(--sp-2) var(--sp-4); }
+  .exp-stop + .exp-stop::before { display: none; }
 }

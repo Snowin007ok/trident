@@ -23,10 +23,13 @@
  *   v6 — adds savedImages, the Visual Archive. It starts empty, carries each
  *        image's own source information with it, and grants no XP. No other
  *        field is read or written by this migration.
+ *   v7 — adds avatarId, the learner's chosen portrait avatar. It starts null,
+ *        which shows the manifest's fixed default; choosing one stores only
+ *        its id. No progress, XP, streak or saved item is touched.
  */
 
 const KEY = 'trident.state';
-export const SCHEMA_VERSION = 6;
+export const SCHEMA_VERSION = 7;
 
 function blankState() {
   return {
@@ -64,7 +67,10 @@ function blankState() {
 
     /* ---- v6: the Visual Archive — historical images the learner kept, each
        stored with the source information it was shown with ---- */
-    savedImages: []            // { id, title, caption, alt, url, sourceType, credit, sourcePage, licence, licenceUrl }[]
+    savedImages: [],           // { id, title, caption, alt, url, sourceType, credit, sourcePage, licence, licenceUrl }[]
+
+    /* ---- v7: the portrait avatar, by id only; null means the fixed default ---- */
+    avatarId: null
   };
 }
 
@@ -111,6 +117,9 @@ function migrate(raw) {
 
   // v5 -> v6: an empty Visual Archive. Nothing else is touched.
   if (!Array.isArray(s.savedImages)) s.savedImages = [];
+
+  // v6 -> v7: no avatar chosen yet. Nothing else is touched.
+  if (typeof s.avatarId !== 'string') s.avatarId = null;
 
   if (typeof raw.xp !== 'number') {
     let xp = 0;
@@ -229,6 +238,11 @@ export function toggleSavedImage(image) {
     else s.savedImages.unshift({ ...image, savedAt: new Date().toISOString() });
     if (s.savedImages.length > 200) s.savedImages.length = 200;
   });
+}
+
+/** Choose a portrait avatar. Only its id is stored; nothing else changes. */
+export function setAvatar(id) {
+  return update((s) => { s.avatarId = typeof id === 'string' && id ? id : null; });
 }
 
 /* --------------------------------------------------------- learning profile */
